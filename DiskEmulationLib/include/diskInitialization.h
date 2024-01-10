@@ -13,5 +13,8 @@ struct DiskInfo {
 
 DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSize);
 void writeBytes(DiskInfo *diskInfo, int sector, const char* data);
+char* readBytes(DiskInfo *diskInfo, int sector, int numOfBytesToRead);
+
+static char* buildFilePath(const char* diskDirectory, int sector);
 
 #endif 

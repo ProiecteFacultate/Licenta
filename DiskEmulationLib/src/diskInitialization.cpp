@@ -15,54 +15,50 @@ DiskInfo::DiskInfo(const char* diskDirectory, unsigned int sectorsNumber, unsign
 
 DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSize)
 {
-    for(int sector = 0; sector < sectorsNumber; sector++)
-    {
-        size_t fullFilePathLen = strlen(diskDirectory) + 32;
-        char* fullFilePath = new char[fullFilePathLen];
-        snprintf(fullFilePath, fullFilePathLen, "%s\\sector_%d", diskDirectory, sector);
+    for(int sector = 0; sector < sectorsNumber; sector++) {
+        char *fullFilePath = buildFilePath(diskDirectory, sector);
 
-        HANDLE fileHandle = CreateFile(
-                fullFilePath,
-                GENERIC_WRITE,
-                FILE_SHARE_READ,
-                NULL,
-                CREATE_NEW,
-                FILE_ATTRIBUTE_NORMAL,
-                NULL);
-
-//        char* strText = "Hello World!";
-//        DWORD bytesWritten;
-//        WriteFile(
-//                fileHandle,
-//                strText,
-//                strlen(strText),
-//                &bytesWritten,
-//                nullptr);
-//
-//        CloseHandle(fileHandle);
+        CreateFile(fullFilePath,GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_NEW,
+                   FILE_ATTRIBUTE_NORMAL,NULL);
     }
 
     long long totalDiskSizeBytes = sectorsNumber * sectorSize;
     return DiskInfo(diskDirectory, sectorsNumber, sectorSize, totalDiskSizeBytes);
 }
 
+char* readBytes(DiskInfo *diskInfo, int sector, int numOfBytesToRead)
+{
+    char *fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
+
+    HANDLE fileHandle = CreateFile(fullFilePath,OFN_READONLY,0,NULL,OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL,NULL);
+
+    char* readBuffer = new char[numOfBytesToRead + 1];
+    DWORD dwBytesRead = 0;
+    ReadFile(fileHandle, readBuffer, numOfBytesToRead, &dwBytesRead, NULL);
+
+    readBuffer[numOfBytesToRead] = '\n';
+    return readBuffer;
+}
+
+
 void writeBytes(DiskInfo* diskInfo, int sector, const char* data)
 {
-    size_t fullFilePathLen = strlen(diskInfo->diskDirectory) + 32;
-    char* fullFilePath = new char[fullFilePathLen];
-    snprintf(fullFilePath, fullFilePathLen, "%s\\sector_%d", diskInfo->diskDirectory, sector);
+    char* fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
 
-    HANDLE fileHandle = CreateFile(
-            fullFilePath,
-            OF_READWRITE,
-            0,
-            NULL,
-            OPEN_EXISTING,
-            FILE_ATTRIBUTE_NORMAL,
-            NULL
-    );
+    HANDLE fileHandle = CreateFile(fullFilePath,OF_READWRITE,0,NULL,OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL,NULL);
 
     DWORD bytesWritten;
     WriteFile(fileHandle,data,strlen(data),&bytesWritten,nullptr);
     CloseHandle(fileHandle);
+}
+
+static char* buildFilePath(const char* diskDirectory, int sector)
+{
+    size_t fullFilePathLen = strlen(diskDirectory) + 32;
+    char* fullFilePath = new char[fullFilePathLen];
+    snprintf(fullFilePath, fullFilePathLen, "%s\\sector_%d", diskDirectory, sector);
+
+    return fullFilePath;
 }

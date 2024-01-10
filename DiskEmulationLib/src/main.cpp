@@ -12,6 +12,7 @@ int main() {
 
     const char* text = "Hello World";
     writeBytes(&diskInfo, 0, text);
+    std::cout << readBytes(&diskInfo, 0, 5);
 
     return 0;
 }
