@@ -11,6 +11,7 @@ DiskInfo::DiskInfo(const char* diskDirectory, unsigned int sectorsNumber, unsign
     this->sectorsNumber = sectorsNumber;
     this->sectorSizeBytes = sectorSizeBytes;
     this->totalSizeBytes = totalSizeBytes;
+    this->status = 0;
 }
 
 DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSize)
@@ -26,33 +27,98 @@ DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, u
     return DiskInfo(diskDirectory, sectorsNumber, sectorSize, totalDiskSizeBytes);
 }
 
-char* readBytes(DiskInfo *diskInfo, int sector, int numOfBytesToRead)
+//////////////
+//
+//
+//
+//
+//
+//
+////////////// DISK SERVICES //////////////
+
+int getDiskStatus(DiskInfo *diskInfo)
 {
-    char *fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
-
-    HANDLE fileHandle = CreateFile(fullFilePath,OFN_READONLY,0,NULL,OPEN_EXISTING,
-                                   FILE_ATTRIBUTE_NORMAL,NULL);
-
-    char* readBuffer = new char[numOfBytesToRead + 1];
-    DWORD dwBytesRead = 0;
-    ReadFile(fileHandle, readBuffer, numOfBytesToRead, &dwBytesRead, NULL);
-
-    readBuffer[numOfBytesToRead] = '\n';
-    return readBuffer;
+    return diskInfo->status;
 }
 
-
-void writeBytes(DiskInfo* diskInfo, int sector, const char* data)
+int readDiskSectors(DiskInfo *diskInfo, int numOfSectorsToRead, int sector, char* buffer, int &numOfSectorsRead)
 {
-    char* fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
+    memset(buffer, '\0', strlen(buffer));
 
-    HANDLE fileHandle = CreateFile(fullFilePath,OF_READWRITE,0,NULL,OPEN_EXISTING,
-                                   FILE_ATTRIBUTE_NORMAL,NULL);
+    for(int sectorNum = 0; sectorNum < numOfSectorsToRead; sectorNum++)
+    {
+        if(sector + sectorNum > diskInfo->sectorsNumber)
+        {
+            numOfSectorsRead = sectorNum;
+            diskInfo->status = 4;
+            return 1;
+        }
 
-    DWORD bytesWritten;
-    WriteFile(fileHandle,data,strlen(data),&bytesWritten,nullptr);
-    CloseHandle(fileHandle);
+        char* sectorReadBuffer = new char[diskInfo->sectorSizeBytes + 1];
+
+        int readSectorResult = readSector(diskInfo, sector + sectorNum, sectorReadBuffer);
+        if(readSectorResult == 1) //read sector failed
+        {
+            numOfSectorsRead = sectorNum;
+            diskInfo->status = 64;
+            return 1;
+        }
+
+        strcat(buffer, sectorReadBuffer);
+    }
+
+    numOfSectorsRead = numOfSectorsToRead;
+    diskInfo->status = 0;
+    return 0;
 }
+
+int writeDiskSectors(DiskInfo *diskInfo, int numOfSectorsToWrite, int sector, char* buffer, int &numOfSectorsWritten)
+{
+    for(int sectorNum = 0; sectorNum < numOfSectorsToWrite; sectorNum++)
+    {
+        if(sector + sectorNum > diskInfo->sectorsNumber)
+        {
+            numOfSectorsWritten = sectorNum;
+            diskInfo->status = 4;
+            return 1;
+        }
+
+        if(strlen(buffer) == 0)  //we successfully wrote all buffer, but in less sectors than specified
+        {
+            numOfSectorsWritten = sectorNum;
+            diskInfo->status = 0;
+            return 0;
+        }
+
+        char* sectorWriteBuffer = new char[diskInfo->sectorSizeBytes + 1];
+        strncpy(sectorWriteBuffer, buffer, diskInfo->sectorSizeBytes);
+        sectorWriteBuffer[diskInfo->sectorSizeBytes] = '\0';
+        size_t remainingBufferSize = std::max(static_cast<int>(strlen(buffer) - diskInfo->sectorSizeBytes), 0);
+        memmove(buffer, buffer + diskInfo->sectorSizeBytes, remainingBufferSize);
+        buffer[remainingBufferSize] = '\0';
+
+        int writeSectorResult = writeSector(diskInfo, sector + sectorNum, sectorWriteBuffer);
+        if(writeSectorResult == 1) //write sector failed
+        {
+            numOfSectorsWritten = sectorNum;
+            diskInfo->status = 64;
+            return 1;
+        }
+    }
+
+    numOfSectorsWritten = numOfSectorsToWrite;
+    diskInfo->status = 0;
+    return 0;
+}
+
+//////////////
+//
+//
+//
+//
+//
+//
+////////////// HELPER FUNCTIONS //////////////
 
 static char* buildFilePath(const char* diskDirectory, int sector)
 {
@@ -61,4 +127,53 @@ static char* buildFilePath(const char* diskDirectory, int sector)
     snprintf(fullFilePath, fullFilePathLen, "%s\\sector_%d", diskDirectory, sector);
 
     return fullFilePath;
+}
+
+static int readSector(DiskInfo *diskInfo, int sector, char *buffer) //returns 0 if success, 1 otherwise
+{
+    char *fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
+
+    HANDLE fileHandle = CreateFile(fullFilePath,OFN_READONLY,0,NULL,OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL,NULL);
+
+    if(fileHandle == INVALID_HANDLE_VALUE)
+    {
+        return 1;
+    }
+
+    DWORD dwBytesRead = 0;
+    bool readFileResult = ReadFile(fileHandle, buffer, diskInfo->sectorSizeBytes, &dwBytesRead, NULL);
+    if(!readFileResult)
+    {
+        return 1;
+    }
+
+    buffer[diskInfo->sectorSizeBytes] = '\0';
+    CloseHandle(fileHandle);
+
+    return 0;
+}
+
+static int writeSector(DiskInfo *diskInfo, int sector, char *buffer) //returns 0 if success, 1 otherwise
+{
+    char* fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
+
+    HANDLE fileHandle = CreateFile(fullFilePath,OF_READWRITE,0,NULL,OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL,NULL);
+
+    if(fileHandle == INVALID_HANDLE_VALUE)
+    {
+        return 1;
+    }
+
+    DWORD bytesWritten;
+    bool writeFileResult = WriteFile(fileHandle,buffer,strlen(buffer),&bytesWritten,nullptr);
+    if(!writeFileResult)
+    {
+        return 1;
+    }
+
+    CloseHandle(fileHandle);
+
+    return  0;
 }
