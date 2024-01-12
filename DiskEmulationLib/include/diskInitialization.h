@@ -22,14 +22,18 @@ DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, u
 //INT 13, 01
 int getDiskStatus(DiskInfo *diskInfo);
 //INT 13, 02
-int readDiskSectors(DiskInfo *diskInfo, int numOfSectorsToRead, int sector, char* buffer, int &numOfSectorsRead);
+int readDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToRead, unsigned int sector, char* buffer, int &numOfSectorsRead);
 //INT 13, 03
-int writeDiskSectors(DiskInfo *diskInfo, int numOfSectorsToWrite, int sector, char* buffer, int &numOfSectorsWritten);
+int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsigned int sector, char* buffer, int &numOfSectorsWritten);
+//INT 13, 04
+//verifies if the sectors can be found
+int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, unsigned int sector, int &numOfSectorsVerified);
 
 
 //Helper methods
 static char* buildFilePath(const char* diskDirectory, int sector);
-static int readSector(DiskInfo *diskInfo, int sector, char *buffer);
-static int writeSector(DiskInfo *diskInfo, int sector, char *buffer);
+static int readSector(DiskInfo *diskInfo, unsigned int sector, char *buffer);
+static int writeSector(DiskInfo *diskInfo, unsigned int sector, char *buffer);
+static int verifySector(DiskInfo *diskInfo, unsigned int sector);
 
 #endif 

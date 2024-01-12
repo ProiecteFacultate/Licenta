@@ -41,7 +41,7 @@ int getDiskStatus(DiskInfo *diskInfo)
     return diskInfo->status;
 }
 
-int readDiskSectors(DiskInfo *diskInfo, int numOfSectorsToRead, int sector, char* buffer, int &numOfSectorsRead)
+int readDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToRead, unsigned int sector, char* buffer, int &numOfSectorsRead)
 {
     memset(buffer, '\0', strlen(buffer));
 
@@ -72,7 +72,7 @@ int readDiskSectors(DiskInfo *diskInfo, int numOfSectorsToRead, int sector, char
     return 0;
 }
 
-int writeDiskSectors(DiskInfo *diskInfo, int numOfSectorsToWrite, int sector, char* buffer, int &numOfSectorsWritten)
+int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsigned int sector, char* buffer, int &numOfSectorsWritten)
 {
     for(int sectorNum = 0; sectorNum < numOfSectorsToWrite; sectorNum++)
     {
@@ -111,6 +111,31 @@ int writeDiskSectors(DiskInfo *diskInfo, int numOfSectorsToWrite, int sector, ch
     return 0;
 }
 
+int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, unsigned int sector, int &numOfSectorsVerified)
+{
+    for(int sectorNum = 0; sectorNum < numOfSectorsToVerify; sectorNum++)
+    {
+        if(sector + sectorNum > diskInfo->sectorsNumber)
+        {
+            numOfSectorsVerified = sectorNum;
+            diskInfo->status = 4;
+            return 1;
+        }
+
+        int verifySectorResult = verifySector(diskInfo, sector + sectorNum);
+        if(verifySectorResult == 1) //write sector failed
+        {
+            numOfSectorsVerified = sectorNum;
+            diskInfo->status = 64;
+            return 1;
+        }
+    }
+
+    numOfSectorsVerified = numOfSectorsToVerify;
+    diskInfo->status = 0;
+    return 0;
+}
+
 //////////////
 //
 //
@@ -129,7 +154,7 @@ static char* buildFilePath(const char* diskDirectory, int sector)
     return fullFilePath;
 }
 
-static int readSector(DiskInfo *diskInfo, int sector, char *buffer) //returns 0 if success, 1 otherwise
+static int readSector(DiskInfo *diskInfo, unsigned int sector, char *buffer) //returns 0 if success, 1 otherwise
 {
     char *fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
 
@@ -154,7 +179,7 @@ static int readSector(DiskInfo *diskInfo, int sector, char *buffer) //returns 0 
     return 0;
 }
 
-static int writeSector(DiskInfo *diskInfo, int sector, char *buffer) //returns 0 if success, 1 otherwise
+static int writeSector(DiskInfo *diskInfo, unsigned int sector, char *buffer) //returns 0 if success, 1 otherwise
 {
     char* fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
 
@@ -169,6 +194,23 @@ static int writeSector(DiskInfo *diskInfo, int sector, char *buffer) //returns 0
     DWORD bytesWritten;
     bool writeFileResult = WriteFile(fileHandle,buffer,strlen(buffer),&bytesWritten,nullptr);
     if(!writeFileResult)
+    {
+        return 1;
+    }
+
+    CloseHandle(fileHandle);
+
+    return  0;
+}
+
+static int verifySector(DiskInfo *diskInfo, unsigned int sector) //returns 0 if success, 1 otherwise
+{
+    char* fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
+
+    HANDLE fileHandle = CreateFile(fullFilePath,OF_READWRITE,0,NULL,OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL,NULL);
+
+    if(fileHandle == INVALID_HANDLE_VALUE)
     {
         return 1;
     }

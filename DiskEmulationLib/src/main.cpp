@@ -20,7 +20,11 @@ int main() {
     int numOfSectorsRead = 0;
     readDiskSectors(&diskInfo, 3, 0, readBuffer, numOfSectorsRead);
     std::cout << "Number of sectors read: " << numOfSectorsRead << "\n";
-    std::cout << readBuffer;
+    std::cout << readBuffer << "\n";
+
+    int numOfSectorsVerified = 0;
+    verifyDiskSectors(&diskInfo, 1, 4, numOfSectorsVerified);
+    std::cout << "Num of sectors verified: " << numOfSectorsVerified;
 
     return 0;
 }
