@@ -136,6 +136,31 @@ int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, uns
     return 0;
 }
 
+int formatDiskSectors(DiskInfo *diskInfo, unsigned int sector)
+{
+    if(sector >= diskInfo->sectorsNumber)
+    {
+        diskInfo->status = 4;
+        return 1;
+    }
+
+    for(int sectorNum = sector; sectorNum < diskInfo->sectorsNumber; sectorNum++)
+    {
+        char *fullFilePath = buildFilePath(diskInfo->diskDirectory, sectorNum);
+        HANDLE fileHandle = CreateFile(fullFilePath,GENERIC_WRITE,FILE_SHARE_READ,NULL,TRUNCATE_EXISTING,
+                   FILE_ATTRIBUTE_NORMAL,NULL);
+
+        if(fileHandle == INVALID_HANDLE_VALUE) //format sector failed
+        {
+            diskInfo->status = 64;
+            return 1;
+        }
+    }
+
+    diskInfo->status = 0;
+    return 0;
+}
+
 //////////////
 //
 //

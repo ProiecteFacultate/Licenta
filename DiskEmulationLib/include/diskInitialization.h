@@ -28,6 +28,9 @@ int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsig
 //INT 13, 04
 //verifies if the sectors can be found
 int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, unsigned int sector, int &numOfSectorsVerified);
+//INT 13, 07
+//clears sector data
+int formatDiskSectors(DiskInfo *diskInfo, unsigned int sector);
 
 
 //Helper methods
