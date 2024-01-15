@@ -1,6 +1,5 @@
 #ifndef DISKEMULATIONLIB_DISKINITIALIZATION_H
 #define DISKEMULATIONLIB_DISKINITIALIZATION_H
-#include "iostream"
 
 //the disk methods are based on x86 INT 13 - Diskette BIOS Services
 
@@ -27,7 +26,7 @@ int readDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToRead, unsigne
 int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsigned int sector, char* buffer, int &numOfSectorsWritten);
 //INT 13, 04
 //verifies if the sectors can be found
-int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, unsigned int sector, int &numOfSectorsVerified);
+int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, unsigned int sector, char* buffer, int &numOfSectorsVerified);
 //INT 13, 07
 //clears sector data
 int formatDiskSectors(DiskInfo *diskInfo, unsigned int sector);
@@ -37,6 +36,6 @@ int formatDiskSectors(DiskInfo *diskInfo, unsigned int sector);
 static char* buildFilePath(const char* diskDirectory, int sector);
 static int readSector(DiskInfo *diskInfo, unsigned int sector, char *buffer);
 static int writeSector(DiskInfo *diskInfo, unsigned int sector, char *buffer);
-static int verifySector(DiskInfo *diskInfo, unsigned int sector);
+static int verifySector(DiskInfo *diskInfo, unsigned int sector, char* buffer);
 
 #endif 
