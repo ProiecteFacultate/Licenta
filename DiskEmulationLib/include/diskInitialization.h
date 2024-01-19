@@ -21,20 +21,21 @@ DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, u
 //INT 13, 01
 int getDiskStatus(DiskInfo *diskInfo);
 //INT 13, 02
-int readDiskSectors(DiskInfo *diskInfo, char* partition, unsigned int numOfSectorsToRead, unsigned int sector, char* buffer, int &numOfSectorsRead);
+int readDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToRead, unsigned int sector, char* buffer, int &numOfSectorsRead);
 //INT 13, 03
-int writeDiskSectors(DiskInfo *diskInfo, char* partition, unsigned int numOfSectorsToWrite, unsigned int sector, char* buffer, int &numOfSectorsWritten);
+int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsigned int sector, char* buffer, int &numOfSectorsWritten);
 //INT 13, 04
-//verifies sector data matches expected buffer
-int verifyDiskSectors(DiskInfo *diskInfo, char* partition, unsigned int numOfSectorsToVerify, unsigned int sector, char* buffer, int &numOfSectorsVerified);
+//verifies if the sectors can be found
+int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, unsigned int sector, char* buffer, int &numOfSectorsVerified);
 //INT 13, 07
-int formatDiskSectors(DiskInfo *diskInfo, char* partition, int newSectorSize);
+//clears sector data
+int formatDiskSectors(DiskInfo *diskInfo, unsigned int sector);
 
 
 //Helper methods
-static char* buildFilePath(const char* diskDirectory, char* partition, int sector);
-static int readSector(DiskInfo *diskInfo, char* partition, unsigned int sector, char *buffer);
-static int writeSector(DiskInfo *diskInfo, char* partition, unsigned int sector, char *buffer);
-static int verifySector(DiskInfo *diskInfo, char* partition, unsigned int sector, char* buffer);
+static char* buildFilePath(const char* diskDirectory, int sector);
+static int readSector(DiskInfo *diskInfo, unsigned int sector, char *buffer);
+static int writeSector(DiskInfo *diskInfo, unsigned int sector, char *buffer);
+static int verifySector(DiskInfo *diskInfo, unsigned int sector, char* buffer);
 
 #endif 
