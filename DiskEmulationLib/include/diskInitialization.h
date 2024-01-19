@@ -25,7 +25,6 @@ int readDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToRead, unsigne
 //INT 13, 03
 int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsigned int sector, char* buffer, int &numOfSectorsWritten);
 //INT 13, 04
-//verifies if the sectors can be found
 int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, unsigned int sector, char* buffer, int &numOfSectorsVerified);
 //INT 13, 07
 //clears sector data
