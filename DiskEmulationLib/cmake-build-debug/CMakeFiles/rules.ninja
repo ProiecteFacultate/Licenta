@@ -14,7 +14,7 @@
 #############################################
 # Rule for compiling CXX files.
 
-rule CXX_COMPILER__DiskEmulationLib_Debug
+rule CXX_COMPILER__disk_emulation_Debug
   depfile = $DEP_FILE
   deps = gcc
   command = "D:\Softs\CLion\CLion 2023.1.3\bin\mingw\bin\g++.exe" $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
@@ -22,11 +22,11 @@ rule CXX_COMPILER__DiskEmulationLib_Debug
 
 
 #############################################
-# Rule for linking CXX executable.
+# Rule for linking CXX static library.
 
-rule CXX_EXECUTABLE_LINKER__DiskEmulationLib_Debug
-  command = cmd.exe /C "$PRE_LINK && "D:\Softs\CLion\CLion 2023.1.3\bin\mingw\bin\g++.exe" $FLAGS $LINK_FLAGS $in -o $TARGET_FILE -Wl,--out-implib,$TARGET_IMPLIB -Wl,--major-image-version,0,--minor-image-version,0 $LINK_PATH $LINK_LIBRARIES && $POST_BUILD"
-  description = Linking CXX executable $TARGET_FILE
+rule CXX_STATIC_LIBRARY_LINKER__disk_emulation_Debug
+  command = cmd.exe /C "$PRE_LINK && "D:\Softs\CLion\CLion 2023.1.3\bin\cmake\win\x64\bin\cmake.exe" -E rm -f $TARGET_FILE && "D:\Softs\CLion\CLion 2023.1.3\bin\mingw\bin\ar.exe" qc $TARGET_FILE $LINK_FLAGS $in && "D:\Softs\CLion\CLion 2023.1.3\bin\mingw\bin\ranlib.exe" $TARGET_FILE && $POST_BUILD"
+  description = Linking CXX static library $TARGET_FILE
   restat = $RESTAT
 
 
