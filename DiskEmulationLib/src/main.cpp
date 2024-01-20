@@ -1,11 +1,12 @@
 #include "iostream"
 #include "string"
 #include "string.h"
+#include "windows.h"
 
-#include "../include/diskInitialization.h"
+#include "../include/disk.h"
 
 int main() {
-    DiskInfo diskInfo = initializeDisk("D:\\Facultate\\Licenta\\Implementare\\HardDisk", 5, 512);
+    DiskInfo diskInfo = initializeDisk("D:\\Facultate\\Licenta\\Implementare\\HardDisk", 16, 512);
     std::cout << "Sectors number: " << diskInfo.sectorsNumber << "\n";
     std::cout << "Sector size: " << diskInfo.sectorSizeBytes << "\n";
     std:: cout << "Disk size: " << diskInfo.totalSizeBytes << "\n";

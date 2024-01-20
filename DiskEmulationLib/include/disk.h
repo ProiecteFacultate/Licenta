@@ -1,5 +1,7 @@
-#ifndef DISKEMULATIONLIB_DISKINITIALIZATION_H
-#define DISKEMULATIONLIB_DISKINITIALIZATION_H
+#ifndef DISKEMULATIONLIB_DISK_H
+#define DISKEMULATIONLIB_DISK_H
+
+//V 1.01
 
 //the disk methods are based on x86 INT 13 - Diskette BIOS Services
 
@@ -10,10 +12,12 @@ struct DiskInfo {
     unsigned int totalSizeBytes;
     unsigned int status;
 
-    DiskInfo(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSizeBytes, unsigned long long totalSizeBytes);
+    DiskInfo() {};
+    DiskInfo(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSizeBytes, unsigned long long totalSizeBytes, unsigned int status);
 };
 
 DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSize);
+DiskInfo getDisk(const char* diskDirectory);
 
 
 //Disk services

@@ -1,0 +1,69 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.25"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "DiskEmulationLib",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "DiskEmulationLib::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-DiskEmulationLib-Debug-51391ce20ffc3a781d2e.json",
+					"name" : "DiskEmulationLib",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "disk_emulation::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-disk_emulation-Debug-5d7e6af83a2e2a4f429b.json",
+					"name" : "disk_emulation",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "D:/Facultate/Licenta/Implementare/DiskEmulationLib/cmake-build-debug",
+		"source" : "D:/Facultate/Licenta/Implementare/DiskEmulationLib"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}

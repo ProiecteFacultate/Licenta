@@ -41,6 +41,50 @@ include CMakeFiles/rules.ninja
 
 cmake_ninja_workdir = D$:/Facultate/Licenta/Implementare/DiskEmulationLib/cmake-build-debug/
 # =============================================================================
+# Object build statements for EXECUTABLE target DiskEmulationLib
+
+
+#############################################
+# Order-only phony target for DiskEmulationLib
+
+build cmake_object_order_depends_target_DiskEmulationLib: phony || CMakeFiles/DiskEmulationLib.dir
+
+build CMakeFiles/DiskEmulationLib.dir/src/main.cpp.obj: CXX_COMPILER__DiskEmulationLib_Debug D$:/Facultate/Licenta/Implementare/DiskEmulationLib/src/main.cpp || cmake_object_order_depends_target_DiskEmulationLib
+  DEP_FILE = CMakeFiles\DiskEmulationLib.dir\src\main.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles\DiskEmulationLib.dir
+  OBJECT_FILE_DIR = CMakeFiles\DiskEmulationLib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\DiskEmulationLib.dir\
+  TARGET_PDB = DiskEmulationLib.pdb
+
+build CMakeFiles/DiskEmulationLib.dir/src/disk.cpp.obj: CXX_COMPILER__DiskEmulationLib_Debug D$:/Facultate/Licenta/Implementare/DiskEmulationLib/src/disk.cpp || cmake_object_order_depends_target_DiskEmulationLib
+  DEP_FILE = CMakeFiles\DiskEmulationLib.dir\src\disk.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles\DiskEmulationLib.dir
+  OBJECT_FILE_DIR = CMakeFiles\DiskEmulationLib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\DiskEmulationLib.dir\
+  TARGET_PDB = DiskEmulationLib.pdb
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target DiskEmulationLib
+
+
+#############################################
+# Link the executable DiskEmulationLib.exe
+
+build DiskEmulationLib.exe: CXX_EXECUTABLE_LINKER__DiskEmulationLib_Debug CMakeFiles/DiskEmulationLib.dir/src/main.cpp.obj CMakeFiles/DiskEmulationLib.dir/src/disk.cpp.obj
+  FLAGS = -g
+  LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\DiskEmulationLib.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\DiskEmulationLib.dir\
+  TARGET_FILE = DiskEmulationLib.exe
+  TARGET_IMPLIB = libDiskEmulationLib.dll.a
+  TARGET_PDB = DiskEmulationLib.pdb
+
+# =============================================================================
 # Object build statements for STATIC_LIBRARY target disk_emulation
 
 
@@ -108,6 +152,8 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 # =============================================================================
 # Target aliases.
 
+build DiskEmulationLib: phony DiskEmulationLib.exe
+
 build disk_emulation: phony libdisk_emulation.a
 
 # =============================================================================
@@ -118,7 +164,7 @@ build disk_emulation: phony libdisk_emulation.a
 #############################################
 # Folder: D:/Facultate/Licenta/Implementare/DiskEmulationLib/cmake-build-debug
 
-build all: phony libdisk_emulation.a
+build all: phony DiskEmulationLib.exe libdisk_emulation.a
 
 # =============================================================================
 # Built-in targets

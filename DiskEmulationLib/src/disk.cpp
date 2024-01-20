@@ -3,16 +3,17 @@
 #include "string.h"
 #include "iostream"
 
-#include "../include/diskInitialization.h"
+#include "../include/disk.h"
 #include "../include/diskCallsResponse.h"
 
-DiskInfo::DiskInfo(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSizeBytes, unsigned long long totalSizeBytes)   //DiskInfo constructor
+
+DiskInfo::DiskInfo(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSizeBytes, unsigned long long totalSizeBytes, unsigned int status)   //DiskInfo constructor
 {
     this->diskDirectory = diskDirectory;
     this->sectorsNumber = sectorsNumber;
     this->sectorSizeBytes = sectorSizeBytes;
     this->totalSizeBytes = totalSizeBytes;
-    this->status = 0;
+    this->status = status;
 }
 
 DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSize)
@@ -20,12 +21,25 @@ DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, u
     for(int sector = 0; sector < sectorsNumber; sector++) {
         char *fullFilePath = buildFilePath(diskDirectory, sector);
 
-        CreateFile(fullFilePath,GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_NEW,
-                   FILE_ATTRIBUTE_NORMAL,NULL);
+        HANDLE fileHandle = CreateFile(fullFilePath,GENERIC_READ,FILE_SHARE_READ,nullptr,CREATE_NEW,
+                   FILE_ATTRIBUTE_NORMAL,nullptr);
+
+        if(fileHandle == INVALID_HANDLE_VALUE && GetLastError() != ERROR_FILE_EXISTS)
+        {
+            CloseHandle(fileHandle);
+            return  DiskInfo(nullptr, 0, 0, 0, EC_NO_ERROR);
+        }
+
+        CloseHandle(fileHandle);
     }
 
     long long totalDiskSizeBytes = sectorsNumber * sectorSize;
-    return DiskInfo(diskDirectory, sectorsNumber, sectorSize, totalDiskSizeBytes);
+    return  DiskInfo(diskDirectory, sectorsNumber, sectorSize, totalDiskSizeBytes, EC_NO_ERROR);
+}
+
+DiskInfo getDisk(const char* diskDirectory)
+{
+
 }
 
 //////////////
@@ -69,8 +83,8 @@ int readDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToRead, unsigne
     }
 
     numOfSectorsRead = numOfSectorsToRead;
-    diskInfo->status = NO_ERROR;
-    return NO_ERROR;
+    diskInfo->status = EC_NO_ERROR;
+    return EC_NO_ERROR;
 }
 
 int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsigned int sector, char* buffer, int &numOfSectorsWritten)
@@ -87,8 +101,8 @@ int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsig
         if(strlen(buffer) == 0)  //we successfully wrote all buffer, but in less sectors than specified
         {
             numOfSectorsWritten = sectorNum;
-            diskInfo->status = NO_ERROR;
-            return NO_ERROR;
+            diskInfo->status = EC_NO_ERROR;
+            return EC_NO_ERROR;
         }
 
         char* sectorWriteBuffer = new char[diskInfo->sectorSizeBytes + 1];
@@ -168,14 +182,17 @@ int formatDiskSectors(DiskInfo *diskInfo, unsigned int sector)
     for(int sectorNum = sector; sectorNum < diskInfo->sectorsNumber; sectorNum++)
     {
         char *fullFilePath = buildFilePath(diskInfo->diskDirectory, sectorNum);
-        HANDLE fileHandle = CreateFile(fullFilePath,GENERIC_WRITE,FILE_SHARE_READ,NULL,TRUNCATE_EXISTING,
-                   FILE_ATTRIBUTE_NORMAL,NULL);
+        HANDLE fileHandle = CreateFile(fullFilePath,GENERIC_WRITE,FILE_SHARE_READ,nullptr,TRUNCATE_EXISTING,
+                   FILE_ATTRIBUTE_NORMAL,nullptr);
 
         if(fileHandle == INVALID_HANDLE_VALUE) //format sector failed
         {
+            CloseHandle(fileHandle);
             diskInfo->status = EC_ERROR_IN_DISK_CONTROLLER;
             return EC_ERROR_IN_DISK_CONTROLLER;
         }
+
+        CloseHandle(fileHandle);
     }
 
     diskInfo->status = EC_NO_ERROR;
@@ -204,18 +221,20 @@ static int readSector(DiskInfo *diskInfo, unsigned int sector, char *buffer)
 {
     char *fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
 
-    HANDLE fileHandle = CreateFile(fullFilePath,OFN_READONLY,0,NULL,OPEN_EXISTING,
-                                   FILE_ATTRIBUTE_NORMAL,NULL);
+    HANDLE fileHandle = CreateFile(fullFilePath,OFN_READONLY,0,nullptr,OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL,nullptr);
 
     if(fileHandle == INVALID_HANDLE_VALUE)
     {
+        CloseHandle(fileHandle);
         return SECTOR_READ_FAILED;
     }
 
     DWORD dwBytesRead = 0;
-    bool readFileResult = ReadFile(fileHandle, buffer, diskInfo->sectorSizeBytes, &dwBytesRead, NULL);
+    bool readFileResult = ReadFile(fileHandle, buffer, diskInfo->sectorSizeBytes, &dwBytesRead, nullptr);
     if(!readFileResult)
     {
+        CloseHandle(fileHandle);
         return SECTOR_READ_FAILED;
     }
 
@@ -229,11 +248,12 @@ static int writeSector(DiskInfo *diskInfo, unsigned int sector, char *buffer)
 {
     char* fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
 
-    HANDLE fileHandle = CreateFile(fullFilePath,OF_READWRITE,0,NULL,OPEN_EXISTING,
-                                   FILE_ATTRIBUTE_NORMAL,NULL);
+    HANDLE fileHandle = CreateFile(fullFilePath,OF_READWRITE,0,nullptr,OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL,nullptr);
 
     if(fileHandle == INVALID_HANDLE_VALUE)
     {
+        CloseHandle(fileHandle);
         return SECTOR_WRITE_FAILED;
     }
 
@@ -241,6 +261,7 @@ static int writeSector(DiskInfo *diskInfo, unsigned int sector, char *buffer)
     bool writeFileResult = WriteFile(fileHandle,buffer,strlen(buffer),&bytesWritten,nullptr);
     if(!writeFileResult)
     {
+        CloseHandle(fileHandle);
         return SECTOR_WRITE_FAILED;
     }
 

@@ -1,0 +1,3 @@
+D:/Facultate/Licenta/Implementare/FAT32/cmake-build-debug/CMakeFiles/FAT32.dir
+D:/Facultate/Licenta/Implementare/FAT32/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/Facultate/Licenta/Implementare/FAT32/cmake-build-debug/CMakeFiles/rebuild_cache.dir
