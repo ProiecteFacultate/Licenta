@@ -7,18 +7,25 @@
 #include "../include/diskCallsResponse.h"
 
 
-DiskInfo::DiskInfo(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSizeBytes, unsigned long long totalSizeBytes, unsigned int status)   //DiskInfo constructor
-{
-    this->diskDirectory = diskDirectory;
+DiskParameters::DiskParameters(uint32_t sectorsNumber, uint16_t sectorSizeBytes) {
     this->sectorsNumber = sectorsNumber;
     this->sectorSizeBytes = sectorSizeBytes;
-    this->totalSizeBytes = totalSizeBytes;
-    this->status = status;
 }
 
-DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSize)
+DiskInfo::DiskInfo(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSizeBytes, uint16_t status)   //DiskInfo constructor
 {
-    for(int sector = 0; sector < sectorsNumber; sector++) {
+    this->diskDirectory = diskDirectory;
+    this->diskParameters = DiskParameters(sectorsNumber, sectorSizeBytes);
+    this->status = status;
+
+//    char *fullFilePath = buildFilePath(diskDirectory, sector);
+//    HANDLE fileHandle = CreateFile(fullFilePath,GENERIC_READ,FILE_SHARE_READ,nullptr,CREATE_NEW,
+//                                   FILE_ATTRIBUTE_NORMAL,nullptr);
+}
+
+DiskInfo initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize)
+{
+    for(uint32_t sector = 0; sector < sectorsNumber; sector++) {
         char *fullFilePath = buildFilePath(diskDirectory, sector);
 
         HANDLE fileHandle = CreateFile(fullFilePath,GENERIC_READ,FILE_SHARE_READ,nullptr,CREATE_NEW,
@@ -27,14 +34,13 @@ DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, u
         if(fileHandle == INVALID_HANDLE_VALUE && GetLastError() != ERROR_FILE_EXISTS)
         {
             CloseHandle(fileHandle);
-            return  DiskInfo(nullptr, 0, 0, 0, EC_NO_ERROR);
+            return  DiskInfo(nullptr, 0, 0, EC_NO_ERROR);
         }
 
         CloseHandle(fileHandle);
     }
 
-    long long totalDiskSizeBytes = sectorsNumber * sectorSize;
-    return  DiskInfo(diskDirectory, sectorsNumber, sectorSize, totalDiskSizeBytes, EC_NO_ERROR);
+    return  DiskInfo(diskDirectory, sectorsNumber, sectorSize, EC_NO_ERROR);
 }
 
 DiskInfo getDisk(const char* diskDirectory)
@@ -56,20 +62,20 @@ int getDiskStatus(DiskInfo *diskInfo)
     return diskInfo->status;
 }
 
-int readDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToRead, unsigned int sector, char* buffer, int &numOfSectorsRead)
+int readDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToRead, uint32_t sector, char* buffer, uint32_t &numOfSectorsRead)
 {
     memset(buffer, '\0', strlen(buffer));
 
-    for(int sectorNum = 0; sectorNum < numOfSectorsToRead; sectorNum++)
+    for(uint32_t sectorNum = 0; sectorNum < numOfSectorsToRead; sectorNum++)
     {
-        if(sector + sectorNum > diskInfo->sectorsNumber)
+        if(sector + sectorNum > diskInfo->diskParameters.sectorsNumber)
         {
             numOfSectorsRead = sectorNum;
             diskInfo->status = EC_SECTOR_NOT_FOUND;
             return EC_SECTOR_NOT_FOUND;
         }
 
-        char* sectorReadBuffer = new char[diskInfo->sectorSizeBytes + 1];
+        char* sectorReadBuffer = new char[diskInfo->diskParameters.sectorSizeBytes + 1];
 
         int readSectorResult = readSector(diskInfo, sector + sectorNum, sectorReadBuffer);
         if(readSectorResult == SECTOR_READ_FAILED)
@@ -87,11 +93,11 @@ int readDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToRead, unsigne
     return EC_NO_ERROR;
 }
 
-int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsigned int sector, char* buffer, int &numOfSectorsWritten)
+int writeDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToWrite, uint32_t sector, char* buffer, uint32_t &numOfSectorsWritten)
 {
-    for(int sectorNum = 0; sectorNum < numOfSectorsToWrite; sectorNum++)
+    for(uint32_t sectorNum = 0; sectorNum < numOfSectorsToWrite; sectorNum++)
     {
-        if(sector + sectorNum > diskInfo->sectorsNumber)
+        if(sector + sectorNum > diskInfo->diskParameters.sectorsNumber)
         {
             numOfSectorsWritten = sectorNum;
             diskInfo->status = EC_SECTOR_NOT_FOUND;
@@ -105,11 +111,11 @@ int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsig
             return EC_NO_ERROR;
         }
 
-        char* sectorWriteBuffer = new char[diskInfo->sectorSizeBytes + 1];
-        strncpy(sectorWriteBuffer, buffer, diskInfo->sectorSizeBytes);
-        sectorWriteBuffer[diskInfo->sectorSizeBytes] = '\0';
-        size_t remainingBufferSize = std::max(static_cast<int>(strlen(buffer) - diskInfo->sectorSizeBytes), 0);
-        memmove(buffer, buffer + diskInfo->sectorSizeBytes, remainingBufferSize);
+        char* sectorWriteBuffer = new char[diskInfo->diskParameters.sectorSizeBytes + 1];
+        strncpy(sectorWriteBuffer, buffer, diskInfo->diskParameters.sectorSizeBytes);
+        sectorWriteBuffer[diskInfo->diskParameters.sectorSizeBytes] = '\0';
+        size_t remainingBufferSize = std::max(static_cast<int>(strlen(buffer) - diskInfo->diskParameters.sectorSizeBytes), 0);
+        memmove(buffer, buffer + diskInfo->diskParameters.sectorSizeBytes, remainingBufferSize);
         buffer[remainingBufferSize] = '\0';
 
         int writeSectorResult = writeSector(diskInfo, sector + sectorNum, sectorWriteBuffer);
@@ -126,11 +132,11 @@ int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsig
     return EC_NO_ERROR;
 }
 
-int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, unsigned int sector, char* buffer, int &numOfSectorsVerified)
+int verifyDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToVerify, uint32_t sector, char* buffer, uint32_t &numOfSectorsVerified)
 {
-    for(int sectorNum = 0; sectorNum < numOfSectorsToVerify; sectorNum++)
+    for(uint32_t sectorNum = 0; sectorNum < numOfSectorsToVerify; sectorNum++)
     {
-        if(sector + sectorNum > diskInfo->sectorsNumber)
+        if(sector + sectorNum > diskInfo->diskParameters.sectorsNumber)
         {
             numOfSectorsVerified = sectorNum;
             diskInfo->status = EC_SECTOR_NOT_FOUND;
@@ -144,11 +150,11 @@ int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, uns
             return EC_NO_ERROR;
         }
 
-        char* sectorVerifyBuffer = new char[diskInfo->sectorSizeBytes + 1];
-        strncpy(sectorVerifyBuffer, buffer, diskInfo->sectorSizeBytes);
-        sectorVerifyBuffer[diskInfo->sectorSizeBytes] = '\0';
-        size_t remainingBufferSize = std::max(static_cast<int>(strlen(buffer) - diskInfo->sectorSizeBytes), 0);
-        memmove(buffer, buffer + diskInfo->sectorSizeBytes, remainingBufferSize);
+        char* sectorVerifyBuffer = new char[diskInfo->diskParameters.sectorSizeBytes + 1];
+        strncpy(sectorVerifyBuffer, buffer, diskInfo->diskParameters.sectorSizeBytes);
+        sectorVerifyBuffer[diskInfo->diskParameters.sectorSizeBytes] = '\0';
+        size_t remainingBufferSize = std::max(static_cast<int>(strlen(buffer) - diskInfo->diskParameters.sectorSizeBytes), 0);
+        memmove(buffer, buffer + diskInfo->diskParameters.sectorSizeBytes, remainingBufferSize);
         buffer[remainingBufferSize] = '\0';
 
         int verifySectorResult = verifySector(diskInfo, sector + sectorNum, sectorVerifyBuffer);
@@ -171,15 +177,15 @@ int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, uns
     return EC_NO_ERROR;
 }
 
-int formatDiskSectors(DiskInfo *diskInfo, unsigned int sector)
+int formatDiskSectors(DiskInfo *diskInfo, uint32_t sector)
 {
-    if(sector >= diskInfo->sectorsNumber)
+    if(sector >= diskInfo->diskParameters.sectorsNumber)
     {
         diskInfo->status = EC_SECTOR_NOT_FOUND;
         return EC_SECTOR_NOT_FOUND;
     }
 
-    for(int sectorNum = sector; sectorNum < diskInfo->sectorsNumber; sectorNum++)
+    for(uint32_t sectorNum = sector; sectorNum < diskInfo->diskParameters.sectorsNumber; sectorNum++)
     {
         char *fullFilePath = buildFilePath(diskInfo->diskDirectory, sectorNum);
         HANDLE fileHandle = CreateFile(fullFilePath,GENERIC_WRITE,FILE_SHARE_READ,nullptr,TRUNCATE_EXISTING,
@@ -208,7 +214,7 @@ int formatDiskSectors(DiskInfo *diskInfo, unsigned int sector)
 //
 ////////////// HELPER FUNCTIONS //////////////
 
-static char* buildFilePath(const char* diskDirectory, int sector)
+static char* buildFilePath(const char* diskDirectory, uint32_t sector)
 {
     size_t fullFilePathLen = strlen(diskDirectory) + 32;
     char* fullFilePath = new char[fullFilePathLen];
@@ -217,7 +223,7 @@ static char* buildFilePath(const char* diskDirectory, int sector)
     return fullFilePath;
 }
 
-static int readSector(DiskInfo *diskInfo, unsigned int sector, char *buffer)
+static int readSector(DiskInfo *diskInfo, uint32_t sector, char *buffer)
 {
     char *fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
 
@@ -231,20 +237,20 @@ static int readSector(DiskInfo *diskInfo, unsigned int sector, char *buffer)
     }
 
     DWORD dwBytesRead = 0;
-    bool readFileResult = ReadFile(fileHandle, buffer, diskInfo->sectorSizeBytes, &dwBytesRead, nullptr);
+    bool readFileResult = ReadFile(fileHandle, buffer, diskInfo->diskParameters.sectorSizeBytes, &dwBytesRead, nullptr);
     if(!readFileResult)
     {
         CloseHandle(fileHandle);
         return SECTOR_READ_FAILED;
     }
 
-    buffer[diskInfo->sectorSizeBytes] = '\0';
+    buffer[diskInfo->diskParameters.sectorSizeBytes] = '\0';
     CloseHandle(fileHandle);
 
     return SECTOR_READ_SUCCESS;
 }
 
-static int writeSector(DiskInfo *diskInfo, unsigned int sector, char *buffer)
+static int writeSector(DiskInfo *diskInfo, uint32_t sector, char *buffer)
 {
     char* fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
 
@@ -270,9 +276,9 @@ static int writeSector(DiskInfo *diskInfo, unsigned int sector, char *buffer)
     return  SECTOR_WRITE_SUCCESS;
 }
 
-static int verifySector(DiskInfo *diskInfo, unsigned int sector, char* buffer)
+static int verifySector(DiskInfo *diskInfo, uint32_t sector, char* buffer)
 {
-    char* sectorDataBuffer = new char[diskInfo->sectorSizeBytes + 1];
+    char* sectorDataBuffer = new char[diskInfo->diskParameters.sectorSizeBytes + 1];
     int readSectorResult = readSector(diskInfo, sector, sectorDataBuffer);
 
     if(readSectorResult == SECTOR_READ_FAILED)

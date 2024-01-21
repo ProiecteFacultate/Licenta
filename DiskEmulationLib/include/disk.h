@@ -1,22 +1,28 @@
 #ifndef DISKEMULATIONLIB_DISK_H
 #define DISKEMULATIONLIB_DISK_H
 
-//V 1.01
+//V 1.02
 
 //the disk methods are based on x86 INT 13 - Diskette BIOS Services
 
-struct DiskInfo {
-    const char* diskDirectory;
-    unsigned int sectorsNumber;
-    unsigned int sectorSizeBytes;
-    unsigned int totalSizeBytes;
-    unsigned int status;
+struct DiskParameters {
+    uint32_t sectorsNumber;
+    uint16_t sectorSizeBytes;
 
-    DiskInfo() {};
-    DiskInfo(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSizeBytes, unsigned long long totalSizeBytes, unsigned int status);
+    DiskParameters() {};
+    DiskParameters(uint32_t sectorsNumber, uint16_t sectorSizeBytes);
 };
 
-DiskInfo initializeDisk(const char* diskDirectory, unsigned int sectorsNumber, unsigned int sectorSize);
+struct DiskInfo {
+    const char* diskDirectory;
+    DiskParameters diskParameters;
+    uint16_t status;
+
+    DiskInfo() {};
+    DiskInfo(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSizeBytes,  uint16_t status);
+};
+
+DiskInfo initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize);
 DiskInfo getDisk(const char* diskDirectory);
 
 
@@ -25,20 +31,20 @@ DiskInfo getDisk(const char* diskDirectory);
 //INT 13, 01
 int getDiskStatus(DiskInfo *diskInfo);
 //INT 13, 02
-int readDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToRead, unsigned int sector, char* buffer, int &numOfSectorsRead);
+int readDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToRead, uint32_t sector, char* buffer, uint32_t &numOfSectorsRead);
 //INT 13, 03
-int writeDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToWrite, unsigned int sector, char* buffer, int &numOfSectorsWritten);
+int writeDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToWrite, uint32_t sector, char* buffer, uint32_t &numOfSectorsWritten);
 //INT 13, 04
-int verifyDiskSectors(DiskInfo *diskInfo, unsigned int numOfSectorsToVerify, unsigned int sector, char* buffer, int &numOfSectorsVerified);
+int verifyDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToVerify, uint32_t sector, char* buffer, uint32_t &numOfSectorsVerified);
 //INT 13, 07
 //clears sector data
-int formatDiskSectors(DiskInfo *diskInfo, unsigned int sector);
+int formatDiskSectors(DiskInfo *diskInfo, uint32_t sector);
 
 
 //Helper methods
-static char* buildFilePath(const char* diskDirectory, int sector);
-static int readSector(DiskInfo *diskInfo, unsigned int sector, char *buffer);
-static int writeSector(DiskInfo *diskInfo, unsigned int sector, char *buffer);
-static int verifySector(DiskInfo *diskInfo, unsigned int sector, char* buffer);
+static char* buildFilePath(const char* diskDirectory, uint32_t sector);
+static int readSector(DiskInfo *diskInfo, uint32_t sector, char *buffer);
+static int writeSector(DiskInfo *diskInfo, uint32_t sector, char *buffer);
+static int verifySector(DiskInfo *diskInfo, uint32_t sector, char* buffer);
 
 #endif 
