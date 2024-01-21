@@ -1,6 +1,6 @@
 set(FIND_DISKEMULATION_PATHS D:/Facultate/Licenta/Implementare/Libraries/DiskEmulation)
 
-find_path(DISKEMULATION_INCLUDE_DIR diskCallsResponse.h
+find_path(DISKEMULATION_INCLUDE_DIR disk.h
         PATH_SUFFIXES include
         PATHS ${FIND_DISKEMULATION_PATHS})
 

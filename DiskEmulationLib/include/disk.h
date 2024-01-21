@@ -1,30 +1,14 @@
+//V 1.03
+
 #ifndef DISKEMULATIONLIB_DISK_H
 #define DISKEMULATIONLIB_DISK_H
 
-//V 1.02
+#include "../include/diskUtils.h"
 
 //the disk methods are based on x86 INT 13 - Diskette BIOS Services
 
-struct DiskParameters {
-    uint32_t sectorsNumber;
-    uint16_t sectorSizeBytes;
-
-    DiskParameters() {};
-    DiskParameters(uint32_t sectorsNumber, uint16_t sectorSizeBytes);
-};
-
-struct DiskInfo {
-    const char* diskDirectory;
-    DiskParameters diskParameters;
-    uint16_t status;
-
-    DiskInfo() {};
-    DiskInfo(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSizeBytes,  uint16_t status);
-};
-
-DiskInfo initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize);
-DiskInfo getDisk(const char* diskDirectory);
-
+DiskInfo* initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize);
+DiskInfo* getDisk(const char* diskDirectory);
 
 //Disk services
 
@@ -42,6 +26,7 @@ int formatDiskSectors(DiskInfo *diskInfo, uint32_t sector);
 
 
 //Helper methods
+static int createMetadataFile(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize);
 static char* buildFilePath(const char* diskDirectory, uint32_t sector);
 static int readSector(DiskInfo *diskInfo, uint32_t sector, char *buffer);
 static int writeSector(DiskInfo *diskInfo, uint32_t sector, char *buffer);

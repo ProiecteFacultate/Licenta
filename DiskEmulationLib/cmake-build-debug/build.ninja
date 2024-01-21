@@ -65,6 +65,14 @@ build CMakeFiles/DiskEmulationLib.dir/src/disk.cpp.obj: CXX_COMPILER__DiskEmulat
   TARGET_COMPILE_PDB = CMakeFiles\DiskEmulationLib.dir\
   TARGET_PDB = DiskEmulationLib.pdb
 
+build CMakeFiles/DiskEmulationLib.dir/src/diskUtils.cpp.obj: CXX_COMPILER__DiskEmulationLib_Debug D$:/Facultate/Licenta/Implementare/DiskEmulationLib/src/diskUtils.cpp || cmake_object_order_depends_target_DiskEmulationLib
+  DEP_FILE = CMakeFiles\DiskEmulationLib.dir\src\diskUtils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles\DiskEmulationLib.dir
+  OBJECT_FILE_DIR = CMakeFiles\DiskEmulationLib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\DiskEmulationLib.dir\
+  TARGET_PDB = DiskEmulationLib.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target DiskEmulationLib
@@ -73,7 +81,7 @@ build CMakeFiles/DiskEmulationLib.dir/src/disk.cpp.obj: CXX_COMPILER__DiskEmulat
 #############################################
 # Link the executable DiskEmulationLib.exe
 
-build DiskEmulationLib.exe: CXX_EXECUTABLE_LINKER__DiskEmulationLib_Debug CMakeFiles/DiskEmulationLib.dir/src/main.cpp.obj CMakeFiles/DiskEmulationLib.dir/src/disk.cpp.obj
+build DiskEmulationLib.exe: CXX_EXECUTABLE_LINKER__DiskEmulationLib_Debug CMakeFiles/DiskEmulationLib.dir/src/main.cpp.obj CMakeFiles/DiskEmulationLib.dir/src/disk.cpp.obj CMakeFiles/DiskEmulationLib.dir/src/diskUtils.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\DiskEmulationLib.dir
@@ -93,16 +101,16 @@ build DiskEmulationLib.exe: CXX_EXECUTABLE_LINKER__DiskEmulationLib_Debug CMakeF
 
 build cmake_object_order_depends_target_disk_emulation: phony || CMakeFiles/disk_emulation.dir
 
-build CMakeFiles/disk_emulation.dir/src/main.cpp.obj: CXX_COMPILER__disk_emulation_Debug D$:/Facultate/Licenta/Implementare/DiskEmulationLib/src/main.cpp || cmake_object_order_depends_target_disk_emulation
-  DEP_FILE = CMakeFiles\disk_emulation.dir\src\main.cpp.obj.d
+build CMakeFiles/disk_emulation.dir/src/disk.cpp.obj: CXX_COMPILER__disk_emulation_Debug D$:/Facultate/Licenta/Implementare/DiskEmulationLib/src/disk.cpp || cmake_object_order_depends_target_disk_emulation
+  DEP_FILE = CMakeFiles\disk_emulation.dir\src\disk.cpp.obj.d
   FLAGS = -g -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\disk_emulation.dir
   OBJECT_FILE_DIR = CMakeFiles\disk_emulation.dir\src
   TARGET_COMPILE_PDB = CMakeFiles\disk_emulation.dir\disk_emulation.pdb
   TARGET_PDB = libdisk_emulation.pdb
 
-build CMakeFiles/disk_emulation.dir/src/disk.cpp.obj: CXX_COMPILER__disk_emulation_Debug D$:/Facultate/Licenta/Implementare/DiskEmulationLib/src/disk.cpp || cmake_object_order_depends_target_disk_emulation
-  DEP_FILE = CMakeFiles\disk_emulation.dir\src\disk.cpp.obj.d
+build CMakeFiles/disk_emulation.dir/src/diskUtils.cpp.obj: CXX_COMPILER__disk_emulation_Debug D$:/Facultate/Licenta/Implementare/DiskEmulationLib/src/diskUtils.cpp || cmake_object_order_depends_target_disk_emulation
+  DEP_FILE = CMakeFiles\disk_emulation.dir\src\diskUtils.cpp.obj.d
   FLAGS = -g -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\disk_emulation.dir
   OBJECT_FILE_DIR = CMakeFiles\disk_emulation.dir\src
@@ -117,7 +125,7 @@ build CMakeFiles/disk_emulation.dir/src/disk.cpp.obj: CXX_COMPILER__disk_emulati
 #############################################
 # Link the static library libdisk_emulation.a
 
-build libdisk_emulation.a: CXX_STATIC_LIBRARY_LINKER__disk_emulation_Debug CMakeFiles/disk_emulation.dir/src/main.cpp.obj CMakeFiles/disk_emulation.dir/src/disk.cpp.obj
+build libdisk_emulation.a: CXX_STATIC_LIBRARY_LINKER__disk_emulation_Debug CMakeFiles/disk_emulation.dir/src/disk.cpp.obj CMakeFiles/disk_emulation.dir/src/diskUtils.cpp.obj
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles\disk_emulation.dir
   POST_BUILD = cd .

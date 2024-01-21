@@ -1,5 +1,5 @@
-#ifndef DISKEMULATIONLIB_DISKCALLSRESPONSE_H
-#define DISKEMULATIONLIB_DISKCALLSRESPONSE_H
+#ifndef DISKEMULATIONLIB_DISKCODES_H
+#define DISKEMULATIONLIB_DISKCODES_H
 
 //Error codes (we add 1000 to each error code in order to not mismatch with other response values)
 #define EC_NO_ERROR 1000
@@ -15,6 +15,9 @@
 
 
 //Helper methods related
+#define METADATA_SECTOR_WRITE_FAILED (-1)
+#define METADATA_SECTOR_WRITE_SUCCESS 0
+
 #define SECTOR_READ_FAILED (-1)
 #define SECTOR_READ_SUCCESS 0
 
@@ -28,4 +31,4 @@
 
 
 
-#endif //DISKEMULATIONLIB_DISKCALLSRESPONSE_H
+#endif //DISKEMULATIONLIB_DISKCODES_H

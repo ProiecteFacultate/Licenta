@@ -4,27 +4,16 @@
 #include "iostream"
 
 #include "../include/disk.h"
-#include "../include/diskCallsResponse.h"
+#include "../include/diskUtils.h"
+#include "../include/diskCodes.h"
 
-
-DiskParameters::DiskParameters(uint32_t sectorsNumber, uint16_t sectorSizeBytes) {
-    this->sectorsNumber = sectorsNumber;
-    this->sectorSizeBytes = sectorSizeBytes;
-}
-
-DiskInfo::DiskInfo(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSizeBytes, uint16_t status)   //DiskInfo constructor
+DiskInfo* initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize)
 {
-    this->diskDirectory = diskDirectory;
-    this->diskParameters = DiskParameters(sectorsNumber, sectorSizeBytes);
-    this->status = status;
+    if(createMetadataFile(diskDirectory, sectorsNumber, sectorSize) == METADATA_SECTOR_WRITE_FAILED)
+    {
+        return nullptr;
+    }
 
-//    char *fullFilePath = buildFilePath(diskDirectory, sector);
-//    HANDLE fileHandle = CreateFile(fullFilePath,GENERIC_READ,FILE_SHARE_READ,nullptr,CREATE_NEW,
-//                                   FILE_ATTRIBUTE_NORMAL,nullptr);
-}
-
-DiskInfo initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize)
-{
     for(uint32_t sector = 0; sector < sectorsNumber; sector++) {
         char *fullFilePath = buildFilePath(diskDirectory, sector);
 
@@ -34,18 +23,40 @@ DiskInfo initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint1
         if(fileHandle == INVALID_HANDLE_VALUE && GetLastError() != ERROR_FILE_EXISTS)
         {
             CloseHandle(fileHandle);
-            return  DiskInfo(nullptr, 0, 0, EC_NO_ERROR);
+            return nullptr;
         }
 
         CloseHandle(fileHandle);
     }
 
-    return  DiskInfo(diskDirectory, sectorsNumber, sectorSize, EC_NO_ERROR);
+    return new DiskInfo(diskDirectory, sectorsNumber, sectorSize, EC_NO_ERROR);
 }
 
-DiskInfo getDisk(const char* diskDirectory)
+DiskInfo* getDisk(const char* diskDirectory)
 {
+    size_t metadataFilePathLen = strlen(diskDirectory) + 32;
+    char* metadataFilePath = new char[metadataFilePathLen];
+    snprintf(metadataFilePath, metadataFilePathLen, "%s\\Metadata", diskDirectory);
 
+    HANDLE fileHandle = CreateFile(metadataFilePath,OFN_READONLY,0,nullptr,OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL,nullptr);
+
+    if(fileHandle == INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(fileHandle);
+        return nullptr;
+    }
+
+    DWORD dwBytesRead = 0;
+    DiskMetadata diskMetadata;
+    bool readFileResult = ReadFile(fileHandle, &diskMetadata, sizeof(diskMetadata), &dwBytesRead, nullptr);
+    if(!readFileResult)
+    {
+        CloseHandle(fileHandle);
+        return nullptr;
+    }
+
+    return new DiskInfo(diskDirectory, diskMetadata.sectorsNumber, diskMetadata.sectorSizeBytes, EC_NO_ERROR);
 }
 
 //////////////
@@ -214,6 +225,35 @@ int formatDiskSectors(DiskInfo *diskInfo, uint32_t sector)
 //
 ////////////// HELPER FUNCTIONS //////////////
 
+static int createMetadataFile(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize)
+{
+    size_t metadataFilePathLen = strlen(diskDirectory) + 32;
+    char* metadataFilePath = new char[metadataFilePathLen];
+    snprintf(metadataFilePath, metadataFilePathLen, "%s\\Metadata", diskDirectory);
+
+    HANDLE metadataFileHandle = CreateFile(metadataFilePath,OF_READWRITE,FILE_SHARE_WRITE,nullptr,CREATE_NEW,
+                                           FILE_ATTRIBUTE_NORMAL,nullptr);
+
+    if(metadataFileHandle == INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(metadataFileHandle);
+        return METADATA_SECTOR_WRITE_FAILED;
+    }
+
+    DiskMetadata diskMetadata = DiskMetadata(sectorsNumber, sectorSize);
+    DWORD bytesWritten;
+    bool writeFileResult = WriteFile(metadataFileHandle, &diskMetadata,sizeof(diskMetadata),&bytesWritten,nullptr);
+    if(!writeFileResult || bytesWritten != sizeof(diskMetadata))
+    {
+        CloseHandle(metadataFileHandle);
+        return METADATA_SECTOR_WRITE_FAILED;
+    }
+
+    CloseHandle(metadataFileHandle);
+
+    return METADATA_SECTOR_WRITE_SUCCESS;
+}
+
 static char* buildFilePath(const char* diskDirectory, uint32_t sector)
 {
     size_t fullFilePathLen = strlen(diskDirectory) + 32;
@@ -299,3 +339,4 @@ static int verifySector(DiskInfo *diskInfo, uint32_t sector, char* buffer)
 
     return SECTOR_VERIFY_EQUAL_DATA;
 }
+
