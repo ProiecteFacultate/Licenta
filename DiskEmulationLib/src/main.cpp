@@ -7,25 +7,35 @@
 #include "../include/diskUtils.h"
 
 int main() {
-    initializeDisk("D:\\Facultate\\Licenta\\Implementare\\HardDisk", 16, 512);
+    char* diskDirectory = "D:\\Facultate\\Licenta\\Implementare\\HardDisk";
+    DiskInfo* diskInfo = getDisk(diskDirectory);
+    if(diskInfo == nullptr)
+    {
+        diskInfo = initializeDisk(diskDirectory, 16, 512);
+        std::cout << "Disk initialized\n";
+    }
+    else
+    {
+        std::cout << "Sectors number: " << diskInfo->diskParameters.sectorsNumber << "\n";
+        std::cout << "Sector size: " << diskInfo->diskParameters.sectorSizeBytes << "\n";
+        std:: cout << "Disk size: " << diskInfo->diskParameters.sectorsNumber * diskInfo->diskParameters.sectorSizeBytes << "\n";
+    }
 
-    DiskInfo* disk = getDisk("D:\\Facultate\\Licenta\\Implementare\\HardDisk");
-    std::cout << "Sectors number: " << disk->diskParameters.sectorsNumber << "\n";
-    std::cout << "Sector size: " << disk->diskParameters.sectorSizeBytes << "\n";
-    std::cout << "Disk size: " << disk->diskParameters.sectorsNumber *  disk->diskParameters.sectorSizeBytes << "\n";
+    char* writeBuffer = new char[diskInfo->diskParameters.sectorSizeBytes * 4];
+    copy_buffer(writeBuffer,
+                "Hello WorldHello WorldAAAAAAAAA\0ZZ\0o WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello TTTTTTWorldHello WorldHello WorldKKK",
+                diskInfo->diskParameters.sectorSizeBytes * 4);
+    uint32_t numOfSectorsWritten = 0;
+    writeDiskSectors(diskInfo, 4, 0, writeBuffer, numOfSectorsWritten);
+    std::cout << "Number of sectors written: " << numOfSectorsWritten << "\n";
 
-//    char* writeBuffer = new char[diskInfo.diskParameters.sectorSizeBytes * 3];
-//    strcpy(writeBuffer, "Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World\0"
-//    );
-//    uint32_t numOfSectorsWritten = 0;
-//    writeDiskSectors(&diskInfo, 4, 0, writeBuffer, numOfSectorsWritten);
-//    std::cout << "Number of sectors written: " << numOfSectorsWritten << "\n";
-//    char* readBuffer = new char[diskInfo.diskParameters.sectorSizeBytes * 3];
-//    uint32_t numOfSectorsRead = 0;
-//    readDiskSectors(&diskInfo, 3, 0, readBuffer, numOfSectorsRead);
-//    std::cout << "Number of sectors read: " << numOfSectorsRead << "\n";
-//    std::cout << readBuffer << "\n";
-//
+    char* readBuffer = new char[diskInfo->diskParameters.sectorSizeBytes * 3];
+    uint32_t numOfSectorsRead = 0;
+    readDiskSectors(diskInfo, 3, 0, readBuffer, numOfSectorsRead);
+    for(int i = 0; i < diskInfo->diskParameters.sectorSizeBytes * 3; i++)
+        std::cout << readBuffer[i];
+    std::cout << "\n\nNumber of sectors read: " << numOfSectorsRead << "\n";
+
 //    char* verifyBuffer = new char[diskInfo.diskParameters.sectorSizeBytes * 3];
 //    strcpy(verifyBuffer, "Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World\0"
 //    );
