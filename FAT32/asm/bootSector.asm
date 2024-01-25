@@ -5,15 +5,15 @@ nop
 
 bdb_oem:                    db 'MSWIN4.1'           ; 8 bytes
 bdb_bytes_per_sector:       dw 512
-bdb_sectors_per_cluster:    db 1
-bdb_reserved_sectors:       dw 1
+bdb_sectors_per_cluster:    db 64
+bdb_reserved_sectors:       dw 32
 bdb_fat_count:              db 2
-bdb_dir_entries_count:      dw 0E0h
-bdb_total_sectors:          dw 2880                 ; 2880 * 512 = 1.44MB
-bdb_media_descriptor_type:  db 0F0h                 ; F0 = 3.5" floppy disk
+bdb_dir_entries_count:      dw 0
+bdb_total_sectors:          dw 0
+bdb_media_descriptor_type:  db 0FAh
 bdb_sectors_per_fat:        dw 9                    ; 9 sectors/fat
-bdb_sectors_per_track:      dw 18
-bdb_heads:                  dw 2
+bdb_sectors_per_track:      dw 34
+bdb_heads:                  dw 34
 bdb_hidden_sectors:         dd 0
 bdb_large_sector_count:     dd 0
 
