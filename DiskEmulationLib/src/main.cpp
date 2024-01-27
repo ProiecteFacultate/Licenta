@@ -7,11 +7,12 @@
 #include "../include/diskUtils.h"
 
 int main() {
-    char* diskDirectory = "D:\\Facultate\\Licenta\\Implementare\\HardDisk";
+    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_144Mb";
     DiskInfo* diskInfo = getDisk(diskDirectory);
     if(diskInfo == nullptr)
     {
         diskInfo = initializeDisk(diskDirectory, 16, 512);
+        fillDiskInitialMemory(diskInfo);
         std::cout << "Disk initialized\n";
     }
     else
@@ -22,7 +23,7 @@ int main() {
     }
 
     char* writeBuffer = new char[diskInfo->diskParameters.sectorSizeBytes * 4];
-    copy_buffer(writeBuffer,
+    memcpy(writeBuffer,
                 "Hello WorldHello WorldAAAAAAAAA\0ZZ\0o WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello TTTTTTWorldHello WorldHello WorldKKK",
                 diskInfo->diskParameters.sectorSizeBytes * 4);
     uint32_t numOfSectorsWritten = 0;

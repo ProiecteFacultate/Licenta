@@ -74,6 +74,7 @@ typedef struct
 
 bool checkBootSectorsInitialized(DiskInfo* diskInfo);
 void initializeBootSectors(DiskInfo* diskInfo);
-
+BootSector* readBootSector(DiskInfo* diskInfo);
+FsInfo * readFsInfo(DiskInfo* diskInfo);
 
 #endif

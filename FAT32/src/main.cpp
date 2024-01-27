@@ -10,11 +10,12 @@
 #include "../include/fat32Utils.h"
 
 int main() {
-    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_144Mb";
+    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_144Mb_2";
     DiskInfo* diskInfo = getDisk(diskDirectory);
     if(diskInfo == nullptr)
     {
         diskInfo = initializeDisk(diskDirectory, 288000, 512);
+        fillDiskInitialMemory(diskInfo);
         std::cout << "Disk initialized\n";
     }
     else
@@ -33,6 +34,9 @@ int main() {
     {
         std::cout << "Boot sectors already initialized\n";
     }
+
+    BootSector* bootSector = readBootSector(diskInfo);
+    FsInfo* fsInfo = readFsInfo(diskInfo);
 
     return 0;
 }

@@ -1,4 +1,4 @@
-//V 1.04
+//V 1.05
 
 #ifndef DISKEMULATIONLIB_DISK_H
 #define DISKEMULATIONLIB_DISK_H
@@ -8,6 +8,7 @@
 //the disk methods are based on x86 INT 13 - Diskette BIOS Services
 
 DiskInfo* initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize);
+int fillDiskInitialMemory(DiskInfo *diskInfo);
 DiskInfo* getDisk(const char* diskDirectory);
 
 //Disk services

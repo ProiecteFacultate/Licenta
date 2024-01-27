@@ -34,6 +34,31 @@ DiskInfo* initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint
     return new DiskInfo(diskDirectory, sectorsNumber, sectorSize, EC_NO_ERROR);
 }
 
+int fillDiskInitialMemory(DiskInfo *diskInfo)
+{
+    uint32_t numOfSectorsWritten = 0;
+    char* buffer = new char[diskInfo->diskParameters.sectorSizeBytes];
+    memset(buffer, '\0', diskInfo->diskParameters.sectorSizeBytes);
+
+    for(uint32_t sector = 0; sector < diskInfo->diskParameters.sectorsNumber; sector++)
+    {
+        int writeResult = writeDiskSectors(diskInfo, 1, sector, buffer, numOfSectorsWritten);
+        int retryWriteCount = 2;
+        while(writeResult != EC_NO_ERROR && retryWriteCount > 0)
+        {
+            writeResult = writeDiskSectors(diskInfo, 1, sector, buffer, numOfSectorsWritten);
+            retryWriteCount--;
+        }
+
+        if(writeResult != EC_NO_ERROR && retryWriteCount == 0)
+        {
+            throw std::runtime_error("Failed to fill disk initial memory");
+        }
+    }
+
+    return EC_NO_ERROR;
+}
+
 DiskInfo* getDisk(const char* diskDirectory)
 {
     size_t metadataFilePathLen = strlen(diskDirectory) + 32;
@@ -294,7 +319,7 @@ static int writeSector(DiskInfo *diskInfo, uint32_t sector, char *buffer)
     }
 
     char* writeBuffer = new char[diskInfo->diskParameters.sectorSizeBytes];
-    copy_buffer(writeBuffer, buffer, diskInfo->diskParameters.sectorSizeBytes);
+    memcpy(writeBuffer, buffer, diskInfo->diskParameters.sectorSizeBytes);
 
     DWORD bytesWritten = 0;
     bool writeFileResult = WriteFile(fileHandle,writeBuffer,diskInfo->diskParameters.sectorSizeBytes, &bytesWritten,nullptr);

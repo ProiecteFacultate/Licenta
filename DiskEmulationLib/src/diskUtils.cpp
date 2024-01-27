@@ -27,15 +27,6 @@ DiskInfo::DiskInfo(const char* diskDirectory, uint32_t sectorsNumber, uint16_t s
     this->status = status;
 }
 
-
-void copy_buffer(char* destination, const char* source, size_t num)
-{
-    for(int i = 0; i < num; i++)
-    {
-        destination[i] = source[i];
-    }
-}
-
 void concat_buffer(char* destination, const char* source, size_t destinationInitialSize, size_t num)
 {
     for(int i = 0; i < num; i++)
