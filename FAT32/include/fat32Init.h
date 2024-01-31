@@ -4,8 +4,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifndef FAT32_FAT32_H
-#define FAT32_FAT32_H
+#ifndef FAT32INIT_FAT32INIT_H
+#define FAT32INIT_FAT32INIT_H
 
 
 typedef struct
@@ -75,6 +75,6 @@ typedef struct
 bool checkBootSectorsInitialized(DiskInfo* diskInfo);
 void initializeBootSectors(DiskInfo* diskInfo);
 BootSector* readBootSector(DiskInfo* diskInfo);
-FsInfo * readFsInfo(DiskInfo* diskInfo);
+FsInfo * readFsInfo(DiskInfo* diskInfo, BootSector* bootSector);
 
 #endif

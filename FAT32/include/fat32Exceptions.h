@@ -1,6 +1,0 @@
-#ifndef FAT32_FAT32EXCEPTIONS_H
-#define FAT32_FAT32EXCEPTIONS_H
-
-
-
-#endif

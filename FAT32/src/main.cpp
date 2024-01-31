@@ -7,10 +7,11 @@
 #include "disk.h"
 #include "diskUtils.h"
 #include "diskCodes.h"
-#include "../include/fat32Utils.h"
+#include "../include/fat32Init.h"
+#include "../include/fat32.h"
 
 int main() {
-    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_144Mb_2";
+    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_144Mb";
     DiskInfo* diskInfo = getDisk(diskDirectory);
     if(diskInfo == nullptr)
     {
@@ -36,7 +37,13 @@ int main() {
     }
 
     BootSector* bootSector = readBootSector(diskInfo);
-    FsInfo* fsInfo = readFsInfo(diskInfo);
+    FsInfo* fsInfo = readFsInfo(diskInfo, bootSector);
+
+    char* parentPath = new char[100];
+    memcpy(parentPath, "Root/Level_1\0", 13);
+    char* newDir = new char[7];
+    memcpy(newDir, "NewDir\0", 7);
+    createFolder(diskInfo, bootSector, parentPath, newDir);
 
     return 0;
 }

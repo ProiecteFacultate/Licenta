@@ -6,8 +6,7 @@
 #include "../include/disk.h"
 #include "../include/diskUtils.h"
 #include "../include/diskCodes.h"
-#include "../include/fat32Utils.h"
-#include "../include/fat32Exceptions.h"
+#include "../include/fat32Init.h"
 
 
 bool checkBootSectorsInitialized(DiskInfo* diskInfo)
@@ -98,11 +97,11 @@ BootSector* readBootSector(DiskInfo* diskInfo)
     return bootSector;
 }
 
-FsInfo * readFsInfo(DiskInfo* diskInfo)
+FsInfo* readFsInfo(DiskInfo* diskInfo, BootSector* bootSector)
 {
     char* readBuffer = new char[diskInfo->diskParameters.sectorSizeBytes];
     uint32_t numberOfSectorsRead = 0;
-    readDiskSectors(diskInfo, 1, 1, readBuffer, numberOfSectorsRead);
+    readDiskSectors(diskInfo, 1, bootSector->FsInfoSector, readBuffer, numberOfSectorsRead);
 
     FsInfo * fsInfo = (FsInfo*)&readBuffer[480];
     memcpy((char*)&fsInfo->LeadSignature, &readBuffer[0], 4);
