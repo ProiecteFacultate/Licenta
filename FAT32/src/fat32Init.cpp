@@ -85,6 +85,19 @@ void initializeBootSectors(DiskInfo* diskInfo)
     delete[] secondBootSectorData;
 }
 
+void initializeFat(DiskInfo* diskInfo, BootSector* bootSector)
+{
+    uint32_t firstFatSector = bootSector->ReservedSectors;
+    char* firstFatSectorData = new char[bootSector->BytesPerSector];
+    memset(firstFatSectorData, '\0', bootSector->BytesPerSector);
+
+    firstFatSectorData[0] = '\x01';
+    firstFatSectorData[4] = '\x01';
+
+    uint32_t numberOfSectorsWritten = 0;
+    writeDiskSectors(diskInfo, 1, firstFatSector, firstFatSectorData, numberOfSectorsWritten);
+}
+
 BootSector* readBootSector(DiskInfo* diskInfo)
 {
     char* readBuffer = new char[diskInfo->diskParameters.sectorSizeBytes];

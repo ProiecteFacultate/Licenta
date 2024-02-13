@@ -10,10 +10,11 @@
 #ifndef FAT32_FAT32_H
 #define FAT32_FAT32_H
 
-uint32_t getNextSector(DiskInfo* diskInfo, BootSector* bootSector, uint32_t actualCluster);
-int createFolder(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParentPath, char* directoryName);
+int getNextSector(DiskInfo* diskInfo, BootSector* bootSector, uint32_t actualCluster, uint32_t& nextCluster);
+int createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParentPath, char* directoryName);
 
-static DirectoryEntry* findDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirEntry, char* searchedDir);
-static DirectoryEntry* findDirectoryEntryInCluster(BootSector* bootSector, char* clusterData, char* dirName);
+static int findDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, char* searchedDirectoryName, DirectoryEntry** searchedDirectoryEntry);
+static int findDirectoryEntryInCluster(BootSector* bootSector, char* clusterData, char* dirName, DirectoryEntry** directoryEntry);
+static int searchEmptyCluster(DiskInfo* diskInfo, BootSector* bootSector, uint32_t& emptyClusterNumber);
 
 #endif

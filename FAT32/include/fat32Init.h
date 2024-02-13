@@ -9,7 +9,7 @@
 
 
 typedef struct
-{                                                //144MB -> 288.000 sectors -> 4,500 clusters (64 sectors/cluster)
+{                                                //144MiB -> 288.000 sectors -> 4,500 clusters (64 sectors/cluster)
     // bios parameter block
     uint8_t BootJumpInstruction[3];
     uint8_t OemIdentifier[8];                    //'MSWIN4.1'     -fixed
@@ -75,6 +75,7 @@ typedef struct
 bool checkBootSectorsInitialized(DiskInfo* diskInfo);
 void initializeBootSectors(DiskInfo* diskInfo);
 BootSector* readBootSector(DiskInfo* diskInfo);
+void initializeFat(DiskInfo* diskInfo, BootSector* bootSector);
 FsInfo * readFsInfo(DiskInfo* diskInfo, BootSector* bootSector);
 
 #endif
