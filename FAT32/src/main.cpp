@@ -9,14 +9,17 @@
 #include "diskCodes.h"
 #include "../include/fat32Init.h"
 #include "../include/fat32.h"
+#include "../include/fat32Api.h"
+
+bool creatingDiskAndFileSystem = false;
 
 int initialLoad(DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo)
 {
-    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_144Mib";
+    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_512Kib";
     *diskInfo = getDisk(diskDirectory);
-    if(diskInfo == nullptr)
+    if(*diskInfo == nullptr)
     {
-        *diskInfo = initializeDisk(diskDirectory, 288000, 512);
+        *diskInfo = initializeDisk(diskDirectory, 1024, 512);
         fillDiskInitialMemory(*diskInfo);
         std::cout << "Disk initialized\n";
     }
@@ -40,7 +43,10 @@ int initialLoad(DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo)
     *bootSector = readBootSector(*diskInfo);
     *fsInfo = readFsInfo(*diskInfo, *bootSector);
 
-   // initializeFat(*diskInfo, *bootSector);   //TODO initialize only when file system created
+    if(creatingDiskAndFileSystem == true)
+    {
+        initializeFat(*diskInfo, *bootSector);   //TODO initialize only when file system created
+    }
 }
 
 int main() {
@@ -50,12 +56,16 @@ int main() {
 
     initialLoad(&diskInfo, &bootSector, &fsInfo);
 
-    char* parentPath = new char[100];
-    memcpy(parentPath, "Root\0", 13);
-    char* newDir = new char[7];
-    memcpy(newDir, "NewDir\0", 7);
-    int createDirectoryResult = createDirectory(diskInfo, bootSector, parentPath, newDir);
-    std::cout << "Directory creation: " << createDirectoryResult << "\n";
+    if(creatingDiskAndFileSystem == false)
+    {
+        char* parentPath = new char[100];
+        memcpy(parentPath, "Root\0", 5);
+        char* newDir = new char[10];
+        memcpy(newDir, "MyNewD.ex\0", 10);
+        int createDirectoryResult = createDirectory(diskInfo, bootSector, parentPath, newDir);
+        std::cout << "Directory creation: " << createDirectoryResult << "\n";
+    }
+
 
     return 0;
 }

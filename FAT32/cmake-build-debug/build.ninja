@@ -70,8 +70,15 @@ build CMakeFiles/FAT32.dir/src/fat32.cpp.obj: CXX_COMPILER__FAT32_Debug D$:/Facu
   OBJECT_DIR = CMakeFiles\FAT32.dir
   OBJECT_FILE_DIR = CMakeFiles\FAT32.dir\src
 
-build CMakeFiles/FAT32.dir/src/fat32MethodUtils.cpp.obj: CXX_COMPILER__FAT32_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32MethodUtils.cpp || cmake_object_order_depends_target_FAT32
-  DEP_FILE = CMakeFiles\FAT32.dir\src\fat32MethodUtils.cpp.obj.d
+build CMakeFiles/FAT32.dir/src/fat32FunctionsUtils.cpp.obj: CXX_COMPILER__FAT32_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32FunctionsUtils.cpp || cmake_object_order_depends_target_FAT32
+  DEP_FILE = CMakeFiles\FAT32.dir\src\fat32FunctionsUtils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\FAT32.dir
+  OBJECT_FILE_DIR = CMakeFiles\FAT32.dir\src
+
+build CMakeFiles/FAT32.dir/src/fat32Api.cpp.obj: CXX_COMPILER__FAT32_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32Api.cpp || cmake_object_order_depends_target_FAT32
+  DEP_FILE = CMakeFiles\FAT32.dir\src\fat32Api.cpp.obj.d
   FLAGS = -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\FAT32.dir
@@ -85,7 +92,7 @@ build CMakeFiles/FAT32.dir/src/fat32MethodUtils.cpp.obj: CXX_COMPILER__FAT32_Deb
 #############################################
 # Link the executable FAT32.exe
 
-build FAT32.exe: CXX_EXECUTABLE_LINKER__FAT32_Debug CMakeFiles/FAT32.dir/src/main.cpp.obj CMakeFiles/FAT32.dir/src/fat32Init.cpp.obj CMakeFiles/FAT32.dir/src/fat32.cpp.obj CMakeFiles/FAT32.dir/src/fat32MethodUtils.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
+build FAT32.exe: CXX_EXECUTABLE_LINKER__FAT32_Debug CMakeFiles/FAT32.dir/src/main.cpp.obj CMakeFiles/FAT32.dir/src/fat32Init.cpp.obj CMakeFiles/FAT32.dir/src/fat32.cpp.obj CMakeFiles/FAT32.dir/src/fat32FunctionsUtils.cpp.obj CMakeFiles/FAT32.dir/src/fat32Api.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
   FLAGS = -g
   LINK_LIBRARIES = D:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\FAT32.dir

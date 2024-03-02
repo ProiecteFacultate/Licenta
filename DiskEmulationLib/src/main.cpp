@@ -6,7 +6,8 @@
 #include "../include/disk.h"
 #include "../include/diskUtils.h"
 
-int main() {
+void startup()
+{
     char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_144Mb";
     DiskInfo* diskInfo = getDisk(diskDirectory);
     if(diskInfo == nullptr)
@@ -24,8 +25,8 @@ int main() {
 
     char* writeBuffer = new char[diskInfo->diskParameters.sectorSizeBytes * 4];
     memcpy(writeBuffer,
-                "Hello WorldHello WorldAAAAAAAAA\0ZZ\0o WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello TTTTTTWorldHello WorldHello WorldKKK",
-                diskInfo->diskParameters.sectorSizeBytes * 4);
+           "Hello WorldHello WorldAAAAAAAAA\0ZZ\0o WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello TTTTTTWorldHello WorldHello WorldKKK",
+           diskInfo->diskParameters.sectorSizeBytes * 4);
     uint32_t numOfSectorsWritten = 0;
     writeDiskSectors(diskInfo, 4, 0, writeBuffer, numOfSectorsWritten);
     std::cout << "Number of sectors written: " << numOfSectorsWritten << "\n";
@@ -44,7 +45,26 @@ int main() {
 //    verifyDiskSectors(&diskInfo, 3, 0, verifyBuffer, numOfSectorsVerified);
 //    std::cout << "Num of sectors verified: " << numOfSectorsVerified;
 
-  //  formatDiskSectors(&diskInfo, 0);
+    //  formatDiskSectors(&diskInfo, 0);
+}
 
+struct Test {
+    uint32_t val1;
+    uint32_t val2;
+    uint32_t val3;
+    uint32_t val4;
+    uint32_t val5;
+    uint32_t val6;
+    uint32_t val7;
+    uint32_t val8;
+}__attribute__((packed));
+
+int main() {
+    uint32_t x = 17;
+    char* y = new char[4];
+    memset(y, '\0', 4);
+    y = (char*) &(x);
+
+   // startup();
     return 0;
 }

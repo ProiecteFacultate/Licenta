@@ -76,7 +76,8 @@
 				0,
 				2,
 				4,
-				6
+				6,
+				10
 			]
 		}
 	],
@@ -121,7 +122,8 @@
 				0,
 				2,
 				4,
-				6
+				6,
+				10
 			]
 		},
 		{
@@ -132,7 +134,8 @@
 				3,
 				5,
 				7,
-				8
+				8,
+				9
 			]
 		}
 	],
@@ -168,13 +171,13 @@
 		},
 		{
 			"backtrace" : 1,
-			"path" : "include/fat32MethodUtils.h",
+			"path" : "include/fat32FunctionsUtils.h",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "src/fat32MethodUtils.cpp",
+			"path" : "src/fat32FunctionsUtils.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -186,6 +189,17 @@
 			"backtrace" : 1,
 			"path" : "include/fat32Attributes.h",
 			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/fat32Api.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/fat32Api.cpp",
+			"sourceGroupIndex" : 0
 		}
 	],
 	"type" : "EXECUTABLE"

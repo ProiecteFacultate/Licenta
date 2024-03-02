@@ -1,13 +1,13 @@
 #ifndef FAT32_FAT32CODES_H
 #define FAT32_FAT32CODES_H
 
-#define FAT_VALUE_FREE                                   0
-#define FAT_VALUE_RESERVED_1                             1                                        //Reserved for internal purposes
-#define FAT_VALUE_USED                                   2
-#define FAT_VALUE_RESERVED_2                             3                                        //Reserved in some contexts
-#define FAT_VALUE_RESERVED_3                             4                                        //Reserved; do not use
-#define FAT_VALUE_BAD_SECTOR                             5
-#define FAT_VALUE_EOC                                    6
+#define FAT_VALUE_FREE                                   0x00000000
+#define FAT_VALUE_RESERVED_1                             0x00000001                               //Reserved for internal purposes
+#define FAT_VALUE_USED                                   0x00000002                               //this is a not assignable value!!!!!!!!
+#define FAT_VALUE_RESERVED_2                             0x0FFFFFF0                               //Reserved in some contexts
+#define FAT_VALUE_RESERVED_3                             0x0FFFFFF6                               //Reserved; do not use
+#define FAT_VALUE_BAD_SECTOR                             0x0FFFFFF7
+#define FAT_VALUE_EOC                                    0x0FFFFFFF
 
 #define DIR_ENTRY_NO_MORE_ENTRIES                        0
 #define DIR_ENTRY_FOUND                                  1
@@ -17,6 +17,7 @@
 
 #define DIR_CREATION_FAILED                              0
 #define DIR_CREATION_SUCCESS                             1
+#define DIR_CREATION_INVALID_DIRNAME                     2
 
 #define CLUSTER_SEARCH_FAILED                            0
 #define CLUSTER_SEARCH_SUCCESS                           1
@@ -33,5 +34,10 @@
 
 #define DIR_SETUP_FIRST_CLUSTER_FAILED                   0
 #define DIR_SETUP_FIRST_CLUSTER_SUCCESS                  1
+
+#define FAT_VALUE_RETRIEVE_FAILED                        (-1)
+
+#define DIR_ADD_NEW_CLUSTER_FAILED                       0
+#define DIR_ADD_NEW_CLUSTER_SUCCESS                      1
 
 #endif

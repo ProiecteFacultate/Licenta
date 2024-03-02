@@ -6,6 +6,8 @@
 #include "../include/disk.h"
 #include "../include/diskUtils.h"
 #include "../include/diskCodes.h"
+#include "../include/fat32FunctionsUtils.h"
+#include "../include/fat32Codes.h"
 #include "../include/fat32Init.h"
 
 
@@ -35,12 +37,44 @@ bool checkBootSectorsInitialized(DiskInfo* diskInfo)
 }
 
 void initializeBootSectors(DiskInfo* diskInfo)
-{
+{//TODO use bootsector structure instead of bytes
+    BootSector* bootSectorData = new BootSector();
+
+    //BPB
+    char* bootJumpInstruction = "\xEB\x0C\x90";
+    memcpy(bootSectorData->BootJumpInstruction, bootJumpInstruction, 3);
+    memcpy(bootSectorData->OemIdentifier, "MSWIN4.1", 8);
+    bootSectorData->BytesPerSector = 512;
+    bootSectorData->SectorsPerCluster = 16;
+    bootSectorData->ReservedSectors = 32;
+    bootSectorData->FatCount = 2;
+    bootSectorData->RootDirEntryCount = 0;
+    bootSectorData->TotalSectors = 0;
+    bootSectorData->MediaDescriptorType = 99;
+    bootSectorData->X_SectorsPerFat = 0;
+    bootSectorData->SectorsPerTrack = 99;
+    bootSectorData->Heads = 99;
+    bootSectorData->HiddenSectors = 0;
+    bootSectorData->LargeSectorCount = 0;
+
+    //EBPB
+    bootSectorData->SectorsPerFat = 36;
+    bootSectorData->Flags = 20224; //40xF00
+    bootSectorData->FatVersion =0;
+    bootSectorData->RootDirCluster = 2;
+    bootSectorData->FsInfoSector = 1;
+    bootSectorData->BackupBootSector = 6;
+    memset(bootSectorData->Reserved_1, 0, 12);
+    bootSectorData->Drive = 0;
+    bootSectorData->FlagsWinNT = 0;
+    bootSectorData->Signature = 99;
+    bootSectorData->VolumeId = 0;
+    memcpy(bootSectorData->VolumeLabel, "LABEL      ", 11);
+    memcpy(bootSectorData->SystemId, "FAT32   ", 8);
+    bootSectorData->BootSignature = 43605; //(0xAA55)
+
     char* firstBootSectorBuffer = new char[diskInfo->diskParameters.sectorSizeBytes];
-    char* firstBootSectorData = new char[90];
-    memcpy(firstBootSectorData, "\xEB\x0C\x90MSWIN4.1\x00\x02\x40\x20\x00\x02\x00\x00\x00\x00\xFA\x00\x00\x22\x00\x22\x00\x00\x00\x00\x00\x00\x00\x00\x00" // BPB + EBPB
-     "\x22\x00\x00\x00\x00\x4F\x00\x00\x02\x00\x00\x00\x01\x00\x06\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x29\x00\x00\x00\x00LABEL      FAT32   ", 90);
-    memcpy(firstBootSectorBuffer, firstBootSectorData, 90);
+    memcpy(firstBootSectorBuffer, bootSectorData, 90);
     memcpy(firstBootSectorBuffer + 510, "\x55\xAA", 2);
 
     uint32_t numberOfSectorsWritten = 0;
@@ -80,22 +114,21 @@ void initializeBootSectors(DiskInfo* diskInfo)
     }
 
     delete[] firstBootSectorBuffer;
-    delete[] firstBootSectorData;
     delete[] SecondBootSectorBuffer;
     delete[] secondBootSectorData;
 }
 
 void initializeFat(DiskInfo* diskInfo, BootSector* bootSector)
 {
-    uint32_t firstFatSector = bootSector->ReservedSectors;
     char* firstFatSectorData = new char[bootSector->BytesPerSector];
     memset(firstFatSectorData, '\0', bootSector->BytesPerSector);
 
-    firstFatSectorData[0] = '\x01';
-    firstFatSectorData[4] = '\x01';
+    *(uint32_t*)&firstFatSectorData[0] = FAT_VALUE_RESERVED_1;
+    *(uint32_t*)&firstFatSectorData[4] = FAT_VALUE_RESERVED_1;
+    *(uint32_t*)&firstFatSectorData[8] = FAT_VALUE_EOC; //root first cluster (root starts from cluster 2 so the 2 previous ones are ignored)
 
     uint32_t numberOfSectorsWritten = 0;
-    writeDiskSectors(diskInfo, 1, firstFatSector, firstFatSectorData, numberOfSectorsWritten);
+    writeDiskSectors(diskInfo, 1, getFirstFatSector(bootSector), firstFatSectorData, numberOfSectorsWritten);
 }
 
 BootSector* readBootSector(DiskInfo* diskInfo)
