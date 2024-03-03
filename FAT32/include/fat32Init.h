@@ -70,7 +70,7 @@ typedef struct
     uint16_t LastWriteTime;
     uint16_t LastWriteDate;
     uint16_t FirstClusterLow;
-    uint32_t FileSize;
+    uint32_t FileSize; //for directories containing subdirectories, this counts only the bytes in the clusters corresponding to this directory entry, without its subdirectories size
 } __attribute__((packed)) DirectoryEntry;
 
 

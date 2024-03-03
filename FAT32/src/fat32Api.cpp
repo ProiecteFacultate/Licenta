@@ -2,12 +2,13 @@
 #include "string"
 #include "string.h"
 #include "iostream"
+#include "vector"
 
 #include "../include/disk.h"
 #include "../include/diskUtils.h"
 #include "../include/diskCodes.h"
 #include "../include/fat32Init.h"
-#include "../include/fat32FunctionsUtils.h"
+#include "../include/Utils.h"
 #include "../include/fat32Codes.h"
 #include "../include/fat32Attributes.h"
 #include "../include/fat32.h"
@@ -60,4 +61,26 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
 
     delete actualDirectoryEntry;
     return DIR_CREATION_SUCCESS;
+}
+
+uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath)
+{
+    char* actualDirectoryName = strtok(directoryPath, "/");
+    DirectoryEntry* actualDirectoryEntry = nullptr;
+    DirectoryEntry* searchedDirectoryEntry = new DirectoryEntry();
+
+    while(actualDirectoryName != nullptr)
+    {
+        int searchDirectoryEntryResult = findDirectoryEntryByDirectoryName(diskInfo, bootSector, actualDirectoryEntry,
+                                                                           actualDirectoryName, &searchedDirectoryEntry);
+        if(searchDirectoryEntryResult == DIR_ENTRY_FOUND)
+            actualDirectoryEntry = searchedDirectoryEntry;
+        else
+        {
+            delete searchedDirectoryEntry, delete actualDirectoryName; //don't delete actualDirectoryEntry because is either null, or points to the same address as searchedDirectoryEntry
+            return DIR_CREATION_FAILED;
+        }
+
+        actualDirectoryName = strtok(nullptr, "/");
+    }
 }

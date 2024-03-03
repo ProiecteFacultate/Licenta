@@ -9,6 +9,8 @@
 #include "../include/diskCodes.h"
 #include "../include/fat32Init.h"
 #include "../include/fat32.h"
+#include "../include/fat32Codes.h"
+#include "../include/fat32Attributes.h"
 
 bool checkDirectoryNameValidity(const char* directoryName)
 {
@@ -100,37 +102,4 @@ void formatDirectoryName(const char* directoryName, char* formattedName)
             index++;
         }
     }
-}
-
-uint16_t getFirstFatSector(BootSector* bootSector)
-{
-    return bootSector->ReservedSectors;   //first fat table comes immediately after the reserved sectors
-}
-
-uint32_t getFirstSectorForCluster(BootSector* bootSector, uint32_t cluster)
-{
-    return bootSector->ReservedSectors + bootSector->FatCount * bootSector->SectorsPerFat + (cluster - bootSector->RootDirCluster) * bootSector->SectorsPerCluster;
-}
-
-uint32_t getTotalNumberOfDataClusters(DiskInfo* diskInfo, BootSector* bootSector)
-{
-    uint32_t numberOfDataSectors = diskInfo->diskParameters.sectorsNumber - (bootSector->ReservedSectors + (bootSector->FatCount * bootSector->SectorsPerFat));
-    return numberOfDataSectors / bootSector->SectorsPerCluster;
-}
-
-void copyNewDirectoryTimeToDotDirectoryEntries(DirectoryEntry* newDirectoryEntry, DirectoryEntry* dotDirectoryEntry, DirectoryEntry* dotDotDirectoryEntry)
-{
-    dotDirectoryEntry->CreationDate = newDirectoryEntry->CreationDate;
-    dotDirectoryEntry->CreationTime = newDirectoryEntry->CreationTime;
-    dotDirectoryEntry->CreationTimeTenths = newDirectoryEntry->CreationTimeTenths;
-    dotDirectoryEntry->LastAccessedDate = newDirectoryEntry->LastAccessedDate;
-    dotDirectoryEntry->LastWriteDate = newDirectoryEntry->LastWriteDate;
-    dotDirectoryEntry->LastWriteTime = newDirectoryEntry->LastWriteTime;
-
-    dotDotDirectoryEntry->CreationDate = newDirectoryEntry->CreationDate;
-    dotDotDirectoryEntry->CreationTime = newDirectoryEntry->CreationTime;
-    dotDotDirectoryEntry->CreationTimeTenths = newDirectoryEntry->CreationTimeTenths;
-    dotDotDirectoryEntry->LastAccessedDate = newDirectoryEntry->LastAccessedDate;
-    dotDotDirectoryEntry->LastWriteDate = newDirectoryEntry->LastWriteDate;
-    dotDotDirectoryEntry->LastWriteTime = newDirectoryEntry->LastWriteTime;
 }

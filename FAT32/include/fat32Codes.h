@@ -40,4 +40,8 @@
 #define DIR_ADD_NEW_CLUSTER_FAILED                       0
 #define DIR_ADD_NEW_CLUSTER_SUCCESS                      1
 
+#define CLUSTER_SEARCH_IN_CHAN_FAILED                    0
+#define CLUSTER_SEARCH_IN_CHAN_SUCCESS                   1
+#define CLUSTER_SEARCH_IN_CHAN_EOC                       2                                         //if we reach eoc, before reaching our cluster in chain
+
 #endif
