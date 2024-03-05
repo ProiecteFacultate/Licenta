@@ -3,6 +3,7 @@
 #include "string.h"
 #include "stdio.h"
 #include "windows.h"
+#include "vector"
 
 #include "disk.h"
 #include "diskUtils.h"
@@ -58,12 +59,20 @@ int main() {
 
     if(creatingDiskAndFileSystem == false)
     {
-        char* parentPath = new char[100];
+        char* parentPath = new char[5];
         memcpy(parentPath, "Root\0", 5);
         char* newDir = new char[10];
         memcpy(newDir, "MyNewD.ex\0", 10);
         int createDirectoryResult = createDirectory(diskInfo, bootSector, parentPath, newDir);
         std::cout << "Directory creation: " << createDirectoryResult << "\n";
+
+        std::vector<DirectoryEntry*> subDirectories;
+        int getSubdirectoriesResult = getSubDirectories(diskInfo, bootSector, parentPath, subDirectories);
+        std::cout << "Get subdirectories result: " << getSubdirectoriesResult << "\n";
+        for(auto dir : subDirectories)
+        {
+            std::cout << dir->FileName << "\n";
+        }
     }
 
 

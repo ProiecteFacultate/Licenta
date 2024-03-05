@@ -4,13 +4,7 @@
 #include "algorithm"
 #include "iostream"
 
-#include "../include/disk.h"
-#include "../include/diskUtils.h"
-#include "../include/diskCodes.h"
-#include "../include/fat32Init.h"
 #include "../include/fat32.h"
-#include "../include/fat32Codes.h"
-#include "../include/fat32Attributes.h"
 
 bool checkDirectoryNameValidity(const char* directoryName)
 {

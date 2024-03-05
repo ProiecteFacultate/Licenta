@@ -10,13 +10,23 @@
 #include "../include/fat32Init.h"
 #include "../include/fat32.h"
 #include "../include/Utils.h"
-#include "../include/fat32Codes.h"
+#include "../include/codes/fat32Codes.h"
 #include "../include/fat32Attributes.h"
 #include "../include/fat32FunctionUtils.h"
+
+uint32_t getClusterSize(BootSector* bootSector)
+{
+    return bootSector->SectorsPerCluster * bootSector->BytesPerSector;
+}
 
 uint16_t getFirstFatSector(BootSector* bootSector)
 {
     return bootSector->ReservedSectors;   //first fat table comes immediately after the reserved sectors
+}
+
+uint32_t getFirstClusterForDirectory(BootSector* bootSector, DirectoryEntry* directoryEntry)
+{
+    return ((uint32_t) directoryEntry->FirstClusterHigh << 16) | (uint32_t) directoryEntry->FirstClusterLow;
 }
 
 uint32_t getFirstSectorForCluster(BootSector* bootSector, uint32_t cluster)
@@ -129,4 +139,72 @@ void createDirectoryEntry(char* directoryName, uint8_t directoryAttribute, uint3
     directoryEntry->LastAccessedDate = directoryEntry->CreationDate;
     directoryEntry->FirstClusterLow = firstCluster;
     directoryEntry->FileSize = 64; //dot and dotdot directoryEntries
+
+    delete[] formattedName;
+}
+
+uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* newDotDotEntry)
+{
+    uint32_t numOfSectorsRead = 0;
+    uint32_t numberOfSectorsWritten = 0;
+    uint32_t nextCluster = 0;
+    char* firstSectorInSubDirectoryData = new char[bootSector->BytesPerSector];
+
+    char* clusterData = new char[bootSector->SectorsPerCluster * bootSector->BytesPerSector];
+    uint32_t actualCluster = getFirstClusterForDirectory(bootSector, givenDirectoryEntry);
+    uint32_t readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
+                                          clusterData, numOfSectorsRead);
+    uint32_t numberOfClusterInParentDirectory = 0; //the cluster number in chain
+    uint32_t occupiedBytesInCluster = 0; //if the cluster is full, then it is cluster size, otherwise smaller
+    uint32_t offsetInCluster = 64; //we start from 64 because in the first sector of the first cluster we got dot & dotdot
+
+    while(readResult == EC_NO_ERROR)
+    {
+        if(givenDirectoryEntry->FileSize / getClusterSize(bootSector) <= numberOfClusterInParentDirectory)
+            occupiedBytesInCluster = getClusterSize(bootSector);
+        else
+            occupiedBytesInCluster = givenDirectoryEntry->FileSize % getClusterSize(bootSector);
+
+        //iterate over subDirectories entries in this cluster and update their dotdot entry
+        for(; offsetInCluster < occupiedBytesInCluster; offsetInCluster += 32)
+        {
+            DirectoryEntry* subDirectoryEntry = (DirectoryEntry*)&clusterData[offsetInCluster];
+            uint32_t subDirectoryFirstSector = getFirstSectorForCluster(bootSector, getFirstClusterForDirectory(bootSector, subDirectoryEntry));
+            readResult = readDiskSectors(diskInfo, 1, subDirectoryFirstSector,clusterData, numOfSectorsRead);
+
+            if(readResult != EC_NO_ERROR)
+            {
+                delete[] clusterData, delete[] firstSectorInSubDirectoryData;
+                return DIRECTORY_UPDATE_SUBDIRECTORIES_DOT_DOT_FAILED;
+            }
+
+            memcpy(firstSectorInSubDirectoryData + 32, newDotDotEntry, 32);
+            uint32_t writeResult = writeDiskSectors(diskInfo, 1, subDirectoryFirstSector, firstSectorInSubDirectoryData, numberOfSectorsWritten);
+
+            if(writeResult != EC_NO_ERROR)
+            {
+                delete[] clusterData, delete[] firstSectorInSubDirectoryData;
+                return DIRECTORY_UPDATE_SUBDIRECTORIES_DOT_DOT_FAILED;
+            }
+        }
+
+        //get the next cluster of the given directory
+        uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+
+        if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
+        {
+            delete[] clusterData, delete[] firstSectorInSubDirectoryData;
+            return DIRECTORY_UPDATE_SUBDIRECTORIES_DOT_DOT_FAILED;
+        }
+        else if(getNextClusterResult == FAT_VALUE_EOC)
+        {
+            delete[] clusterData, delete[] firstSectorInSubDirectoryData;
+            return DIRECTORY_UPDATE_SUBDIRECTORIES_DOT_DOT_SUCCESS;
+        }
+
+        actualCluster = nextCluster;
+        numOfSectorsRead = 0;
+        readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
+                                     clusterData,numOfSectorsRead);
+    }
 }

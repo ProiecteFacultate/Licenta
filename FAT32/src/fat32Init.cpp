@@ -8,7 +8,7 @@
 #include "../include/diskCodes.h"
 #include "../include/Utils.h"
 #include "../include/fat32FunctionUtils.h"
-#include "../include/fat32Codes.h"
+#include "../include/codes/fat32Codes.h"
 #include "../include/fat32Init.h"
 
 
@@ -38,7 +38,7 @@ bool checkBootSectorsInitialized(DiskInfo* diskInfo)
 }
 
 void initializeBootSectors(DiskInfo* diskInfo)
-{//TODO use bootsector structure instead of bytes
+{
     BootSector* bootSectorData = new BootSector();
 
     //BPB
@@ -112,6 +112,31 @@ void initializeBootSectors(DiskInfo* diskInfo)
     if(retryWriteCount == 0)
     {
         throw std::runtime_error("Failed to initialize second boot sector");
+    }
+
+    //TODO root directoryEntry
+    DirectoryEntry* rootDirectoryEntry = new DirectoryEntry();
+    rootDirectoryEntry->FileSize = 64; //root dir does not contain dot & dotdot entries, but we consider that they exist for symmetry with other clusters
+    rootDirectoryEntry->FirstClusterLow = bootSectorData->RootDirCluster;
+    rootDirectoryEntry->FirstClusterHigh = bootSectorData->RootDirCluster >> 16;
+    char* rootFirstSectorData = new char[bootSectorData->BytesPerSector];
+    memset(rootFirstSectorData, 0, bootSectorData->BytesPerSector);
+    memcpy(rootFirstSectorData, rootDirectoryEntry, 32);
+
+    retryWriteCount = 2;
+    numberOfSectorsWritten = 0;
+    writeResult =  writeDiskSectors(diskInfo, 1, getFirstSectorForCluster(bootSectorData, bootSectorData->RootDirCluster),
+                                    rootFirstSectorData, numberOfSectorsWritten);
+    while(writeResult != EC_NO_ERROR && retryWriteCount > 0)
+    {
+        writeResult =  writeDiskSectors(diskInfo, 1, getFirstSectorForCluster(bootSectorData, bootSectorData->RootDirCluster),
+                                        rootFirstSectorData, numberOfSectorsWritten);
+        retryWriteCount--;
+    }
+
+    if(retryWriteCount == 0)
+    {
+        throw std::runtime_error("Failed to write root directory entry");
     }
 
     delete[] firstBootSectorBuffer;

@@ -10,8 +10,13 @@
 #ifndef FAT32_FAT32FUNCTIONUTILS_H
 #define FAT32_FAT32FUNCTIONUTILS_H
 
+//Helper function that know about the file system (they have access to structures like DiskInfo, BootSector, DirectoryEntry
+
+uint32_t getClusterSize(BootSector* bootSector);
 
 uint16_t getFirstFatSector(BootSector* bootSector);
+
+uint32_t getFirstClusterForDirectory(BootSector* bootSector, DirectoryEntry* directoryEntry);
 
 uint32_t getFirstSectorForCluster(BootSector* bootSector, uint32_t cluster);
 
@@ -28,5 +33,8 @@ uint32_t findNthClusterInChain(DiskInfo* diskInfo, BootSector* bootSector, uint3
 
 //Populates a given directory entry with data at creation
 void createDirectoryEntry(char* directoryName, uint8_t directoryAttribute, uint32_t firstCluster, DirectoryEntry* directoryEntry);
+
+//Being given a directory entry, traverse all its subdirectories, and update their dotdot entry (used when a perent directory changes its file size and want its subdirectories to know)
+uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* newDotDotEntry);
 
 #endif //FAT32_FAT32FUNCTIONUTILS_H
