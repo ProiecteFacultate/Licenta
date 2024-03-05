@@ -13,6 +13,7 @@
 #include "../include/fat32Api.h"
 
 bool creatingDiskAndFileSystem = false;
+bool debugMode = false;
 
 int initialLoad(DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo)
 {
@@ -57,6 +58,24 @@ int main() {
 
     initialLoad(&diskInfo, &bootSector, &fsInfo);
 
+    if(debugMode == true)
+    {
+        uint32_t numOfSectorsRead = 0;
+        char* rootSectorData = new char[bootSector->BytesPerSector];
+        readDiskSectors(diskInfo, 1, 104, rootSectorData, numOfSectorsRead);
+        char* sectorData1 = new char[bootSector->BytesPerSector];
+        readDiskSectors(diskInfo, 1, 120, sectorData1, numOfSectorsRead);
+        char* sectorData2 = new char[bootSector->BytesPerSector];
+        readDiskSectors(diskInfo, 1, 136, sectorData2, numOfSectorsRead);
+        char* sectorData3 = new char[bootSector->BytesPerSector];
+        readDiskSectors(diskInfo, 1, 152, sectorData3, numOfSectorsRead);
+
+//        char* sectorData1 = new char[bootSector->BytesPerSector];
+//        readDiskSectors(diskInfo, 1, 120, sectorData1, numOfSectorsRead);
+//        DirectoryEntry* dir = (DirectoryEntry*)&sectorData1[0];
+        return 0;
+    }
+
     if(creatingDiskAndFileSystem == false)
     {
         char* parentPath = new char[5];
@@ -66,12 +85,15 @@ int main() {
         int createDirectoryResult = createDirectory(diskInfo, bootSector, parentPath, newDir);
         std::cout << "Directory creation: " << createDirectoryResult << "\n";
 
-        std::vector<DirectoryEntry*> subDirectories;
+        std::vector<DirectoryEntry> subDirectories;
         int getSubdirectoriesResult = getSubDirectories(diskInfo, bootSector, parentPath, subDirectories);
         std::cout << "Get subdirectories result: " << getSubdirectoriesResult << "\n";
         for(auto dir : subDirectories)
         {
-            std::cout << dir->FileName << "\n";
+            char* fileName = new char[12];
+            memcpy(fileName, dir.FileName, 11);
+            fileName[11] = 0;
+            std::cout << fileName << "\n";
         }
     }
 

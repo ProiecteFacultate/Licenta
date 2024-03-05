@@ -65,7 +65,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
     return DIR_CREATION_SUCCESS;
 }
 
-uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry*> subDirectories)
+uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry>& subDirectories)
 {
     char* actualDirectoryName = strtok(directoryPath, "/");
     DirectoryEntry* actualDirectoryEntry = nullptr;
@@ -106,16 +106,17 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
         uint32_t numOfSectorsRead = 0;
         int readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster), 
                                          clusterData, numOfSectorsRead);
-        
+
         if(readResult == EC_NO_ERROR)
         {
+            DirectoryEntry* directoryEntry = new DirectoryEntry();
+
             for(uint32_t offset = 64; offset < clusterOccupiedSpace; offset += 32) //first 2 entries are dot & dotdot (in case of root they don't exist but the first is data about root
             {
-                DirectoryEntry* directoryEntry = new DirectoryEntry();
                 memcpy(directoryEntry, clusterData + offset, 32);
-                subDirectories.push_back(directoryEntry);
+                subDirectories.push_back(*directoryEntry);
             }
-            delete[] clusterData;
+            delete[] clusterData, delete directoryEntry;
         }
         else
         {

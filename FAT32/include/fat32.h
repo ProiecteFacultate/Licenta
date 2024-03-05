@@ -38,6 +38,6 @@ uint32_t addNewClusterToDirectory(DiskInfo* diskInfo, BootSector* bootSector, ui
 uint32_t setupFirstClusterInDirectory(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, uint32_t clusterNumber, DirectoryEntry* newDirectoryEntry);
 
 //Given a directory entry, updated the entry in its parent, and also all its subdirectories dotdot
-uint32_t updateDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* newDirectoryEntry)
+uint32_t updateDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* newDirectoryEntry);
 
 #endif

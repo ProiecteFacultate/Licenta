@@ -16,7 +16,7 @@
 
 
 uint32_t findDirectoryEntryByDirectoryName(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, char* searchedDirectoryName,
-                                                  DirectoryEntry** searchedDirectoryEntry)
+                                           DirectoryEntry** searchedDirectoryEntry)
 {
     uint32_t numOfSectorsRead = 0;
     uint32_t givenDirectoryEntryOffsetInParentCluster = 0;
@@ -178,13 +178,13 @@ uint32_t updateFat(DiskInfo* diskInfo, BootSector* bootSector, uint32_t clusterN
     return FAT_UPDATE_SUCCESS;
 }
 
-uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, char* newDirectoryName, //TODO increase parent file size when add child
+uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, char* newDirectoryName,
                                                    uint32_t firstEmptyCluster, DirectoryEntry* newDirectoryEntry)
 {
-    uint32_t directoryFirstCluster = ((uint32_t) parentDirectoryEntry->FirstClusterHigh << 16) | (uint32_t) parentDirectoryEntry->FirstClusterLow;
     uint32_t firstClusterInChainWithFreeSpace = parentDirectoryEntry->FileSize / getClusterSize(bootSector); //number of cluster IN CHAIN: so 0,1,2,3
     uint32_t cluster = 0; //the cluster number of the first cluster with free space in the directory
-    uint32_t findClusterResult = findNthClusterInChain(diskInfo, bootSector, directoryFirstCluster, firstClusterInChainWithFreeSpace, cluster);
+    uint32_t findClusterResult = findNthClusterInChain(diskInfo, bootSector, getFirstClusterForDirectory(bootSector, parentDirectoryEntry),
+                                                       firstClusterInChainWithFreeSpace, cluster);
 
     if(findClusterResult == CLUSTER_SEARCH_IN_CHAN_FAILED)
         return DIR_ENTRY_ADD_FAILED;
@@ -215,7 +215,15 @@ uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, BootSector* bootSector, D
     uint32_t writeResult =  writeDiskSectors(diskInfo, 1, sector, sectorData, numOfSectorsWritten);
 
     delete[] sectorData;
-    return (writeResult == EC_NO_ERROR) ? DIR_ENTRY_ADD_SUCCESS : DIR_ENTRY_ADD_FAILED;
+
+    if(writeResult != EC_NO_ERROR)
+        return DIR_ENTRY_ADD_FAILED;
+
+    parentDirectoryEntry->FileSize += 32; //we also want to update the parent directory entry file size
+    //we can use parentDirectoryEntry for both with no problem
+    uint32_t updateParentDirectoryEntryResult = updateDirectoryEntry(diskInfo, bootSector, parentDirectoryEntry, parentDirectoryEntry);
+
+    return (updateParentDirectoryEntryResult == DIRECTORY_ENTRY_UPDATE_SUCCESS) ? DIR_ENTRY_ADD_SUCCESS : DIR_ENTRY_ADD_FAILED;
 }
 
 uint32_t addNewClusterToDirectory(DiskInfo* diskInfo, BootSector* bootSector, uint32_t lastClusterInDirectory, uint32_t& newCluster)
@@ -242,16 +250,6 @@ uint32_t setupFirstClusterInDirectory(DiskInfo* diskInfo, BootSector* bootSector
 
     dotDirectoryEntry->FirstClusterHigh = clusterNumber >> 16;
     dotDirectoryEntry->FirstClusterLow = clusterNumber;
-
-//    if(memcmp(parentDirectoryEntry->FileName, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 11) != 0)  //if it is 0 it means the parent is the root directory
-//    {
-//        memcpy(dotDotDirectoryEntry, parentDirectoryEntry, 32);
-//    }
-//    else //case for root directory, for which the first cluster is 2
-//    {
-//        dotDotDirectoryEntry->FirstClusterHigh = bootSector->RootDirCluster >> 16;
-//        dotDotDirectoryEntry->FirstClusterLow = bootSector->RootDirCluster;
-//    }
 
     memcpy(dotDotDirectoryEntry, parentDirectoryEntry, 32);
 
@@ -285,8 +283,8 @@ uint32_t updateDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, Direct
 
     if(givenDirectoryFirstCluster == bootSector->RootDirCluster) //it means that the given directory entry is root
     {
-        memcpy(sectorData + 32, newDirectoryEntry, 32);
-        uint32_t writeResult =  writeDiskSectors(diskInfo, 1, getFirstSectorForCluster(bootSector, givenDirectoryFirstCluster),
+        memcpy(sectorData, newDirectoryEntry, 32);
+        uint32_t writeResult = writeDiskSectors(diskInfo, 1, getFirstSectorForCluster(bootSector, givenDirectoryFirstCluster),
                                                  sectorData, numOfSectorsWritten);
 
         delete[] sectorData;
@@ -299,7 +297,7 @@ uint32_t updateDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, Direct
     }
 
     DirectoryEntry* givenDirectoryDotDotEntry = (DirectoryEntry*)&sectorData[32]; //aka parent directory entry (but only with file size & first cluster)
-    char* clusterData = new char[bootSector->SectorsPerCluster * bootSector->BytesPerSector];
+    char* clusterData = new char[getClusterSize(bootSector)];
     uint32_t actualCluster = getFirstClusterForDirectory(bootSector, givenDirectoryDotDotEntry); //the first cluster of the given directory's parent
     readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
                                           clusterData, numOfSectorsRead);

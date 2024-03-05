@@ -150,7 +150,7 @@ uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootS
     uint32_t nextCluster = 0;
     char* firstSectorInSubDirectoryData = new char[bootSector->BytesPerSector];
 
-    char* clusterData = new char[bootSector->SectorsPerCluster * bootSector->BytesPerSector];
+    char* clusterData = new char[getClusterSize(bootSector)];
     uint32_t actualCluster = getFirstClusterForDirectory(bootSector, givenDirectoryEntry);
     uint32_t readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
                                           clusterData, numOfSectorsRead);
@@ -170,7 +170,7 @@ uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootS
         {
             DirectoryEntry* subDirectoryEntry = (DirectoryEntry*)&clusterData[offsetInCluster];
             uint32_t subDirectoryFirstSector = getFirstSectorForCluster(bootSector, getFirstClusterForDirectory(bootSector, subDirectoryEntry));
-            readResult = readDiskSectors(diskInfo, 1, subDirectoryFirstSector,clusterData, numOfSectorsRead);
+            readResult = readDiskSectors(diskInfo, 1, subDirectoryFirstSector,firstSectorInSubDirectoryData, numOfSectorsRead);
 
             if(readResult != EC_NO_ERROR)
             {
@@ -206,5 +206,7 @@ uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootS
         numOfSectorsRead = 0;
         readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
                                      clusterData,numOfSectorsRead);
+
+        offsetInCluster = 0; //64 is only for the first cluster, for the rest of them is 0
     }
 }
