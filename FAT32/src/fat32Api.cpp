@@ -28,7 +28,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
     while(actualDirectoryName != nullptr)
     {
         uint32_t searchDirectoryEntryResult = findDirectoryEntryByDirectoryName(diskInfo, bootSector, actualDirectoryEntry,
-                                                                           actualDirectoryName, &searchedDirectoryEntry);
+                                                                           actualDirectoryName, searchedDirectoryEntry);
         if(searchDirectoryEntryResult == DIR_ENTRY_FOUND)
             actualDirectoryEntry = searchedDirectoryEntry;
         else
@@ -57,6 +57,15 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
         return DIR_CREATION_FAILED;
     }
 
+    uint32_t parentAlreadyContainsDirectoryWithGivenName = findDirectoryEntryByDirectoryName(diskInfo, bootSector, actualDirectoryEntry,
+                                                                                             newDirectoryName, new DirectoryEntry());
+
+    if(parentAlreadyContainsDirectoryWithGivenName == DIR_ENTRY_FOUND)
+    {
+        delete actualDirectoryEntry;
+        return DIR_CREATION_FAILED;
+    }
+
     DirectoryEntry* newDirectoryEntry = new DirectoryEntry(); //the directory entry for the newly created directory
     addDirectoryEntryToParent(diskInfo, bootSector, actualDirectoryEntry, newDirectoryName, emptyClusterNumber, newDirectoryEntry);
     setupFirstClusterInDirectory(diskInfo, bootSector, actualDirectoryEntry ,emptyClusterNumber, newDirectoryEntry);
@@ -74,7 +83,7 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
     while(actualDirectoryName != nullptr)
     {
         int searchDirectoryEntryResult = findDirectoryEntryByDirectoryName(diskInfo, bootSector, actualDirectoryEntry,
-                                                                           actualDirectoryName, &searchedDirectoryEntry);
+                                                                           actualDirectoryName, searchedDirectoryEntry);
         if(searchDirectoryEntryResult == DIR_ENTRY_FOUND)
             actualDirectoryEntry = searchedDirectoryEntry;
         else
@@ -86,7 +95,7 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
         actualDirectoryName = strtok(nullptr, "/");
     }
 
-    uint32_t actualCluster = ((uint32_t) actualDirectoryEntry->FirstClusterHigh << 16) | (uint32_t) actualDirectoryEntry->FirstClusterLow;  //directory first cluster
+    uint32_t actualCluster = getFirstClusterForDirectory(bootSector, actualDirectoryEntry);  //directory first cluster
 
     while (true)
     {   uint32_t nextCluster = 0;

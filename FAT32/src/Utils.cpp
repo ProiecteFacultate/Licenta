@@ -43,35 +43,39 @@ bool checkDirectoryNameValidity(const char* directoryName)
     return true;
 }
 
-bool compareDirectoryNames(char* expected, const char* actual)
+bool compareDirectoryNames(char* expected, const char* actual) //WARN pass expected with null in the end!!!!
 {
-    for(int i = 0; i < 11; i++)
-        expected[i] = toupper(expected[i]);
+    int index;
 
-    int beforeDotIndex = 0;
-    while(beforeDotIndex < 8 && expected[beforeDotIndex] != '.')
-    {
-        if(expected[beforeDotIndex] != actual[beforeDotIndex])
+    for(index = 0; index < strlen(expected); index++)
+        expected[index] = toupper(expected[index]);
+
+    int dotIndexInExpected = 12;  //let's consider only the cases where there is no more than one dot !! DO NOT ADD MORE THAN 1 DOT
+    for(index = 0; index < strlen(expected); index++)
+        if(expected[index] == '.')
+            dotIndexInExpected = index;
+
+    if(dotIndexInExpected > 8)
+        return false;  //it means that the expected name (non extension part) is bigger than 8
+
+    for(index = 0; index < dotIndexInExpected; index++)
+        if(expected[index] != actual[index])
             return false;
 
-        beforeDotIndex++;
-    }
-
-    int afterDotIndex = 8;
-    while(expected[afterDotIndex] != '\0') //expected will have null value at the end (after the extension)
-    {
-        if(expected[afterDotIndex] != actual[afterDotIndex])
+    int indexInExtensionPart = 0;
+    for(index = dotIndexInExpected + 1; index < strlen(expected); index++, indexInExtensionPart++)
+        if(expected[index] != actual[8 + indexInExtensionPart])
             return false;
 
-        afterDotIndex++;
-    }
+    if(indexInExtensionPart > 3) //it means that extension in expected was > 3
+        return false;
 
-    for(int i = beforeDotIndex; i < 8; i++)
-        if(actual[i] != 0x20)
+    for(index = indexInExtensionPart; index < 3; index++) //same as on the comment below but for extension
+        if(actual[8 + index] != 0x20)
             return false;
 
-    for(int i = afterDotIndex; i < 11; i++)
-        if(actual[i] != 0x20)
+    for(index = dotIndexInExpected; index < 8; index++)  //in case names match on first part, but then after name (without extension) ends in expected, it is continued in actual
+        if(actual[index] != 0x20)
             return false;
 
     return true;

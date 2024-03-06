@@ -160,10 +160,8 @@ uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootS
 
     while(readResult == EC_NO_ERROR)
     {
-        if(givenDirectoryEntry->FileSize / getClusterSize(bootSector) <= numberOfClusterInParentDirectory)
-            occupiedBytesInCluster = getClusterSize(bootSector);
-        else
-            occupiedBytesInCluster = givenDirectoryEntry->FileSize % getClusterSize(bootSector);
+        occupiedBytesInCluster = givenDirectoryEntry->FileSize >= getClusterSize(bootSector) * (numberOfClusterInParentDirectory + 1) ? getClusterSize(bootSector)
+                                                                                                                     : givenDirectoryEntry->FileSize % getClusterSize(bootSector);
 
         //iterate over subDirectories entries in this cluster and update their dotdot entry
         for(; offsetInCluster < occupiedBytesInCluster; offsetInCluster += 32)

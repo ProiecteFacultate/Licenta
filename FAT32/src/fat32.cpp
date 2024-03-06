@@ -16,7 +16,7 @@
 
 
 uint32_t findDirectoryEntryByDirectoryName(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, char* searchedDirectoryName,
-                                           DirectoryEntry** searchedDirectoryEntry)
+                                           DirectoryEntry* searchedDirectoryEntry)
 {
     uint32_t numOfSectorsRead = 0;
     uint32_t givenDirectoryEntryOffsetInParentCluster = 0;
@@ -33,14 +33,14 @@ uint32_t findDirectoryEntryByDirectoryName(DiskInfo* diskInfo, BootSector* bootS
             return DIR_ENTRY_SEARCH_ERROR;
         }
 
-        memcpy(*searchedDirectoryEntry, rootFirstSectorBuffer, 32);
+        memcpy(searchedDirectoryEntry, rootFirstSectorBuffer, 32);
 
         delete[] rootFirstSectorBuffer;
         return DIR_ENTRY_FOUND;
     }
 
-    char* clusterData = new char[bootSector->SectorsPerCluster * bootSector->BytesPerSector];
-    uint32_t actualCluster = ((uint32_t) parentDirectoryEntry->FirstClusterHigh << 16) | (uint32_t) parentDirectoryEntry->FirstClusterLow;
+    char* clusterData = new char[getClusterSize(bootSector)];
+    uint32_t actualCluster = getFirstClusterForDirectory(bootSector, parentDirectoryEntry);
     uint32_t readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
                                      clusterData, numOfSectorsRead);
     uint32_t numberOfClusterInParentDirectory = 0; //the cluster number in chain
@@ -48,10 +48,8 @@ uint32_t findDirectoryEntryByDirectoryName(DiskInfo* diskInfo, BootSector* bootS
 
     while(readResult == EC_NO_ERROR)
     {
-        if(parentDirectoryEntry->FileSize / getClusterSize(bootSector) <= numberOfClusterInParentDirectory)
-            occupiedBytesInCluster = getClusterSize(bootSector);
-        else
-            occupiedBytesInCluster = parentDirectoryEntry->FileSize % getClusterSize(bootSector);
+        occupiedBytesInCluster = parentDirectoryEntry->FileSize >= getClusterSize(bootSector) * (numberOfClusterInParentDirectory + 1) ? getClusterSize(bootSector)
+                                                                                                                  : parentDirectoryEntry->FileSize % getClusterSize(bootSector);
 
         uint32_t searchDirectoryEntryInClusterResult = findDirectoryEntryInGivenClusterData(bootSector, clusterData,searchedDirectoryName,
                                                                                             searchedDirectoryEntry, occupiedBytesInCluster, givenDirectoryEntryOffsetInParentCluster);
@@ -86,23 +84,29 @@ uint32_t findDirectoryEntryByDirectoryName(DiskInfo* diskInfo, BootSector* bootS
     return DIR_ENTRY_SEARCH_ERROR;
 }
 
-uint32_t findDirectoryEntryInGivenClusterData(BootSector* bootSector, char* clusterData, char* directoryName, DirectoryEntry** directoryEntry, uint32_t occupiedBytesInCluster,
+uint32_t findDirectoryEntryInGivenClusterData(BootSector* bootSector, char* clusterData, char* directoryName, DirectoryEntry* directoryEntry, uint32_t occupiedBytesInCluster,
                                               uint32_t& offset)
 {
     offset = 0; //in case of first cluster of a directory, indexing from 0 will also check dot & dotdot, but this won't affect the result
+    char* desiredFileName = new char[12];
+    desiredFileName[11] = '\0';
 
     while(offset < occupiedBytesInCluster)
     {
-        *directoryEntry = (DirectoryEntry*)&clusterData[offset];
+        directoryEntry = (DirectoryEntry*)&clusterData[offset];
+        memcpy(desiredFileName, directoryName, 11);
 
-        if(compareDirectoryNames(directoryName, (char*) (*directoryEntry)->FileName))
+        if(compareDirectoryNames(desiredFileName, (char*) directoryEntry->FileName))
         {
-            memcpy(*directoryEntry, &clusterData[offset], 32); //otherwise, if we just cast, when cluster data gets changed, directoryEntry data also gets
+            memcpy(directoryEntry, &clusterData[offset], 32); //otherwise, if we just cast, when cluster data gets changed, directoryEntry data also gets
+            delete[] desiredFileName;
             return DIR_ENTRY_FOUND;
         }
 
         offset += 32;
     }
+
+    delete[] desiredFileName;
 
     if(offset >= getClusterSize(bootSector))
         return DIR_ENTRY_NOT_FOUND_IN_CLUSTER;
@@ -303,17 +307,14 @@ uint32_t updateDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, Direct
                                           clusterData, numOfSectorsRead);
     uint32_t numberOfClusterInParentDirectory = 0; //the cluster number in chain
     uint32_t occupiedBytesInCluster = 0; //if the cluster is full, then it is cluster size, otherwise smaller
-    DirectoryEntry* mock = new DirectoryEntry();
 
     while(readResult == EC_NO_ERROR)
     {
-        if(givenDirectoryEntry->FileSize / getClusterSize(bootSector) <= numberOfClusterInParentDirectory)
-            occupiedBytesInCluster = getClusterSize(bootSector);
-        else
-            occupiedBytesInCluster = givenDirectoryEntry->FileSize % getClusterSize(bootSector);
+        occupiedBytesInCluster = givenDirectoryEntry->FileSize >= getClusterSize(bootSector) * (numberOfClusterInParentDirectory + 1) ? getClusterSize(bootSector)
+                                                                                                                      : givenDirectoryEntry->FileSize % getClusterSize(bootSector);
 
         uint32_t searchDirectoryEntryInClusterResult = findDirectoryEntryInGivenClusterData(bootSector, clusterData, (char*) givenDirectoryEntry->FileName,
-                                                                                            &mock, occupiedBytesInCluster, givenDirectoryEntryOffsetInParentCluster);
+                                                                                            new DirectoryEntry(), occupiedBytesInCluster, givenDirectoryEntryOffsetInParentCluster);
 
         if(searchDirectoryEntryInClusterResult == DIR_ENTRY_FOUND)
         {

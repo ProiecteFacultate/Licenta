@@ -15,10 +15,10 @@
 
 //Being given a directory name to look for, and its parent's directory entry, looks for the directory name in its parent's cluster(S), returning its directory entry
 uint32_t findDirectoryEntryByDirectoryName(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, char* searchedDirectoryName,
-                                                  DirectoryEntry** searchedDirectoryEntry);
+                                                  DirectoryEntry* searchedDirectoryEntry);
 
 //Being given a directory name to look for, and a buffer containing a cluster's data, looks for the directory name in that buffer
-uint32_t findDirectoryEntryInGivenClusterData(BootSector* bootSector, char* clusterData, char* directoryName, DirectoryEntry** directoryEntry, uint32_t occupiedBytesInCluster,
+uint32_t findDirectoryEntryInGivenClusterData(BootSector* bootSector, char* clusterData, char* directoryName, DirectoryEntry* directoryEntry, uint32_t occupiedBytesInCluster,
                                               uint32_t& offset);
 
 //Looks in fat for an empty cluster
