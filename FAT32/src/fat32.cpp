@@ -90,14 +90,16 @@ uint32_t findDirectoryEntryInGivenClusterData(BootSector* bootSector, char* clus
 {
     offset = 0; //in case of first cluster of a directory, indexing from 0 will also check dot & dotdot, but this won't affect the result
     char* desiredFileName = new char[12];
+    char* actualFileName = new char[12];
 
     while(offset < occupiedBytesInCluster)
     {
-        directoryEntry = (DirectoryEntry*)&clusterData[offset];
-        memset(desiredFileName, '\0', 11);
+        memset(desiredFileName, '\0', 12);
         memcpy(desiredFileName, directoryName, 11);
+        memset(actualFileName, '\0', 12);
+        memcpy(actualFileName, ((DirectoryEntry*)&clusterData[offset])->FileName, 11);
 
-        if(compareDirectoryNames(desiredFileName, (char*) directoryEntry->FileName))
+        if(compareDirectoryNames(desiredFileName, actualFileName))
         {
             memcpy(directoryEntry, &clusterData[offset], 32); //otherwise, if we just cast, when cluster data gets changed, directoryEntry data also gets
             delete[] desiredFileName;
@@ -238,7 +240,7 @@ uint32_t addNewClusterToDirectory(DiskInfo* diskInfo, BootSector* bootSector, ui
     if(searchEmptyClusterResult == CLUSTER_SEARCH_FAILED)
         return DIR_ADD_NEW_CLUSTER_FAILED;
 
-    uint32_t updateFatResult = updateFat(diskInfo, bootSector, newCluster, "\x0F\xFF\xFF\xFF"); //set EOC for the new cluster
+    uint32_t updateFatResult = updateFat(diskInfo, bootSector, newCluster, "\xFF\xFF\xFF\x0F"); //set EOC for the new cluster
     if(updateFatResult == FAT_UPDATE_FAILED)
         return DIR_ADD_NEW_CLUSTER_FAILED;
 
@@ -311,8 +313,8 @@ uint32_t updateDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, Direct
 
     while(readResult == EC_NO_ERROR)
     {
-        occupiedBytesInCluster = givenDirectoryEntry->FileSize >= getClusterSize(bootSector) * (numberOfClusterInParentDirectory + 1) ? getClusterSize(bootSector)
-                                                                                                                      : givenDirectoryEntry->FileSize % getClusterSize(bootSector);
+        occupiedBytesInCluster = givenDirectoryDotDotEntry->FileSize >= getClusterSize(bootSector) * (numberOfClusterInParentDirectory + 1) ? getClusterSize(bootSector)
+                                                                                                                      : givenDirectoryDotDotEntry->FileSize % getClusterSize(bootSector);
 
         uint32_t searchDirectoryEntryInClusterResult = findDirectoryEntryInGivenClusterData(bootSector, clusterData, (char*) givenDirectoryEntry->FileName,
                                                                                             new DirectoryEntry(), occupiedBytesInCluster, givenDirectoryEntryOffsetInParentCluster);

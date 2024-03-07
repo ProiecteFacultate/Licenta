@@ -78,25 +78,32 @@ int main() {
 
     if(creatingDiskAndFileSystem == false)
     {
-        char* parentPath = new char[5];
+        char* parentPath = new char[100];
         char* newDir = new char[10];
         memcpy(parentPath, "Root\0", 5);
+        char* originalParentPath = new char[100];
+        memcpy(originalParentPath, parentPath, 100);
         std::cout << '\n';
+        memset(newDir, '\0', 10);
+//        memcpy(newDir, "Level_3", 7);
+//        int createDirectoryResult = createDirectory(diskInfo, bootSector, parentPath, newDir);
+//        std::cout << "Directory creation for " << newDir << " : " << createDirectoryResult << "\n";
+
+
         for(int x = 0; x <= 99; x++)
         {
-            memset(newDir, '\0', 10);
             memcpy(newDir, "Dir_", 4);
             std::string xAsString = (x < 10 ? "0" : "") + std::to_string(x);
             memcpy(newDir + 4, &xAsString[0], 2);
             int createDirectoryResult = createDirectory(diskInfo, bootSector, parentPath, newDir);
-            std::cout << "Directory creation for " << x << " : " << createDirectoryResult << "\n";
+            std::cout << "Directory creation for " << newDir << " : " << createDirectoryResult << "\n";
         }
 
         uint32_t nextCluster = 0;
         //getNextCluster(diskInfo, bootSector, 2, nextCluster)
 
         std::vector<DirectoryEntry*> subDirectories;
-        int getSubdirectoriesResult = getSubDirectories(diskInfo, bootSector, parentPath, subDirectories);
+        int getSubdirectoriesResult = getSubDirectories(diskInfo, bootSector, originalParentPath, subDirectories);
         std::string prompt1 = "\nGet subdirectories result: ";
         std::cout << prompt1 << getSubdirectoriesResult << "\n";
         for(auto dir : subDirectories)

@@ -115,7 +115,11 @@ void initializeBootSectors(DiskInfo* diskInfo)
     }
 
     //TODO root directoryEntry
+    char* rootFileName = new char[11];
+    memset(rootFileName, ' ', 11);
+    memcpy(rootFileName, "Root", 4); //in root its name 'Root' is in first dir entry, while in root's children will be in dot dot
     DirectoryEntry* rootDirectoryEntry = new DirectoryEntry();
+    memcpy(rootDirectoryEntry->FileName, rootFileName, 11);
     rootDirectoryEntry->FileSize = 64; //root dir does not contain dot & dotdot entries, but we consider that they exist for symmetry with other clusters
     rootDirectoryEntry->FirstClusterLow = bootSectorData->RootDirCluster;
     rootDirectoryEntry->FirstClusterHigh = bootSectorData->RootDirCluster >> 16;

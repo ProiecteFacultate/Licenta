@@ -33,8 +33,8 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
             actualDirectoryEntry = searchedDirectoryEntry;
         else
         {
-            delete searchedDirectoryEntry, delete actualDirectoryName; //don't delete actualDirectoryEntry because is either null, or points to the same address as searchedDirectoryEntry
-            return DIR_CREATION_FAILED;
+            delete searchedDirectoryEntry; //don't delete actualDirectoryEntry because is either null, or points to the same address as searchedDirectoryEntry
+            return DIR_CREATION_PARENT_DO_NOT_EXIST;
         }
 
         actualDirectoryName = strtok(nullptr, "/");
@@ -63,7 +63,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
         return DIR_CREATION_NO_CLUSTER_AVAILABLE;
     }
 
-    uint32_t updateFatResult = updateFat(diskInfo, bootSector, emptyClusterNumber, "\x0F\xFF\xFF\xFF"); //updates fat value for the first cluster in the new directory
+    uint32_t updateFatResult = updateFat(diskInfo, bootSector, emptyClusterNumber, "\xFF\xFF\xFF\x0F"); //updates fat value for the first cluster in the new directory
 
     if(updateFatResult == FAT_UPDATE_FAILED)
     {
@@ -93,7 +93,7 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
             actualDirectoryEntry = searchedDirectoryEntry;
         else
         {
-            delete searchedDirectoryEntry, delete actualDirectoryName; //don't delete actualDirectoryEntry because is either null, or points to the same address as searchedDirectoryEntry
+            delete searchedDirectoryEntry; //don't delete actualDirectoryEntry because is either null, or points to the same address as searchedDirectoryEntry
             return GET_SUB_DIRECTORIES_FAILED;
         }
 
@@ -127,7 +127,7 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
         }
         else
         {
-            delete[] clusterData, delete searchedDirectoryEntry, delete actualDirectoryName;
+            delete[] clusterData, delete searchedDirectoryEntry;
             return GET_SUB_DIRECTORIES_SUCCESS;
         }
 
@@ -136,13 +136,13 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
 
         if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
         {
-            delete[] clusterData, delete searchedDirectoryEntry, delete actualDirectoryName;
+            delete[] clusterData, delete searchedDirectoryEntry;
             return GET_SUB_DIRECTORIES_FAILED;
         }
 
         if(getNextClusterResult == FAT_VALUE_EOC)
         {
-            delete[] clusterData, delete searchedDirectoryEntry, delete actualDirectoryName;
+            delete[] clusterData, delete searchedDirectoryEntry;
             return GET_SUB_DIRECTORIES_SUCCESS;
         }
 

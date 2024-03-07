@@ -54,6 +54,9 @@ bool checkDirectoryNameValidity(const char* directoryName) //CAUTION directoryNa
 
 bool compareDirectoryNames(char* expected, const char* actual) //CAUTION pass expected with null in the end!!!!
 {
+    if(strcmp(expected, actual) == 0) //this is used for the case where expected is taken from a directoryEntry->FileName so already has required format
+        return true;
+
     int index;
 
     for(index = 0; index < strlen(expected); index++)
@@ -67,6 +70,7 @@ bool compareDirectoryNames(char* expected, const char* actual) //CAUTION pass ex
             firstIndexAfterNamePart = index;
             containsDot = true;
         }
+
 
     if(firstIndexAfterNamePart == -1)
         firstIndexAfterNamePart = strlen(expected);
