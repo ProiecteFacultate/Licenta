@@ -55,15 +55,17 @@ uint32_t getNextCluster(DiskInfo* diskInfo, BootSector* bootSector, uint32_t act
         return FAT_VALUE_RETRIEVE_FAILED;
     }
 
-    nextCluster = *(uint32_t*)&fatTable[offsetInsideSector] & 0x0FFFFFFF; //the high 4 bits are ignored
+    nextCluster = actualCluster;
+    uint32_t nextClusterFatValue = *(uint32_t*)&fatTable[offsetInsideSector] & 0x0FFFFFFF; //the high 4 bits are ignored
     delete[] fatTable;
 
-    switch (nextCluster) {
+    switch (nextClusterFatValue) {
         case 0x00000000:
             return FAT_VALUE_FREE;
         case 0x00000001:
             return FAT_VALUE_RESERVED_1;
         case 0x00000002 ... 0x0FFFFFEF:
+            nextCluster = nextClusterFatValue;
             return FAT_VALUE_USED;
         case 0x0FFFFFF0 ... 0x0FFFFFF5:
             return FAT_VALUE_RESERVED_2;
@@ -110,10 +112,10 @@ uint32_t findNthClusterInChain(DiskInfo* diskInfo, BootSector* bootSector, uint3
 
         if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
             return CLUSTER_SEARCH_IN_CHAN_FAILED;
-        else if(index == n)
-            return CLUSTER_SEARCH_IN_CHAN_SUCCESS;
         else if(getNextClusterResult == FAT_VALUE_EOC)
             return CLUSTER_SEARCH_IN_CHAN_EOC;
+        else if(index == n)
+            return CLUSTER_SEARCH_IN_CHAN_SUCCESS;
 
         actualCluster = foundClusterNumber;
         index++;
@@ -205,6 +207,7 @@ uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootS
         readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
                                      clusterData,numOfSectorsRead);
 
+        numberOfClusterInParentDirectory++;
         offsetInCluster = 0; //64 is only for the first cluster, for the rest of them is 0
     }
 }

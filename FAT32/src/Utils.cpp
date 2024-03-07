@@ -6,13 +6,16 @@
 
 #include "../include/fat32.h"
 
-bool checkDirectoryNameValidity(const char* directoryName)
+bool checkDirectoryNameValidity(const char* directoryName) //CAUTION directoryName MUST end with null
 {
+    if(strlen(directoryName) > 11)
+        return false;
+
     char invalidChars[] = {0x22, 0x2A, 0x2B, 0x2C, 0x2F, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, 0x5B, 0x5C, 0x5D};
 
     int index;
     for(index = 0; index < strlen(directoryName); index++) //we can use strlen since NULL is an invalid char in the name anyway
-        if((directoryName[index] < 0x20 && !(index == 0 && directoryName[index] == 0x05)) || std::find(invalidChars, invalidChars + 14, directoryName[index]))
+        if((directoryName[index] < 0x20 && !(index == 0 && directoryName[index] == 0x05)) || std::find(invalidChars, invalidChars + 14, directoryName[index]) != invalidChars + 14)
             return false;
 
     if(directoryName[0] == '.')
@@ -30,52 +33,68 @@ bool checkDirectoryNameValidity(const char* directoryName)
         return false;
 
     int extensionSize = 0;
+    bool containsExtension = false; //if it has dot it contains extension, otherwise not
     index = strlen(directoryName) - 1;
-    while(directoryName[index] >= 0 && directoryName[index] != '.')
+    while(directoryName[index] >= 0)
     {
         extensionSize++;
         index--;
+        if(directoryName[index] == '.')
+        {
+            containsExtension = true;
+            break;
+        }
     }
 
-    if(extensionSize > 3)
+    if(containsExtension && extensionSize > 3)
         return false;
 
     return true;
 }
 
-bool compareDirectoryNames(char* expected, const char* actual) //WARN pass expected with null in the end!!!!
+bool compareDirectoryNames(char* expected, const char* actual) //CAUTION pass expected with null in the end!!!!
 {
     int index;
 
     for(index = 0; index < strlen(expected); index++)
         expected[index] = toupper(expected[index]);
 
-    int dotIndexInExpected = 12;  //let's consider only the cases where there is no more than one dot !! DO NOT ADD MORE THAN 1 DOT
+    bool containsDot = false;
+    int firstIndexAfterNamePart = -1;  //let's consider only the cases where there is no more than one dot !! DO NOT ADD MORE THAN 1 DOT
     for(index = 0; index < strlen(expected); index++)
         if(expected[index] == '.')
-            dotIndexInExpected = index;
+        {
+            firstIndexAfterNamePart = index;
+            containsDot = true;
+        }
 
-    if(dotIndexInExpected > 8)
+    if(firstIndexAfterNamePart == -1)
+        firstIndexAfterNamePart = strlen(expected);
+
+    if(firstIndexAfterNamePart > 8)
         return false;  //it means that the expected name (non extension part) is bigger than 8
 
-    for(index = 0; index < dotIndexInExpected; index++)
+    for(index = 0; index < firstIndexAfterNamePart; index++)
         if(expected[index] != actual[index])
             return false;
 
+    for(index = firstIndexAfterNamePart; index < 8; index++)  //in case names match on first part, but then after name (without extension) ends in expected, it is continued in actual
+        if(actual[index] != 0x20)
+            return false;
+
+    if(!containsDot) //it means that we have not dot, so we stop after checking the beginning
+        firstIndexAfterNamePart--; //because we add 1 below
+
     int indexInExtensionPart = 0;
-    for(index = dotIndexInExpected + 1; index < strlen(expected); index++, indexInExtensionPart++)
+    for(index = firstIndexAfterNamePart + 1; index < strlen(expected); index++, indexInExtensionPart++)
         if(expected[index] != actual[8 + indexInExtensionPart])
             return false;
 
     if(indexInExtensionPart > 3) //it means that extension in expected was > 3
         return false;
 
-    for(index = indexInExtensionPart; index < 3; index++) //same as on the comment below but for extension
+    for(index = indexInExtensionPart; index < 3; index++)  //in case extension match on first part, but then it continues in actual (after ending in expected)
         if(actual[8 + index] != 0x20)
-            return false;
-
-    for(index = dotIndexInExpected; index < 8; index++)  //in case names match on first part, but then after name (without extension) ends in expected, it is continued in actual
-        if(actual[index] != 0x20)
             return false;
 
     return true;

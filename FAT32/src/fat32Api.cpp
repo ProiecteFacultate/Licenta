@@ -18,7 +18,7 @@
 
 uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParentPath, char* newDirectoryName)
 {
-    if(checkDirectoryNameValidity(newDirectoryName))
+    if(!checkDirectoryNameValidity(newDirectoryName))
         return DIR_CREATION_INVALID_DIRNAME;
 
     char* actualDirectoryName = strtok(directoryParentPath, "/");
@@ -40,6 +40,15 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
         actualDirectoryName = strtok(nullptr, "/");
     }
 
+    uint32_t parentAlreadyContainsDirectoryWithGivenName = findDirectoryEntryByDirectoryName(diskInfo, bootSector, actualDirectoryEntry,
+                                                                                             newDirectoryName, new DirectoryEntry());
+
+    if(parentAlreadyContainsDirectoryWithGivenName == DIR_ENTRY_FOUND)
+    {
+        delete actualDirectoryEntry;
+        return DIR_CREATION_NEW_NAME_ALREADY_EXISTS;
+    }
+
     uint32_t emptyClusterNumber = -1;
     int searchEmptyClusterResult = searchEmptyCluster(diskInfo, bootSector, emptyClusterNumber);
 
@@ -48,19 +57,15 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
         delete actualDirectoryEntry;
         return DIR_CREATION_FAILED;
     }
+    else if(searchEmptyClusterResult == CLUSTER_SEARCH_NO_FREE_CLUSTERS)
+    {
+        delete actualDirectoryEntry;
+        return DIR_CREATION_NO_CLUSTER_AVAILABLE;
+    }
 
     uint32_t updateFatResult = updateFat(diskInfo, bootSector, emptyClusterNumber, "\x0F\xFF\xFF\xFF"); //updates fat value for the first cluster in the new directory
 
     if(updateFatResult == FAT_UPDATE_FAILED)
-    {
-        delete actualDirectoryEntry;
-        return DIR_CREATION_FAILED;
-    }
-
-    uint32_t parentAlreadyContainsDirectoryWithGivenName = findDirectoryEntryByDirectoryName(diskInfo, bootSector, actualDirectoryEntry,
-                                                                                             newDirectoryName, new DirectoryEntry());
-
-    if(parentAlreadyContainsDirectoryWithGivenName == DIR_ENTRY_FOUND)
     {
         delete actualDirectoryEntry;
         return DIR_CREATION_FAILED;
@@ -74,7 +79,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
     return DIR_CREATION_SUCCESS;
 }
 
-uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry>& subDirectories)
+uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry*>& subDirectories)
 {
     char* actualDirectoryName = strtok(directoryPath, "/");
     DirectoryEntry* actualDirectoryEntry = nullptr;
@@ -95,47 +100,54 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
         actualDirectoryName = strtok(nullptr, "/");
     }
 
+    char* clusterData = new char[getClusterSize(bootSector)]; //declare here for time efficiency
+
     uint32_t actualCluster = getFirstClusterForDirectory(bootSector, actualDirectoryEntry);  //directory first cluster
+    uint32_t offsetInCluster = 64; //we start from 64 because in the first sector of the first cluster we got dot & dotdot
+    uint32_t numberOfClusterInParentDirectory = 0; //the cluster number in chain
+    uint32_t occupiedBytesInCluster = 0; //if the cluster is full, then it is cluster size, otherwise smaller
 
     while (true)
-    {   uint32_t nextCluster = 0;
-        uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
-        
-        if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
-        {
-            delete searchedDirectoryEntry, delete actualDirectoryName;
-            return GET_SUB_DIRECTORIES_FAILED;
-        }
+    {
+        occupiedBytesInCluster = actualDirectoryEntry->FileSize >= getClusterSize(bootSector) * (numberOfClusterInParentDirectory + 1) ? getClusterSize(bootSector)
+                                                                                                                    : actualDirectoryEntry->FileSize % getClusterSize(bootSector);
 
-        uint32_t clusterOccupiedSpace = getClusterSize(bootSector);
-        if(getNextClusterResult == FAT_VALUE_EOC) //it means this is the last cluster in directory so it might have less directory entries (unless it is completely full)
-            clusterOccupiedSpace = actualDirectoryEntry->FileSize % getClusterSize(bootSector);
-
-        char* clusterData = new char[getClusterSize(bootSector)];
         uint32_t numOfSectorsRead = 0;
         int readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster), 
                                          clusterData, numOfSectorsRead);
 
         if(readResult == EC_NO_ERROR)
         {
-            DirectoryEntry* directoryEntry = new DirectoryEntry();
-
-            for(uint32_t offset = 64; offset < clusterOccupiedSpace; offset += 32) //first 2 entries are dot & dotdot (in case of root they don't exist but the first is data about root
+            for(; offsetInCluster < occupiedBytesInCluster; offsetInCluster += 32)
             {
-                memcpy(directoryEntry, clusterData + offset, 32);
-                subDirectories.push_back(*directoryEntry);
+                DirectoryEntry* directoryEntry = new DirectoryEntry(); //same for time efficiency
+                memcpy(directoryEntry, clusterData + offsetInCluster, 32);
+                subDirectories.push_back(directoryEntry);
             }
-            delete[] clusterData, delete directoryEntry;
         }
         else
         {
-            delete searchedDirectoryEntry, delete[] clusterData, delete actualDirectoryName;
+            delete[] clusterData, delete searchedDirectoryEntry, delete actualDirectoryName;
             return GET_SUB_DIRECTORIES_SUCCESS;
         }
 
+        uint32_t nextCluster = 0;
+        uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+
+        if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
+        {
+            delete[] clusterData, delete searchedDirectoryEntry, delete actualDirectoryName;
+            return GET_SUB_DIRECTORIES_FAILED;
+        }
+
         if(getNextClusterResult == FAT_VALUE_EOC)
+        {
+            delete[] clusterData, delete searchedDirectoryEntry, delete actualDirectoryName;
             return GET_SUB_DIRECTORIES_SUCCESS;
+        }
 
         actualCluster = nextCluster;
+        numberOfClusterInParentDirectory++;
+        offsetInCluster = 0; //64 is only for the first cluster, for the rest of them is 0
     }
 }

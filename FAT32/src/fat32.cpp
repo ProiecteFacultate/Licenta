@@ -69,6 +69,7 @@ uint32_t findDirectoryEntryByDirectoryName(DiskInfo* diskInfo, BootSector* bootS
                 }
 
                 actualCluster = nextCluster;
+                numberOfClusterInParentDirectory++;
                 numOfSectorsRead = 0;
                 readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
                                              clusterData,numOfSectorsRead);
@@ -89,11 +90,11 @@ uint32_t findDirectoryEntryInGivenClusterData(BootSector* bootSector, char* clus
 {
     offset = 0; //in case of first cluster of a directory, indexing from 0 will also check dot & dotdot, but this won't affect the result
     char* desiredFileName = new char[12];
-    desiredFileName[11] = '\0';
 
     while(offset < occupiedBytesInCluster)
     {
         directoryEntry = (DirectoryEntry*)&clusterData[offset];
+        memset(desiredFileName, '\0', 11);
         memcpy(desiredFileName, directoryName, 11);
 
         if(compareDirectoryNames(desiredFileName, (char*) directoryEntry->FileName))
@@ -344,6 +345,7 @@ uint32_t updateDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, Direct
         }
 
         actualCluster = nextCluster;
+        numberOfClusterInParentDirectory++;
         numOfSectorsRead = 0;
         readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
                                      clusterData,numOfSectorsRead);

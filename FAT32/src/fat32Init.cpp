@@ -46,7 +46,7 @@ void initializeBootSectors(DiskInfo* diskInfo)
     memcpy(bootSectorData->BootJumpInstruction, bootJumpInstruction, 3);
     memcpy(bootSectorData->OemIdentifier, "MSWIN4.1", 8);
     bootSectorData->BytesPerSector = 512;
-    bootSectorData->SectorsPerCluster = 16;
+    bootSectorData->SectorsPerCluster = 4;   //TODO CHANGE
     bootSectorData->ReservedSectors = 32;
     bootSectorData->FatCount = 2;
     bootSectorData->RootDirEntryCount = 0;

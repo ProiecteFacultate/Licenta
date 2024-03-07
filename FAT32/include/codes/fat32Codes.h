@@ -3,7 +3,7 @@
 
 #define FAT_VALUE_FREE                                         0x00000000
 #define FAT_VALUE_RESERVED_1                                   0x00000001                               //Reserved for internal purposes
-#define FAT_VALUE_USED                                         0x00000002                               //this is a not assignable value!!!!!!!!
+#define FAT_VALUE_USED                                         0x00000002                               //CAUTION this is a not assignable value!!!!!!!!
 #define FAT_VALUE_RESERVED_2                                   0x0FFFFFF0                               //Reserved in some contexts
 #define FAT_VALUE_RESERVED_3                                   0x0FFFFFF6                               //Reserved; do not use
 #define FAT_VALUE_BAD_SECTOR                                   0x0FFFFFF7
