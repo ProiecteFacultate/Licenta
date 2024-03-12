@@ -66,13 +66,12 @@ int main() {
         char* rootSectorData = new char[bootSector->BytesPerSector];
         readDiskSectors(diskInfo, 1, 104, rootSectorData, numOfSectorsRead);
         char* sectorData1 = new char[bootSector->BytesPerSector];
-        readDiskSectors(diskInfo, 1, 108, sectorData1, numOfSectorsRead);
+        readDiskSectors(diskInfo, 1, 32, sectorData1, numOfSectorsRead);
         char* sectorData2 = new char[bootSector->BytesPerSector];
         readDiskSectors(diskInfo, 1, 112, sectorData2, numOfSectorsRead);
         char* sectorData3 = new char[bootSector->BytesPerSector];
         readDiskSectors(diskInfo, 1, 152, sectorData3, numOfSectorsRead);
 
-        readDiskSectors(diskInfo, 1, 108, sectorData1, numOfSectorsRead);
         DirectoryEntry* dir = (DirectoryEntry*)&sectorData1[0];
         return 0;
     }
@@ -118,7 +117,6 @@ int main() {
         in.seekg(0, std::ios::beg);
         char *text = new char[fileSize];
         in.read(text, fileSize);
-        text[fileSize] = '\0';
 //        std::cout << text << std::endl;
 
         char* fileParentPath = new char[100];
@@ -132,6 +130,7 @@ int main() {
         memcpy(filePath, "Root/File_1\0", 12);
         uint32_t numberOfBytesWritten = 0;
         uint32_t reasonForIncompleteWrite;
+        memset(text + 6000, 0, 1000);
         uint32_t writeFileResult = write(diskInfo, bootSector, filePath, text, 6000, numberOfBytesWritten, WRITE_WITH_TRUNCATE,
                                          reasonForIncompleteWrite);
         std::string prompt2 = "\nWrite file result: ";
@@ -144,22 +143,29 @@ int main() {
 
 
 ///////////////Read file
+//        filePath = new char[100];
+//        memcpy(filePath, "Root/File_1\0", 12);
+//        uint32_t numberOfBytesRead = 0;
+//        uint32_t reasonForIncompleteRead;
+//        char* readBuffer = new char[7001];
+//        uint32_t readFileResult = read(diskInfo, bootSector, filePath, readBuffer, 7000, numberOfBytesRead, reasonForIncompleteRead);
+//        std::string prompt3 = "\nRead file result: ";
+//        std::cout << prompt3 << readFileResult << " : number of bytes read: " << numberOfBytesRead << "\n";
+//        if(numberOfBytesRead < 7000)
+//        {
+//            std::string prompt4 = "\nReason for incomplete bytes read: ";
+//            std::cout << prompt4 << reasonForIncompleteRead << "\n";
+//        }
+//
+//        readBuffer[7000] = '\0';
+//        std::cout << "\n\n" << readBuffer << "\n\n";
+
+///////////Truncate file
         filePath = new char[100];
         memcpy(filePath, "Root/File_1\0", 12);
-        uint32_t numberOfBytesRead = 0;
-        uint32_t reasonForIncompleteRead;
-        char* readBuffer = new char[7001];
-        uint32_t readFileResult = read(diskInfo, bootSector, filePath, readBuffer, 7000, numberOfBytesRead, reasonForIncompleteRead);
-        std::string prompt3 = "\nRead file result: ";
-        std::cout << prompt3 << readFileResult << " : number of bytes read: " << numberOfBytesRead << "\n";
-        if(numberOfBytesRead < 7000)
-        {
-            std::string prompt4 = "\nReason for incomplete bytes read: ";
-            std::cout << prompt4 << reasonForIncompleteRead << "\n";
-        }
-
-        readBuffer[7000] = '\0';
-        std::cout << "\n\n" << readBuffer << "\n\n";
+        uint32_t truncateResult = truncateFile(diskInfo, bootSector, filePath);
+        std::string prompt5 = "\nTruncate result: ";
+        std::cout << prompt5 << truncateResult << "\n";
     }
 
     return 0;

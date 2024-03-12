@@ -20,4 +20,7 @@
 #define READ_BYTES_FROM_FILE_SUCCESS                     1
 #define READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE     2
 
+#define TRUNCATE_FILE_FAILED                             0
+#define TRUNCATE_FILE_SUCCESS                            1
+
 #endif //FAT32_FAT32APIRESPONSECODES_H

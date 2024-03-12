@@ -26,4 +26,6 @@ uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, 
 //Being given a directory path, a buffer to read into, and a max number of bytes, read up to the max number of bytes
 uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* readBuffer, uint32_t maxBytesToRead, uint32_t& numberOfBytesRead, uint32_t& reasonForIncompleteRead);
 
+uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath);
+
 #endif

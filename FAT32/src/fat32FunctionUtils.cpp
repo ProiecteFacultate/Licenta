@@ -245,8 +245,8 @@ uint32_t freeClustersInChainStartingWithGivenCluster(DiskInfo* diskInfo, BootSec
 
     while(true)
     {
-        updateFat(diskInfo, bootSector, actualCluster, "\x00\x00\x00\x00"); //free fat value
         uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+        updateFat(diskInfo, bootSector, actualCluster, "\x00\x00\x00\x00"); //free fat value
         if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
             return FREE_CLUSTERS_IN_CHAIN_FAILED;
         else if(getNextClusterResult == FAT_VALUE_EOC)

@@ -251,3 +251,13 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
 
     return READ_BYTES_FROM_FILE_SUCCESS;
 }
+
+uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath)
+{
+    uint32_t numberOfBytesWritten = 0;
+    uint32_t reasonForIncompleteWrite;
+    uint32_t writeFileResult = write(diskInfo, bootSector, directoryPath, new char[0], 0, numberOfBytesWritten, WRITE_WITH_TRUNCATE,
+                                     reasonForIncompleteWrite);
+
+    return (writeFileResult == WRITE_BYTES_TO_FILE_SUCCESS) ? TRUNCATE_FILE_SUCCESS : TRUNCATE_FILE_FAILED;
+}

@@ -419,13 +419,13 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, BootSector* bootSector
         actualCluster = nextCluster;
         numOfBytesToWriteToActualCluster = std::min(getClusterSize(bootSector), maxBytesToWrite - numberOfBytesWritten);
         memcpy(clusterData, dataBuffer + numberOfBytesWritten, numOfBytesToWriteToActualCluster);
-        uint32_t writeResult = writeDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
+        writeResult = writeDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
                                                  clusterData, numOfSectorsWritten);
 
         if(writeResult != EC_NO_ERROR)
         {
-            updateFat(diskInfo, bootSector, actualCluster, "\xFF\xFF\xFF\x0F"); //sets actual cluster as EOC
             getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+            updateFat(diskInfo, bootSector, actualCluster, "\xFF\xFF\xFF\x0F"); //sets actual cluster as EOC
             if(!(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED || getNextClusterResult == FAT_VALUE_EOC)) //if it fails to retrieve, then we will have trash clusters
                 freeClustersInChainStartingWithGivenCluster(diskInfo, bootSector, nextCluster);
 
@@ -437,8 +437,8 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, BootSector* bootSector
         numberOfBytesWritten += numOfBytesToWriteToActualCluster;
     }
 
-    updateFat(diskInfo, bootSector, actualCluster, "\xFF\xFF\xFF\x0F"); //sets actual cluster as EOC
     uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+    updateFat(diskInfo, bootSector, actualCluster, "\xFF\xFF\xFF\x0F"); //sets actual cluster as EOC
     if(!(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED || getNextClusterResult == FAT_VALUE_EOC)) //if it fails to retrieve, then we will have trash clusters
         freeClustersInChainStartingWithGivenCluster(diskInfo, bootSector, nextCluster);
 
