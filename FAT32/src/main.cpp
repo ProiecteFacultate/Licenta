@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include "windows.h"
 #include "vector"
+#include "fstream"
 
 #include "disk.h"
 #include "diskUtils.h"
@@ -65,15 +66,14 @@ int main() {
         char* rootSectorData = new char[bootSector->BytesPerSector];
         readDiskSectors(diskInfo, 1, 104, rootSectorData, numOfSectorsRead);
         char* sectorData1 = new char[bootSector->BytesPerSector];
-        readDiskSectors(diskInfo, 1, 120, sectorData1, numOfSectorsRead);
+        readDiskSectors(diskInfo, 1, 108, sectorData1, numOfSectorsRead);
         char* sectorData2 = new char[bootSector->BytesPerSector];
-        readDiskSectors(diskInfo, 1, 136, sectorData2, numOfSectorsRead);
+        readDiskSectors(diskInfo, 1, 112, sectorData2, numOfSectorsRead);
         char* sectorData3 = new char[bootSector->BytesPerSector];
         readDiskSectors(diskInfo, 1, 152, sectorData3, numOfSectorsRead);
 
-//        char* sectorData1 = new char[bootSector->BytesPerSector];
-//        readDiskSectors(diskInfo, 1, 120, sectorData1, numOfSectorsRead);
-//        DirectoryEntry* dir = (DirectoryEntry*)&sectorData1[0];
+        readDiskSectors(diskInfo, 1, 108, sectorData1, numOfSectorsRead);
+        DirectoryEntry* dir = (DirectoryEntry*)&sectorData1[0];
         return 0;
     }
 
@@ -82,13 +82,13 @@ int main() {
 //////////////Directories creation
         char* parentPath = new char[100];
         char* newDir = new char[10];
-        memcpy(parentPath, "Root/File_1\0", 12);
+        memcpy(parentPath, "Root\0", 5);
         char* originalParentPath = new char[100];
         memcpy(originalParentPath, parentPath, 100);
         std::cout << '\n';
         memset(newDir, '\0', 10);
 
-        for(int x = 0; x <= 5; x++)
+        for(int x = 0; x <= 0; x++)
         {
             memcpy(parentPath, originalParentPath, 100);
             memcpy(newDir, "Dir_", 4);
@@ -97,36 +97,50 @@ int main() {
             int createDirectoryResult = createDirectory(diskInfo, bootSector, parentPath, newDir, ATTR_DIRECTORY);
             std::cout << "Directory creation for " << newDir << " : " << createDirectoryResult << "\n";
         }
-
-/////////////Subdirectories list
-        std::vector<DirectoryEntry*> subDirectories;
-        int getSubdirectoriesResult = getSubDirectories(diskInfo, bootSector, originalParentPath, subDirectories);
-        std::string prompt1 = "\nGet subdirectories result: ";
-        std::cout << prompt1 << getSubdirectoriesResult << "\n";
-        for(auto dir : subDirectories)
-        {
-            char* fileName = new char[12];
-            memcpy(fileName, dir->FileName, 11);
-            fileName[11] = 0;
-            std::cout << fileName << "\n";
-        }
+//
+///////////////Subdirectories list
+//        std::vector<DirectoryEntry*> subDirectories;
+//        int getSubdirectoriesResult = getSubDirectories(diskInfo, bootSector, originalParentPath, subDirectories);
+//        std::string prompt1 = "\nGet subdirectories result: ";
+//        std::cout << prompt1 << getSubdirectoriesResult << "\n";
+//        for(auto dir : subDirectories)
+//        {
+//            char* fileName = new char[12];
+//            memcpy(fileName, dir->FileName, 11);
+//            fileName[11] = 0;
+//            std::cout << fileName << "\n";
+//        }
 
 /////////File write
-//        char* fileParentPath = new char[100];
-//        memcpy(fileParentPath, "Root\0", 5);
-//        char* newFile= new char[10];
-//        memcpy(newFile, "File_1\0", 7);
-//        int createFileResult = createDirectory(diskInfo, bootSector, fileParentPath, newFile, ATTR_FILE);
-//        std::cout << "File creation for " << newFile << " : " << createFileResult << "\n";
-//
-//        char* dataBuffer = new char[100];
-//        memcpy(dataBuffer, "ABCDE    F", 10);
-//        char* filePath = new char[10];
-//        memcpy(filePath, "Root/File_1\0", 12);
-//        uint32_t numberOfBytesWritten = 0;
-//        uint32_t writeFileResult = write(diskInfo, bootSector, filePath, dataBuffer, 10, numberOfBytesWritten, WRITE_WITH_TRUNCATE);
-//        std::string prompt2 = "\nWrite file result: ";
-//        std::cout << prompt2 << writeFileResult << "\n";
+        std::ifstream in("../fin.txt");
+        in.seekg(0, std::ios::end);
+        std::streampos fileSize = in.tellg();
+        in.seekg(0, std::ios::beg);
+        char *text = new char[fileSize];
+        in.read(text, fileSize);
+        text[fileSize] = '\0';
+//        std::cout << text << std::endl;
+
+        char* fileParentPath = new char[100];
+        memcpy(fileParentPath, "Root\0", 5);
+        char* newFile= new char[10];
+        memcpy(newFile, "File_1\0", 7);
+        int createFileResult = createDirectory(diskInfo, bootSector, fileParentPath, newFile, ATTR_FILE);
+        std::cout << "File creation for " << newFile << " : " << createFileResult << "\n";
+
+        char* filePath = new char[10];
+        memcpy(filePath, "Root/File_1\0", 12);
+        uint32_t numberOfBytesWritten = 0;
+        uint32_t reasonForIncompleteWrite;
+        uint32_t writeFileResult = write(diskInfo, bootSector, filePath, text, 3804, numberOfBytesWritten, WRITE_WITH_TRUNCATE,
+                                         reasonForIncompleteWrite);
+        std::string prompt2 = "\nWrite file result: ";
+        std::cout << prompt2 << writeFileResult << " : number of bytes written: " << numberOfBytesWritten << "\n";
+        if(numberOfBytesWritten < 3804)
+        {
+            std::string prompt3 = "\nReason for incomplete bytes write: ";
+            std::cout << prompt3 << reasonForIncompleteWrite << "\n";
+        }
     }
 
     return 0;

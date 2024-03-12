@@ -47,7 +47,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
     }
 
     uint32_t emptyClusterNumber = -1;
-    int searchEmptyClusterResult = searchEmptyCluster(diskInfo, bootSector, emptyClusterNumber);
+    uint32_t searchEmptyClusterResult = searchEmptyCluster(diskInfo, bootSector, emptyClusterNumber);
 
     if(searchEmptyClusterResult == CLUSTER_SEARCH_FAILED)
     {
@@ -146,7 +146,8 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
     }
 }
 
-uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* dataBuffer, uint32_t maxBytesToWrite, uint32_t& numberOfBytesWritten, uint32_t writeAttribute)
+uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* dataBuffer, uint32_t maxBytesToWrite, uint32_t& numberOfBytesWritten, uint32_t writeAttribute,
+               uint32_t& reasonForIncompleteWrite)
 {
     if(strcmp(directoryPath, "Root\0") == 0) //you can't write directly to root
         return WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE;
@@ -155,10 +156,7 @@ uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, 
     uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
                                                                      &actualDirectoryEntry);
     if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
-    {
-        delete actualDirectoryEntry;
         return WRITE_BYTES_TO_FILE_FAILED;
-    }
 
     if(actualDirectoryEntry->Attributes == ATTR_READ_ONLY || actualDirectoryEntry->Attributes == ATTR_DIRECTORY)
     {
@@ -166,22 +164,30 @@ uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, 
         return WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE;
     }
 
+    uint32_t writeResult;
+
     if(writeAttribute == WRITE_WITH_TRUNCATE)
+        writeResult = writeBytesToFileWithTruncate(diskInfo, bootSector, actualDirectoryEntry, dataBuffer, maxBytesToWrite, numberOfBytesWritten,
+                                                   reasonForIncompleteWrite);
+    else
+        writeResult = writeBytesToFileWithAppend(diskInfo, bootSector, actualDirectoryEntry, dataBuffer, maxBytesToWrite, numberOfBytesWritten,
+                                                   reasonForIncompleteWrite);
+
+    if(writeResult == WRITE_BYTES_TO_FILE_SUCCESS)
     {
-        uint32_t writeWithTruncateResult = writeBytesToFileWithTruncate(diskInfo, bootSector, actualDirectoryEntry, dataBuffer, maxBytesToWrite, numberOfBytesWritten);
-
-        if(writeWithTruncateResult == WRITE_BYTES_TO_FILE_WITH_TRUNCATE_SUCCESS)
-        {
+        if(writeAttribute == WRITE_WITH_TRUNCATE)
             actualDirectoryEntry->FileSize = 64 + numberOfBytesWritten; //64 for dot & dotdot entries
-            DirectoryEntry* newDirectoryEntry = new DirectoryEntry();
-            memcpy(newDirectoryEntry, actualDirectoryEntry, 32);
-            updateDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, newDirectoryEntry); //CAUTION we don't query this, so if it fails, we have corrupted data
+        else
+            actualDirectoryEntry->FileSize = actualDirectoryEntry->FileSize + numberOfBytesWritten;
 
-            delete actualDirectoryEntry, delete newDirectoryEntry;
-            return WRITE_BYTES_TO_FILE_SUCCESS;
-        }
+        DirectoryEntry* newDirectoryEntry = new DirectoryEntry();
+        memcpy(newDirectoryEntry, actualDirectoryEntry, 32);
+        updateDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, newDirectoryEntry); //CAUTION we don't query this, so if it fails, we have corrupted data
 
-        delete actualDirectoryEntry;
-        return WRITE_BYTES_TO_FILE_FAILED;
+        delete actualDirectoryEntry, delete newDirectoryEntry;
+        return WRITE_BYTES_TO_FILE_SUCCESS;
     }
+
+    delete actualDirectoryEntry;
+    return WRITE_BYTES_TO_FILE_FAILED;
 }

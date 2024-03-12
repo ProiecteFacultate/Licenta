@@ -44,6 +44,10 @@ uint32_t updateDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, Direct
 //Given a directory entry, a data buffer, and a max bytes to write, it writes up to max bytes in the cluster, OVERWRITING the existing data (dot & dotdot are not affected by overwrite)
 //If the cluster contains more clusters then needed after write, it will set as free in the fat table the no longer used clusters
 uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry, char* dataBuffer, uint32_t maxBytesToWrite,
-                                      uint32_t& numberOfBytesWritten);
+                                      uint32_t& numberOfBytesWritten, uint32_t& reasonForIncompleteWrite);
+
+//Given a directory entry, a data buffer, and a max bytes to write, it writes up to max bytes in the cluster, APPENDING to the existing data
+uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry, char* dataBuffer, uint32_t maxBytesToWrite,
+                                    uint32_t& numberOfBytesWritten, uint32_t& reasonForIncompleteWrite);
 
 #endif
