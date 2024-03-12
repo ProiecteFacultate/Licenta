@@ -23,4 +23,7 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
 uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* dataBuffer, uint32_t maxBytesToWrite, uint32_t& numberOfBytesWritten, uint32_t writeAttribute,
                uint32_t& reasonForIncompleteWrite);
 
+//Being given a directory path, a buffer to read into, and a max number of bytes, read up to the max number of bytes
+uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* readBuffer, uint32_t maxBytesToRead, uint32_t& numberOfBytesRead, uint32_t& reasonForIncompleteRead);
+
 #endif

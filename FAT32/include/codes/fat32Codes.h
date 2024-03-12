@@ -58,7 +58,8 @@
 #define INCOMPLETE_BYTES_WRITE_DUE_TO_NO_CLUSTERS_AVAILABLE               0                              //we want to specifically know about this case
 #define INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER                               1
 
-
+#define INCOMPLETE_BYTES_READ_DUE_TO_NO_FILE_NOT_LONG_ENOUGH              0                              //we want to specifically know about this case
+#define INCOMPLETE_BYTES_READ_DUE_TO_OTHER                                1
 
 #define FREE_CLUSTERS_IN_CHAIN_FAILED                                     0
 #define FREE_CLUSTERS_IN_CHAIN_SUCCESS                                    1

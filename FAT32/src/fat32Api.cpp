@@ -158,7 +158,7 @@ uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, 
     if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
         return WRITE_BYTES_TO_FILE_FAILED;
 
-    if(actualDirectoryEntry->Attributes == ATTR_READ_ONLY || actualDirectoryEntry->Attributes == ATTR_DIRECTORY)
+    if(actualDirectoryEntry->Attributes != ATTR_FILE)
     {
         delete actualDirectoryEntry;
         return WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE;
@@ -190,4 +190,64 @@ uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, 
 
     delete actualDirectoryEntry;
     return WRITE_BYTES_TO_FILE_FAILED;
+}
+
+uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* readBuffer, uint32_t maxBytesToRead, uint32_t& numberOfBytesRead, uint32_t& reasonForIncompleteRead)
+{
+    char* clusterData = new char[getClusterSize(bootSector)]; //CAUTION we use a second buffer instead of reading directly in readBuffer because if we would do this, it could...
+    //CAUTION overflow the read buffer (since we are reading whole sectors) and this could overwrite other data in heap
+    uint32_t numOfBytesReadFromThisCluster;
+    uint32_t numOfSectorsRead;
+    uint32_t actualCluster;
+    uint32_t nextCluster;
+
+    if(strcmp(directoryPath, "Root\0") == 0) //you can't read directly to root
+        return READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE;
+
+    DirectoryEntry* actualDirectoryEntry = nullptr;
+    uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
+                                                                     &actualDirectoryEntry);
+    if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
+        return READ_BYTES_FROM_FILE_FAILED;
+
+    if(actualDirectoryEntry->Attributes != ATTR_FILE)
+    {
+        delete actualDirectoryEntry;
+        return READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE;
+    }
+
+    uint32_t givenDirectoryFirstCluster = getFirstClusterForDirectory(bootSector, actualDirectoryEntry);
+    uint32_t readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, givenDirectoryFirstCluster),
+                                          clusterData, numOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+        return READ_BYTES_FROM_FILE_FAILED;
+
+    numberOfBytesRead = std::min(actualDirectoryEntry->FileSize - 64, std::min(getClusterSize(bootSector) - 64, maxBytesToRead));
+    memcpy(readBuffer, clusterData + 64, numberOfBytesRead);
+    actualCluster = givenDirectoryFirstCluster;
+
+    while(numberOfBytesRead < maxBytesToRead)
+    {
+        uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+
+        if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED || getNextClusterResult == FAT_VALUE_EOC)
+        {
+            reasonForIncompleteRead = (getNextClusterResult == FAT_VALUE_EOC) ? INCOMPLETE_BYTES_READ_DUE_TO_NO_FILE_NOT_LONG_ENOUGH : INCOMPLETE_BYTES_READ_DUE_TO_OTHER;
+            return READ_BYTES_FROM_FILE_SUCCESS; //we managed to read bytes for first cluster, so it's still considered a read success
+        }
+
+        actualCluster = nextCluster;
+        readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
+                                              clusterData, numOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+            return READ_BYTES_FROM_FILE_FAILED;
+
+        numOfBytesReadFromThisCluster = std::min(actualDirectoryEntry->FileSize - 64 - numberOfBytesRead, std::min(getClusterSize(bootSector), maxBytesToRead - numberOfBytesRead));
+        memcpy(readBuffer + numberOfBytesRead, clusterData, numOfBytesReadFromThisCluster);
+        numberOfBytesRead += numOfBytesReadFromThisCluster;
+    }
+
+    return READ_BYTES_FROM_FILE_SUCCESS;
 }

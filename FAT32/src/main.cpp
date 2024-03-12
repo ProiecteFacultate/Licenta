@@ -128,19 +128,38 @@ int main() {
         int createFileResult = createDirectory(diskInfo, bootSector, fileParentPath, newFile, ATTR_FILE);
         std::cout << "File creation for " << newFile << " : " << createFileResult << "\n";
 
-        char* filePath = new char[10];
+        char* filePath = new char[100];
         memcpy(filePath, "Root/File_1\0", 12);
         uint32_t numberOfBytesWritten = 0;
         uint32_t reasonForIncompleteWrite;
-        uint32_t writeFileResult = write(diskInfo, bootSector, filePath, text, 3804, numberOfBytesWritten, WRITE_WITH_TRUNCATE,
+        uint32_t writeFileResult = write(diskInfo, bootSector, filePath, text, 6000, numberOfBytesWritten, WRITE_WITH_TRUNCATE,
                                          reasonForIncompleteWrite);
         std::string prompt2 = "\nWrite file result: ";
         std::cout << prompt2 << writeFileResult << " : number of bytes written: " << numberOfBytesWritten << "\n";
-        if(numberOfBytesWritten < 3804)
+        if(numberOfBytesWritten < 6000)
         {
             std::string prompt3 = "\nReason for incomplete bytes write: ";
             std::cout << prompt3 << reasonForIncompleteWrite << "\n";
         }
+
+
+///////////////Read file
+        filePath = new char[100];
+        memcpy(filePath, "Root/File_1\0", 12);
+        uint32_t numberOfBytesRead = 0;
+        uint32_t reasonForIncompleteRead;
+        char* readBuffer = new char[7001];
+        uint32_t readFileResult = read(diskInfo, bootSector, filePath, readBuffer, 7000, numberOfBytesRead, reasonForIncompleteRead);
+        std::string prompt3 = "\nRead file result: ";
+        std::cout << prompt3 << readFileResult << " : number of bytes read: " << numberOfBytesRead << "\n";
+        if(numberOfBytesRead < 7000)
+        {
+            std::string prompt4 = "\nReason for incomplete bytes read: ";
+            std::cout << prompt4 << reasonForIncompleteRead << "\n";
+        }
+
+        readBuffer[7000] = '\0';
+        std::cout << "\n\n" << readBuffer << "\n\n";
     }
 
     return 0;
