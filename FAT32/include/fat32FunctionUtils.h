@@ -39,4 +39,11 @@ void createDirectoryEntry(char* directoryName, uint8_t directoryAttribute, uint3
 //Being given a directory entry, traverse all its subdirectories, and update their dotdot entry (used when a perent directory changes its file size and want its subdirectories to know)
 uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* newDotDotEntry);
 
+//Being given a directory FULL path, returns its corresponding directory entry
+//CAUTION this method requires only the directory path (don't confuse with findDirectoryEntryByDirectoryName)
+uint32_t findDirectoryEntryByFullPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, DirectoryEntry** directoryEntry);
+
+//Being given a cluster, iterate through the chain setting their corresponding fat value to FREE
+uint32_t freeClustersInChainStartingWithGivenCluster(DiskInfo* diskInfo, BootSector* bootSector, uint32_t startingClusterNumber);
+
 #endif //FAT32_FAT32FUNCTIONUTILS_H

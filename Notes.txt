@@ -3,3 +3,5 @@ FAT32:
 We can find some info about root directory (its first cluster and size in its second entry (starting at index 0)
 In root's first sector we have it s name 'Root       ', and in root's children's dot dot entries we also have 'Root     'name.
 Dot dot entries (excepting for root) also contain the parent name
+
+Trash cluster : cluster marked as occupied in fat, but without being part of any cluster chain (it can happen in case of some errors)

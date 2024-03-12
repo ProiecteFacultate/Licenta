@@ -11,6 +11,7 @@
 #include "../include/fat32Init.h"
 #include "../include/fat32.h"
 #include "../include/fat32Api.h"
+#include "../include/fat32Attributes.h"
 
 bool creatingDiskAndFileSystem = false;
 bool debugMode = false;
@@ -78,30 +79,26 @@ int main() {
 
     if(creatingDiskAndFileSystem == false)
     {
+//////////////Directories creation
         char* parentPath = new char[100];
         char* newDir = new char[10];
-        memcpy(parentPath, "Root\0", 5);
+        memcpy(parentPath, "Root/File_1\0", 12);
         char* originalParentPath = new char[100];
         memcpy(originalParentPath, parentPath, 100);
         std::cout << '\n';
         memset(newDir, '\0', 10);
-//        memcpy(newDir, "Level_3", 7);
-//        int createDirectoryResult = createDirectory(diskInfo, bootSector, parentPath, newDir);
-//        std::cout << "Directory creation for " << newDir << " : " << createDirectoryResult << "\n";
 
-
-        for(int x = 0; x <= 99; x++)
+        for(int x = 0; x <= 5; x++)
         {
+            memcpy(parentPath, originalParentPath, 100);
             memcpy(newDir, "Dir_", 4);
-            std::string xAsString = (x < 10 ? "0" : "") + std::to_string(x);
-            memcpy(newDir + 4, &xAsString[0], 2);
-            int createDirectoryResult = createDirectory(diskInfo, bootSector, parentPath, newDir);
+            std::string xAsString = (x < 100 ? "0" : "") + ((x < 10 ? "0" : "") + std::to_string(x));
+            memcpy(newDir + 4, &xAsString[0], 3);
+            int createDirectoryResult = createDirectory(diskInfo, bootSector, parentPath, newDir, ATTR_DIRECTORY);
             std::cout << "Directory creation for " << newDir << " : " << createDirectoryResult << "\n";
         }
 
-        uint32_t nextCluster = 0;
-        //getNextCluster(diskInfo, bootSector, 2, nextCluster)
-
+/////////////Subdirectories list
         std::vector<DirectoryEntry*> subDirectories;
         int getSubdirectoriesResult = getSubDirectories(diskInfo, bootSector, originalParentPath, subDirectories);
         std::string prompt1 = "\nGet subdirectories result: ";
@@ -113,8 +110,24 @@ int main() {
             fileName[11] = 0;
             std::cout << fileName << "\n";
         }
-    }
 
+/////////File write
+//        char* fileParentPath = new char[100];
+//        memcpy(fileParentPath, "Root\0", 5);
+//        char* newFile= new char[10];
+//        memcpy(newFile, "File_1\0", 7);
+//        int createFileResult = createDirectory(diskInfo, bootSector, fileParentPath, newFile, ATTR_FILE);
+//        std::cout << "File creation for " << newFile << " : " << createFileResult << "\n";
+//
+//        char* dataBuffer = new char[100];
+//        memcpy(dataBuffer, "ABCDE    F", 10);
+//        char* filePath = new char[10];
+//        memcpy(filePath, "Root/File_1\0", 12);
+//        uint32_t numberOfBytesWritten = 0;
+//        uint32_t writeFileResult = write(diskInfo, bootSector, filePath, dataBuffer, 10, numberOfBytesWritten, WRITE_WITH_TRUNCATE);
+//        std::string prompt2 = "\nWrite file result: ";
+//        std::cout << prompt2 << writeFileResult << "\n";
+    }
 
     return 0;
 }

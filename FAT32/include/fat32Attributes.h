@@ -7,5 +7,9 @@
 #define ATTR_VOLUME_ID                     8
 #define ATTR_DIRECTORY                     16
 #define ATTR_ARCHIVE                       32
+#define ATTR_FILE                          100                                                           //This is not on official documentation, but was added by me
+
+#define WRITE_WITH_TRUNCATE                1
+#define WRITE_WITH_APPEND                  2
 
 #endif

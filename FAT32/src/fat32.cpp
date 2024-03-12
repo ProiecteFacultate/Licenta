@@ -186,7 +186,7 @@ uint32_t updateFat(DiskInfo* diskInfo, BootSector* bootSector, uint32_t clusterN
 }
 
 uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, char* newDirectoryName,
-                                                   uint32_t firstEmptyCluster, DirectoryEntry* newDirectoryEntry)
+                                                   uint32_t firstEmptyCluster, DirectoryEntry* newDirectoryEntry, uint32_t newDirectoryAttribute)
 {
     uint32_t firstClusterInChainWithFreeSpace = parentDirectoryEntry->FileSize / getClusterSize(bootSector); //number of cluster IN CHAIN: so 0,1,2,3
     uint32_t cluster = 0; //the cluster number of the first cluster with free space in the directory
@@ -216,7 +216,7 @@ uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, BootSector* bootSector, D
         return DIR_ENTRY_ADD_FAILED;
     }
 
-    createDirectoryEntry(newDirectoryName, ATTR_DIRECTORY, firstEmptyCluster, newDirectoryEntry);
+    createDirectoryEntry(newDirectoryName, newDirectoryAttribute, firstEmptyCluster, newDirectoryEntry);
     memcpy(sectorData + offsetInSector, newDirectoryEntry, 32);
     uint32_t numOfSectorsWritten = 0;
     uint32_t writeResult =  writeDiskSectors(diskInfo, 1, sector, sectorData, numOfSectorsWritten);
@@ -352,4 +352,88 @@ uint32_t updateDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, Direct
         readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
                                      clusterData,numOfSectorsRead);
     }
+}
+
+uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry, char* dataBuffer, uint32_t maxBytesToWrite,
+                                      uint32_t& numberOfBytesWritten)
+{
+    numberOfBytesWritten = 0;
+    char* clusterData = new char[getClusterSize(bootSector)];
+    uint32_t numOfSectorsRead = 0;
+    uint32_t numOfSectorsWritten = 0;
+    uint32_t numOfBytesToWriteToActualCluster = 0;
+    uint32_t nextCluster = 0;
+
+    uint32_t givenDirectoryFirstCluster = getFirstClusterForDirectory(bootSector, directoryEntry);
+    uint32_t readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, givenDirectoryFirstCluster),
+                                          clusterData, numOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] clusterData;
+        return WRITE_BYTES_TO_FILE_WITH_TRUNCATE_FAILED;
+    }
+
+    numOfBytesToWriteToActualCluster = std::min(getClusterSize(bootSector) - 64, maxBytesToWrite);
+    memcpy(clusterData + 64, dataBuffer, numOfBytesToWriteToActualCluster); //start at index 64 because it is the first cluster & contains dot & dotdot
+    uint32_t writeResult =  writeDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, givenDirectoryFirstCluster),
+                                             clusterData, numOfSectorsWritten);
+
+    if(writeResult != EC_NO_ERROR)
+    {
+        delete[] clusterData;
+        return WRITE_BYTES_TO_FILE_WITH_TRUNCATE_FAILED;
+    }
+
+    numberOfBytesWritten = numOfBytesToWriteToActualCluster;
+    uint32_t actualCluster = givenDirectoryFirstCluster;
+
+    while(numberOfBytesWritten < maxBytesToWrite)
+    {
+        uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+
+        if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
+        {
+            updateFat(diskInfo, bootSector, actualCluster, "\xFF\xFF\xFF\x0F"); //sets actual cluster as EOC
+            //we can't free the next clusters in chain since fat retrieve failed; they will remain occupied without being part of a cluster (trash clusters)
+            delete[] clusterData;
+            return WRITE_BYTES_TO_FILE_WITH_TRUNCATE_SUCCESS; //we managed to write bytes for first cluster, so it's still considered a write success
+        }
+        else if(getNextClusterResult == FAT_VALUE_EOC)
+        {
+            uint32_t addNewClusterToDirectoryResult = addNewClusterToDirectory(diskInfo, bootSector, actualCluster, nextCluster);
+            if(addNewClusterToDirectoryResult == DIR_ADD_NEW_CLUSTER_FAILED)
+            {
+                delete[] clusterData;
+                return WRITE_BYTES_TO_FILE_WITH_TRUNCATE_SUCCESS; //we managed to write bytes for first cluster, so it's still considered a write success
+            }
+        }
+
+        actualCluster = nextCluster;
+        numOfBytesToWriteToActualCluster = std::min(getClusterSize(bootSector), maxBytesToWrite - numberOfBytesWritten);
+        memcpy(clusterData, dataBuffer, numOfBytesToWriteToActualCluster);
+        uint32_t writeResult = writeDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
+                                                 clusterData, numOfSectorsWritten);
+
+        if(writeResult != EC_NO_ERROR)
+        {
+            updateFat(diskInfo, bootSector, actualCluster, "\xFF\xFF\xFF\x0F"); //sets actual cluster as EOC
+            getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+            if(!(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED || getNextClusterResult == FAT_VALUE_EOC)) //if it fails to retrieve, then we will have trash clusters
+                freeClustersInChainStartingWithGivenCluster(diskInfo, bootSector, nextCluster);
+
+            delete[] clusterData;
+            return WRITE_BYTES_TO_FILE_WITH_TRUNCATE_SUCCESS; //we managed to write bytes for first cluster, so it's still considered a write success
+        }
+
+        numberOfBytesWritten += numOfBytesToWriteToActualCluster;
+    }
+
+    updateFat(diskInfo, bootSector, actualCluster, "\xFF\xFF\xFF\x0F"); //sets actual cluster as EOC
+    uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+    if(!(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED || getNextClusterResult == FAT_VALUE_EOC)) //if it fails to retrieve, then we will have trash clusters
+        freeClustersInChainStartingWithGivenCluster(diskInfo, bootSector, nextCluster);
+
+    delete[] clusterData;
+    return WRITE_BYTES_TO_FILE_WITH_TRUNCATE_SUCCESS;
 }

@@ -10,6 +10,7 @@
 #include "../include/fat32FunctionUtils.h"
 #include "../include/codes/fat32Codes.h"
 #include "../include/fat32Init.h"
+#include "../include/fat32Attributes.h"
 
 
 bool checkBootSectorsInitialized(DiskInfo* diskInfo)
@@ -123,6 +124,7 @@ void initializeBootSectors(DiskInfo* diskInfo)
     rootDirectoryEntry->FileSize = 64; //root dir does not contain dot & dotdot entries, but we consider that they exist for symmetry with other clusters
     rootDirectoryEntry->FirstClusterLow = bootSectorData->RootDirCluster;
     rootDirectoryEntry->FirstClusterHigh = bootSectorData->RootDirCluster >> 16;
+    rootDirectoryEntry->Attributes = ATTR_DIRECTORY;
     char* rootFirstSectorData = new char[bootSectorData->BytesPerSector];
     memset(rootFirstSectorData, 0, bootSectorData->BytesPerSector);
     memcpy(rootFirstSectorData, rootDirectoryEntry, 32);

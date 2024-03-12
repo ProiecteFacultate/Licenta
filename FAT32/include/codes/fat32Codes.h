@@ -43,4 +43,17 @@
 #define DIRECTORY_UPDATE_SUBDIRECTORIES_DOT_DOT_FAILED         0
 #define DIRECTORY_UPDATE_SUBDIRECTORIES_DOT_DOT_SUCCESS        1
 
+#define FIND_DIRECTORY_ENTRY_BY_PATH_FAILED                    0
+#define FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS                   1
+
+#define WRITE_BYTES_TO_FILE_FAILED                             0
+#define WRITE_BYTES_TO_FILE_SUCCESS                            1
+
+
+#define WRITE_BYTES_TO_FILE_WITH_TRUNCATE_FAILED               0
+#define WRITE_BYTES_TO_FILE_WITH_TRUNCATE_SUCCESS              1
+
+#define FREE_CLUSTERS_IN_CHAIN_FAILED                          0
+#define FREE_CLUSTERS_IN_CHAIN_SUCCESS                         1
+
 #endif

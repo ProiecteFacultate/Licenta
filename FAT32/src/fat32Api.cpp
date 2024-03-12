@@ -16,36 +16,33 @@
 #include "../include/fat32FunctionUtils.h"
 #include "../include/fat32Api.h"
 
-uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParentPath, char* newDirectoryName)
+uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParentPath, char* newDirectoryName, uint32_t newDirectoryAttribute)
 {
     if(!checkDirectoryNameValidity(newDirectoryName))
         return DIR_CREATION_INVALID_DIRNAME;
 
-    char* actualDirectoryName = strtok(directoryParentPath, "/");
     DirectoryEntry* actualDirectoryEntry = nullptr;
-    DirectoryEntry* searchedDirectoryEntry = new DirectoryEntry();
+    uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryParentPath,
+                                                                     &actualDirectoryEntry);
+    if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
+        return DIR_CREATION_PARENT_DO_NOT_EXIST;
 
-    while(actualDirectoryName != nullptr)
+    uint32_t parentAlreadyContainsDirectoryWithGivenName = findDirectoryEntryByDirectoryName(diskInfo,
+                                                                                             bootSector,
+                                                                                             actualDirectoryEntry,
+                                                                                             newDirectoryName,
+                                                                                             new DirectoryEntry());
+
+    if(actualDirectoryEntry->Attributes != ATTR_DIRECTORY)
     {
-        uint32_t searchDirectoryEntryResult = findDirectoryEntryByDirectoryName(diskInfo, bootSector, actualDirectoryEntry,
-                                                                           actualDirectoryName, searchedDirectoryEntry);
-        if(searchDirectoryEntryResult == DIR_ENTRY_FOUND)
-            actualDirectoryEntry = searchedDirectoryEntry;
-        else
-        {
-            delete searchedDirectoryEntry; //don't delete actualDirectoryEntry because is either null, or points to the same address as searchedDirectoryEntry
-            return DIR_CREATION_PARENT_DO_NOT_EXIST;
-        }
-
-        actualDirectoryName = strtok(nullptr, "/");
+        delete actualDirectoryEntry;
+        return DIR_CREATION_PARENT_NOT_A_DIRECTORY;
     }
-
-    uint32_t parentAlreadyContainsDirectoryWithGivenName = findDirectoryEntryByDirectoryName(diskInfo, bootSector, actualDirectoryEntry,
-                                                                                             newDirectoryName, new DirectoryEntry());
 
     if(parentAlreadyContainsDirectoryWithGivenName == DIR_ENTRY_FOUND)
     {
-        delete actualDirectoryEntry;
+        if(actualDirectoryEntry != nullptr)
+            delete actualDirectoryEntry;
         return DIR_CREATION_NEW_NAME_ALREADY_EXISTS;
     }
 
@@ -54,12 +51,14 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
 
     if(searchEmptyClusterResult == CLUSTER_SEARCH_FAILED)
     {
-        delete actualDirectoryEntry;
+        if(actualDirectoryEntry != nullptr)
+            delete actualDirectoryEntry;
         return DIR_CREATION_FAILED;
     }
     else if(searchEmptyClusterResult == CLUSTER_SEARCH_NO_FREE_CLUSTERS)
     {
-        delete actualDirectoryEntry;
+        if(actualDirectoryEntry != nullptr)
+            delete actualDirectoryEntry;
         return DIR_CREATION_NO_CLUSTER_AVAILABLE;
     }
 
@@ -67,38 +66,27 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
 
     if(updateFatResult == FAT_UPDATE_FAILED)
     {
-        delete actualDirectoryEntry;
+        if(actualDirectoryEntry != nullptr)
+            delete actualDirectoryEntry;
         return DIR_CREATION_FAILED;
     }
 
     DirectoryEntry* newDirectoryEntry = new DirectoryEntry(); //the directory entry for the newly created directory
-    addDirectoryEntryToParent(diskInfo, bootSector, actualDirectoryEntry, newDirectoryName, emptyClusterNumber, newDirectoryEntry);
+    addDirectoryEntryToParent(diskInfo, bootSector, actualDirectoryEntry, newDirectoryName, emptyClusterNumber, newDirectoryEntry, newDirectoryAttribute);
     setupFirstClusterInDirectory(diskInfo, bootSector, actualDirectoryEntry ,emptyClusterNumber, newDirectoryEntry);
 
-    delete actualDirectoryEntry;
+    if(actualDirectoryEntry != nullptr)
+        delete actualDirectoryEntry;
     return DIR_CREATION_SUCCESS;
 }
 
 uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry*>& subDirectories)
 {
-    char* actualDirectoryName = strtok(directoryPath, "/");
     DirectoryEntry* actualDirectoryEntry = nullptr;
-    DirectoryEntry* searchedDirectoryEntry = new DirectoryEntry();
-
-    while(actualDirectoryName != nullptr)
-    {
-        int searchDirectoryEntryResult = findDirectoryEntryByDirectoryName(diskInfo, bootSector, actualDirectoryEntry,
-                                                                           actualDirectoryName, searchedDirectoryEntry);
-        if(searchDirectoryEntryResult == DIR_ENTRY_FOUND)
-            actualDirectoryEntry = searchedDirectoryEntry;
-        else
-        {
-            delete searchedDirectoryEntry; //don't delete actualDirectoryEntry because is either null, or points to the same address as searchedDirectoryEntry
-            return GET_SUB_DIRECTORIES_FAILED;
-        }
-
-        actualDirectoryName = strtok(nullptr, "/");
-    }
+    uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
+                                                                     &actualDirectoryEntry);
+    if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
+        return GET_SUB_DIRECTORIES_FAILED;
 
     char* clusterData = new char[getClusterSize(bootSector)]; //declare here for time efficiency
 
@@ -127,7 +115,9 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
         }
         else
         {
-            delete[] clusterData, delete searchedDirectoryEntry;
+            if(actualDirectoryEntry != nullptr)
+                delete actualDirectoryEntry;
+            delete[] clusterData;
             return GET_SUB_DIRECTORIES_SUCCESS;
         }
 
@@ -136,18 +126,62 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
 
         if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
         {
-            delete[] clusterData, delete searchedDirectoryEntry;
+            if(actualDirectoryEntry != nullptr)
+                delete actualDirectoryEntry;
+            delete[] clusterData;
             return GET_SUB_DIRECTORIES_FAILED;
         }
 
         if(getNextClusterResult == FAT_VALUE_EOC)
         {
-            delete[] clusterData, delete searchedDirectoryEntry;
+            if(actualDirectoryEntry != nullptr)
+                delete actualDirectoryEntry;
+            delete[] clusterData;
             return GET_SUB_DIRECTORIES_SUCCESS;
         }
 
         actualCluster = nextCluster;
         numberOfClusterInParentDirectory++;
         offsetInCluster = 0; //64 is only for the first cluster, for the rest of them is 0
+    }
+}
+
+uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* dataBuffer, uint32_t maxBytesToWrite, uint32_t& numberOfBytesWritten, uint32_t writeAttribute)
+{
+    if(strcmp(directoryPath, "Root\0") == 0) //you can't write directly to root
+        return WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE;
+
+    DirectoryEntry* actualDirectoryEntry = nullptr;
+    uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
+                                                                     &actualDirectoryEntry);
+    if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
+    {
+        delete actualDirectoryEntry;
+        return WRITE_BYTES_TO_FILE_FAILED;
+    }
+
+    if(actualDirectoryEntry->Attributes == ATTR_READ_ONLY || actualDirectoryEntry->Attributes == ATTR_DIRECTORY)
+    {
+        delete actualDirectoryEntry;
+        return WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE;
+    }
+
+    if(writeAttribute == WRITE_WITH_TRUNCATE)
+    {
+        uint32_t writeWithTruncateResult = writeBytesToFileWithTruncate(diskInfo, bootSector, actualDirectoryEntry, dataBuffer, maxBytesToWrite, numberOfBytesWritten);
+
+        if(writeWithTruncateResult == WRITE_BYTES_TO_FILE_WITH_TRUNCATE_SUCCESS)
+        {
+            actualDirectoryEntry->FileSize = 64 + numberOfBytesWritten; //64 for dot & dotdot entries
+            DirectoryEntry* newDirectoryEntry = new DirectoryEntry();
+            memcpy(newDirectoryEntry, actualDirectoryEntry, 32);
+            updateDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, newDirectoryEntry); //CAUTION we don't query this, so if it fails, we have corrupted data
+
+            delete actualDirectoryEntry, delete newDirectoryEntry;
+            return WRITE_BYTES_TO_FILE_SUCCESS;
+        }
+
+        delete actualDirectoryEntry;
+        return WRITE_BYTES_TO_FILE_FAILED;
     }
 }

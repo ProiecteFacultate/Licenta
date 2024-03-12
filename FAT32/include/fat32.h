@@ -14,8 +14,9 @@
 
 
 //Being given a directory name to look for, and its parent's directory entry, looks for the directory name in its parent's cluster(S), returning its directory entry
+//CAUTION this method looks only in the given parent (don't confuse with findDirectoryEntryByFullPath)
 uint32_t findDirectoryEntryByDirectoryName(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, char* searchedDirectoryName,
-                                                  DirectoryEntry* searchedDirectoryEntry);
+                                           DirectoryEntry* searchedDirectoryEntry);
 
 //Being given a directory name to look for, and a buffer containing a cluster's data, looks for the directory name in that buffer
 uint32_t findDirectoryEntryInGivenClusterData(BootSector* bootSector, char* clusterData, char* directoryName, DirectoryEntry* directoryEntry, uint32_t occupiedBytesInCluster,
@@ -29,7 +30,7 @@ uint32_t updateFat(DiskInfo* diskInfo, BootSector* bootSector, uint32_t clusterN
 
 //When creating a new directory, we need to add a directory entry for this new directory in its parent cluster(S)
 uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, char* newDirectoryName,
-                                                   uint32_t firstEmptyCluster, DirectoryEntry* newDirectoryEntry);
+                                                   uint32_t firstEmptyCluster, DirectoryEntry* newDirectoryEntry, uint32_t newDirectoryAttribute);
 
 //For ann existing directory, adds a new free cluster, if found
 uint32_t addNewClusterToDirectory(DiskInfo* diskInfo, BootSector* bootSector, uint32_t lastClusterInDirectory, uint32_t& newCluster);
@@ -39,5 +40,10 @@ uint32_t setupFirstClusterInDirectory(DiskInfo* diskInfo, BootSector* bootSector
 
 //Given a directory entry, updated the entry in its parent, and also all its subdirectories dotdot
 uint32_t updateDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* newDirectoryEntry);
+
+//Given a directory entry, a data buffer, and a max bytes to write, it writes up to max bytes in the cluster, OVERWRITING the existing data (dot & dotdot are not affected by overwrite)
+//If the cluster contains more clusters then needed after write, it will set as free in the fat table the no longer used clusters
+uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry, char* dataBuffer, uint32_t maxBytesToWrite,
+                                      uint32_t& numberOfBytesWritten);
 
 #endif

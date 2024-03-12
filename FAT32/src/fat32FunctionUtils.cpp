@@ -211,3 +211,47 @@ uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootS
         offsetInCluster = 0; //64 is only for the first cluster, for the rest of them is 0
     }
 }
+
+uint32_t findDirectoryEntryByFullPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, DirectoryEntry** directoryEntry)
+{
+    char* actualDirectoryName = strtok(directoryPath, "/");
+    *directoryEntry = nullptr;
+    DirectoryEntry* searchedDirectoryEntry = new DirectoryEntry();
+
+    while(actualDirectoryName != nullptr)
+    {
+        int searchDirectoryEntryResult = findDirectoryEntryByDirectoryName(diskInfo, bootSector,
+                                                                           *directoryEntry,
+                                                                           actualDirectoryName,
+                                                                           searchedDirectoryEntry);
+        if(searchDirectoryEntryResult == DIR_ENTRY_FOUND)
+            *directoryEntry = searchedDirectoryEntry;
+        else
+        {
+            delete searchedDirectoryEntry; //don't delete actualDirectoryEntry because is either null, or points to the same address as searchedDirectoryEntry
+            return FIND_DIRECTORY_ENTRY_BY_PATH_FAILED;
+        }
+
+        actualDirectoryName = strtok(nullptr, "/");
+    }
+
+    return FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS;
+}
+
+uint32_t freeClustersInChainStartingWithGivenCluster(DiskInfo* diskInfo, BootSector* bootSector, uint32_t startingClusterNumber)
+{
+    uint32_t actualCluster = startingClusterNumber;
+    uint32_t nextCluster = 0;
+
+    while(true)
+    {
+        updateFat(diskInfo, bootSector, actualCluster, "\x00\x00\x00\x00"); //free fat value
+        uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+        if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
+            return FREE_CLUSTERS_IN_CHAIN_FAILED;
+        else if(getNextClusterResult == FAT_VALUE_EOC)
+            return FREE_CLUSTERS_IN_CHAIN_SUCCESS;
+
+        actualCluster = nextCluster;
+    }
+}
