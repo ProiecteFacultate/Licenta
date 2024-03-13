@@ -23,4 +23,9 @@
 #define TRUNCATE_FILE_FAILED                             0
 #define TRUNCATE_FILE_SUCCESS                            1
 
+#define DELETE_DIRECTORY_FAILED                          0
+#define DELETE_DIRECTORY_SUCCESS                         1
+#define DELETE_DIRECTORY_CAN_NOT_DELETE_GIVEN_DIRECTORY  2
+
+
 #endif //FAT32_FAT32APIRESPONSECODES_H

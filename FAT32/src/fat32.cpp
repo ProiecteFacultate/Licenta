@@ -2,6 +2,7 @@
 #include "string"
 #include "string.h"
 #include "iostream"
+#include "vector"
 
 #include "../include/disk.h"
 #include "../include/diskUtils.h"
@@ -525,5 +526,197 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, BootSector* bootSector, 
         actualCluster = nextCluster;
         numberOfClusterInDirectory++;
         directoryCurrentSize = directoryEntry->FileSize + numberOfBytesWritten;
+    }
+}
+
+uint32_t getSubDirectoriesByParentDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, std::vector<DirectoryEntry*>& subDirectories)
+{
+    char* clusterData = new char[getClusterSize(bootSector)]; //declare here for time efficiency
+
+    uint32_t actualCluster = getFirstClusterForDirectory(bootSector, parentDirectoryEntry);  //directory first cluster
+    uint32_t offsetInCluster = 64; //we start from 64 because in the first sector of the first cluster we got dot & dotdot
+    uint32_t numberOfClusterInParentDirectory = 0; //the cluster number in chain
+    uint32_t occupiedBytesInCluster = 0; //if the cluster is full, then it is cluster size, otherwise smaller
+
+    while (true)
+    {
+        occupiedBytesInCluster = parentDirectoryEntry->FileSize >= getClusterSize(bootSector) * (numberOfClusterInParentDirectory + 1) ? getClusterSize(bootSector)
+                                                                                                              : parentDirectoryEntry->FileSize % getClusterSize(bootSector);
+
+        uint32_t numOfSectorsRead = 0;
+        int readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
+                                         clusterData, numOfSectorsRead);
+
+        if(readResult == EC_NO_ERROR)
+        {
+            for(; offsetInCluster < occupiedBytesInCluster; offsetInCluster += 32)
+            {
+                DirectoryEntry* directoryEntry = new DirectoryEntry(); //same for time efficiency
+                memcpy(directoryEntry, clusterData + offsetInCluster, 32);
+                subDirectories.push_back(directoryEntry);
+            }
+        }
+        else
+        {
+            delete[] clusterData;
+            return GET_SUB_DIRECTORIES_SUCCESS;
+        }
+
+        uint32_t nextCluster = 0;
+        uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+
+        if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
+        {
+            delete[] clusterData;
+            return GET_SUB_DIRECTORIES_FAILED;
+        }
+
+        if(getNextClusterResult == FAT_VALUE_EOC)
+        {
+            delete[] clusterData;
+            return GET_SUB_DIRECTORIES_SUCCESS;
+        }
+
+        actualCluster = nextCluster;
+        numberOfClusterInParentDirectory++;
+        offsetInCluster = 0; //64 is only for the first cluster, for the rest of them is 0
+    }
+}
+
+uint32_t deleteDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry)
+{
+    std::vector<DirectoryEntry*> subDirectories;
+
+    if(directoryEntry->Attributes == ATTR_DIRECTORY)
+    {
+        uint32_t getSubdirectoriesResult = getSubDirectoriesByParentDirectoryEntry(diskInfo, bootSector, directoryEntry, subDirectories);
+        if(getSubdirectoriesResult != GET_SUB_DIRECTORIES_SUCCESS)
+            return DELETE_DIRECTORY_ENTRY_FAILED;
+
+        for(DirectoryEntry* childDirectoryEntry : subDirectories)
+        {
+            uint32_t deleteChildDirectoryEntryResult = deleteDirectoryEntry(diskInfo, bootSector, childDirectoryEntry);
+            if(deleteChildDirectoryEntryResult == DELETE_DIRECTORY_ENTRY_FAILED)
+            {
+                for(DirectoryEntry* entry : subDirectories)
+                    delete entry;
+            }
+        }
+
+        for(DirectoryEntry* childDirectoryEntry : subDirectories)
+            delete childDirectoryEntry;
+    }
+
+    uint32_t firstClusterInDirectory = getFirstClusterForDirectory(bootSector, directoryEntry);
+    uint32_t freeClustersInChainResult = freeClustersInChainStartingWithGivenCluster(diskInfo, bootSector, firstClusterInDirectory);
+    return (freeClustersInChainResult == FREE_CLUSTERS_IN_CHAIN_SUCCESS) ? DELETE_DIRECTORY_ENTRY_SUCCESS : DELETE_DIRECTORY_ENTRY_FAILED;
+}
+
+uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* parentDirectoryEntry)
+{
+    char* clusterData = new char[getClusterSize(bootSector)];
+    uint32_t numOfSectorsRead = 0;
+    uint32_t numOfSectorsWritten = 0;
+    uint32_t givenDirectoryEntryOffsetInParentCluster = 0; //the offset in its cluster, not its offset relative to all its parent's clusters
+    uint32_t readResult;
+    uint32_t lastDirectoryEntryInParentOffset;
+
+    uint32_t actualCluster = getFirstClusterForDirectory(bootSector, parentDirectoryEntry);
+    uint32_t numberOfClusterInParentDirectory = 0; //the cluster number in chain
+    uint32_t occupiedBytesInCluster = 0; //if the cluster is full, then it is cluster size, otherwise smaller
+
+    while(true)
+    {
+        occupiedBytesInCluster = parentDirectoryEntry->FileSize >= getClusterSize(bootSector) * (numberOfClusterInParentDirectory + 1) ? getClusterSize(bootSector)
+                                                                                                            : parentDirectoryEntry->FileSize % getClusterSize(bootSector);
+
+        readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
+                                     clusterData, numOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] clusterData;
+            return DELETE_DIRECTORY_ENTRY_FAILED;
+        }
+
+        uint32_t searchDirectoryEntryInClusterResult = findDirectoryEntryInGivenClusterData(bootSector, clusterData, (char*) givenDirectoryEntry->FileName,
+                                                                                            new DirectoryEntry(), occupiedBytesInCluster, givenDirectoryEntryOffsetInParentCluster);
+
+        if(searchDirectoryEntryInClusterResult == DIR_ENTRY_FOUND)
+        {
+            uint32_t clusterNumberInChainContainingLastDirectoryEntry = parentDirectoryEntry->FileSize / getClusterSize(bootSector);
+            if(parentDirectoryEntry->FileSize % getClusterSize(bootSector) == 0)
+            {
+                clusterNumberInChainContainingLastDirectoryEntry--;
+                lastDirectoryEntryInParentOffset = getClusterSize(bootSector) - 32;
+            }
+            else
+                lastDirectoryEntryInParentOffset = (parentDirectoryEntry->FileSize % getClusterSize(bootSector)) - 32;
+
+            uint32_t clusterWithLastDirectoryEntryInParent = 0; //the clusterWithLastDirectoryEntryInParent number of the last clusterWithLastDirectoryEntryInParent in chain
+            uint32_t findClusterResult = findNthClusterInChain(diskInfo, bootSector, getFirstClusterForDirectory(bootSector, parentDirectoryEntry),
+                                                               clusterNumberInChainContainingLastDirectoryEntry, clusterWithLastDirectoryEntryInParent);
+
+            if(findClusterResult != CLUSTER_SEARCH_IN_CHAN_SUCCESS)
+                return DELETE_DIRECTORY_ENTRY_FAILED;
+
+            readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, clusterWithLastDirectoryEntryInParent),
+                                         clusterData, numOfSectorsRead);
+
+            if(readResult != EC_NO_ERROR)
+            {
+                delete[] clusterData;
+                return DELETE_DIRECTORY_ENTRY_FAILED;
+            }
+
+            DirectoryEntry* lastDirectoryEntryInParentDirectory = (DirectoryEntry*)&clusterData[lastDirectoryEntryInParentOffset];
+            DirectoryEntry* newParentDirectoryEntry = new DirectoryEntry();
+            memcpy(newParentDirectoryEntry, parentDirectoryEntry, 32);
+            newParentDirectoryEntry->FileSize -= 32;
+            uint32_t updateParentDirectoryEntryResult = updateDirectoryEntry(diskInfo, bootSector, parentDirectoryEntry, newParentDirectoryEntry);
+
+            if(updateParentDirectoryEntryResult == DIRECTORY_ENTRY_UPDATE_FAILED)
+                return DELETE_DIRECTORY_ENTRY_FAILED;
+
+            //this happens for the case where the given directory entry to delete is the last directory entry in parent, so we just reduce parent size, without moving the entry
+            if(compareDirectoryNames((char*) givenDirectoryEntry->FileName, (char*) lastDirectoryEntryInParentDirectory->FileName) == true)
+                return DELETE_DIRECTORY_ENTRY_SUCCESS;
+
+            //read cluster data again in order to refresh it after updating directory entry above
+            readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
+                                         clusterData, numOfSectorsRead);
+
+            if(readResult != EC_NO_ERROR)
+            {
+                delete[] clusterData;
+                return DELETE_DIRECTORY_ENTRY_FAILED;
+            }
+
+            memcpy(clusterData + givenDirectoryEntryOffsetInParentCluster, lastDirectoryEntryInParentDirectory, 32);
+            uint32_t writeResult = writeDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
+                                                     clusterData, numOfSectorsWritten);
+
+            return (writeResult == EC_NO_ERROR) ? DELETE_DIRECTORY_ENTRY_SUCCESS : DELETE_DIRECTORY_ENTRY_FAILED;
+        }
+
+        //ELSE: we know for sure that the given directory entry exists in its parent, so the only other possible result is DIR_ENTRY_NOT_FOUND_IN_CLUSTER
+        uint32_t nextCluster = 0;
+        uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
+
+        //also we can't have EOC, since this would mean we already reached end of parent without finding the given directory entry which is impossible
+        if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
+        {
+            delete[] clusterData;
+            return DELETE_DIRECTORY_ENTRY_FAILED;
+        }
+
+        actualCluster = nextCluster;
+        numberOfClusterInParentDirectory++;
+        numOfSectorsRead = 0;
+        readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
+                                     clusterData,numOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+            return DELETE_DIRECTORY_ENTRY_FAILED;
     }
 }

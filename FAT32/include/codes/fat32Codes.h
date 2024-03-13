@@ -64,4 +64,7 @@
 #define FREE_CLUSTERS_IN_CHAIN_FAILED                                     0
 #define FREE_CLUSTERS_IN_CHAIN_SUCCESS                                    1
 
+#define DELETE_DIRECTORY_ENTRY_FAILED                                     0
+#define DELETE_DIRECTORY_ENTRY_SUCCESS                                    1
+
 #endif

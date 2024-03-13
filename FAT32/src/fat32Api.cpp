@@ -80,7 +80,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
     return DIR_CREATION_SUCCESS;
 }
 
-uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry*>& subDirectories)
+uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry*>& subDirectories) //TODO REFACTOR
 {
     DirectoryEntry* actualDirectoryEntry = nullptr;
     uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
@@ -260,4 +260,32 @@ uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* director
                                      reasonForIncompleteWrite);
 
     return (writeFileResult == WRITE_BYTES_TO_FILE_SUCCESS) ? TRUNCATE_FILE_SUCCESS : TRUNCATE_FILE_FAILED;
+}
+
+uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath)
+{
+    if(strcmp(directoryPath, "Root\0") == 0) //you can't delete the root
+        return DELETE_DIRECTORY_CAN_NOT_DELETE_GIVEN_DIRECTORY;
+
+    char* parentPath = new char[strlen(directoryPath)];
+    extractParentPathFromPath(directoryPath, parentPath);
+
+    DirectoryEntry* actualDirectoryEntry = nullptr;
+    uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
+                                                                     &actualDirectoryEntry);
+    if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
+        return DELETE_DIRECTORY_FAILED;
+
+    DirectoryEntry* parentDirectoryEntry = nullptr;
+    findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
+                                                                     &parentDirectoryEntry);
+    if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
+        return DELETE_DIRECTORY_FAILED;
+
+    uint32_t deleteDirectoryEntryResult = deleteDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry);
+    if(deleteDirectoryEntryResult != DELETE_DIRECTORY_ENTRY_SUCCESS)
+        return DELETE_DIRECTORY_FAILED;
+
+    uint32_t deleteDirectoryEntryForParentResult = deleteDirectoryEntryFromParent(diskInfo, bootSector, actualDirectoryEntry, parentDirectoryEntry);
+    return (deleteDirectoryEntryForParentResult == DELETE_DIRECTORY_ENTRY_SUCCESS) ? DELETE_DIRECTORY_SUCCESS : DELETE_DIRECTORY_ENTRY_FAILED;
 }

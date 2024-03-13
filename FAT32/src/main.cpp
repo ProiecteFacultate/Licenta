@@ -15,7 +15,7 @@
 #include "../include/fat32Attributes.h"
 
 bool creatingDiskAndFileSystem = false;
-bool debugMode = false;
+bool debugMode = true;
 
 int initialLoad(DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo)
 {
@@ -70,9 +70,9 @@ int main() {
         char* sectorData2 = new char[bootSector->BytesPerSector];
         readDiskSectors(diskInfo, 1, 112, sectorData2, numOfSectorsRead);
         char* sectorData3 = new char[bootSector->BytesPerSector];
-        readDiskSectors(diskInfo, 1, 152, sectorData3, numOfSectorsRead);
+        readDiskSectors(diskInfo, 1, 108, sectorData3, numOfSectorsRead);
 
-        DirectoryEntry* dir = (DirectoryEntry*)&sectorData1[0];
+        DirectoryEntry* dir = (DirectoryEntry*)&rootSectorData[0];
         return 0;
     }
 
@@ -111,35 +111,35 @@ int main() {
 //        }
 
 /////////File write
-        std::ifstream in("../fin.txt");
-        in.seekg(0, std::ios::end);
-        std::streampos fileSize = in.tellg();
-        in.seekg(0, std::ios::beg);
-        char *text = new char[fileSize];
-        in.read(text, fileSize);
-//        std::cout << text << std::endl;
-
-        char* fileParentPath = new char[100];
-        memcpy(fileParentPath, "Root\0", 5);
-        char* newFile= new char[10];
-        memcpy(newFile, "File_1\0", 7);
-        int createFileResult = createDirectory(diskInfo, bootSector, fileParentPath, newFile, ATTR_FILE);
-        std::cout << "File creation for " << newFile << " : " << createFileResult << "\n";
-
-        char* filePath = new char[100];
-        memcpy(filePath, "Root/File_1\0", 12);
-        uint32_t numberOfBytesWritten = 0;
-        uint32_t reasonForIncompleteWrite;
-        memset(text + 6000, 0, 1000);
-        uint32_t writeFileResult = write(diskInfo, bootSector, filePath, text, 6000, numberOfBytesWritten, WRITE_WITH_TRUNCATE,
-                                         reasonForIncompleteWrite);
-        std::string prompt2 = "\nWrite file result: ";
-        std::cout << prompt2 << writeFileResult << " : number of bytes written: " << numberOfBytesWritten << "\n";
-        if(numberOfBytesWritten < 6000)
-        {
-            std::string prompt3 = "\nReason for incomplete bytes write: ";
-            std::cout << prompt3 << reasonForIncompleteWrite << "\n";
-        }
+//        std::ifstream in("../fin.txt");
+//        in.seekg(0, std::ios::end);
+//        std::streampos fileSize = in.tellg();
+//        in.seekg(0, std::ios::beg);
+//        char *text = new char[fileSize];
+//        in.read(text, fileSize);
+////        std::cout << text << std::endl;
+//
+//        char* fileParentPath = new char[100];
+//        memcpy(fileParentPath, "Root/Level_1/\0", 21);
+//        char* newFile= new char[100];
+//        memcpy(newFile, "Level_2_2\0", 10);
+//        int createFileResult = createDirectory(diskInfo, bootSector, fileParentPath, newFile, ATTR_DIRECTORY);
+//        std::cout << "File creation for " << newFile << " : " << createFileResult << "\n";
+//
+//        char* filePath = new char[100];
+//        memcpy(filePath, "Root/File_1\0", 12);
+//        uint32_t numberOfBytesWritten = 0;
+//        uint32_t reasonForIncompleteWrite;
+//        memset(text + 6000, 0, 1000);
+//        uint32_t writeFileResult = write(diskInfo, bootSector, filePath, text, 6000, numberOfBytesWritten, WRITE_WITH_TRUNCATE,
+//                                         reasonForIncompleteWrite);
+//        std::string prompt2 = "\nWrite file result: ";
+//        std::cout << prompt2 << writeFileResult << " : number of bytes written: " << numberOfBytesWritten << "\n";
+//        if(numberOfBytesWritten < 6000)
+//        {
+//            std::string prompt3 = "\nReason for incomplete bytes write: ";
+//            std::cout << prompt3 << reasonForIncompleteWrite << "\n";
+//        }
 
 
 ///////////////Read file
@@ -161,11 +161,18 @@ int main() {
 //        std::cout << "\n\n" << readBuffer << "\n\n";
 
 ///////////Truncate file
-        filePath = new char[100];
-        memcpy(filePath, "Root/File_1\0", 12);
-        uint32_t truncateResult = truncateFile(diskInfo, bootSector, filePath);
-        std::string prompt5 = "\nTruncate result: ";
-        std::cout << prompt5 << truncateResult << "\n";
+//        filePath = new char[100];
+//        memcpy(filePath, "Root/File_1\0", 12);
+//        uint32_t truncateResult = truncateFile(diskInfo, bootSector, filePath);
+//        std::string prompt5 = "\nTruncate result: ";
+//        std::cout << prompt5 << truncateResult << "\n";
+
+///////////Delete directory
+        char* filePathToDelete = new char[100];
+        memcpy(filePathToDelete, "Root/Level_1\0", 20);
+        uint32_t deleteDirectoryResult = deleteDirectoryByPath(diskInfo, bootSector, filePathToDelete);
+        std::string prompt6 = "\nDelete directory result: ";
+        std::cout << prompt6 << deleteDirectoryResult << "\n";
     }
 
     return 0;

@@ -220,7 +220,7 @@ uint32_t findDirectoryEntryByFullPath(DiskInfo* diskInfo, BootSector* bootSector
 
     while(actualDirectoryName != nullptr)
     {
-        int searchDirectoryEntryResult = findDirectoryEntryByDirectoryName(diskInfo, bootSector,
+        uint32_t searchDirectoryEntryResult = findDirectoryEntryByDirectoryName(diskInfo, bootSector,
                                                                            *directoryEntry,
                                                                            actualDirectoryName,
                                                                            searchedDirectoryEntry);
