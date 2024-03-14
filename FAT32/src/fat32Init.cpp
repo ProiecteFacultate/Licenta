@@ -8,6 +8,7 @@
 #include "../include/diskCodes.h"
 #include "../include/utils.h"
 #include "../include/fat32FunctionUtils.h"
+#include "../include/structures.h"
 #include "../include/codes/fat32Codes.h"
 #include "../include/fat32Init.h"
 #include "../include/fat32Attributes.h"
@@ -120,6 +121,7 @@ void initializeBootSectors(DiskInfo* diskInfo)
     memset(rootFileName, ' ', 11);
     memcpy(rootFileName, "Root", 4); //in root its name 'Root' is in first dir entry, while in root's children will be in dot dot
     DirectoryEntry* rootDirectoryEntry = new DirectoryEntry();
+    memset(rootDirectoryEntry, 0, 32); //to have 0 for values that are not set below
     memcpy(rootDirectoryEntry->FileName, rootFileName, 11);
     rootDirectoryEntry->FileSize = 64; //root dir does not contain dot & dotdot entries, but we consider that they exist for symmetry with other clusters
     rootDirectoryEntry->FirstClusterLow = bootSectorData->RootDirCluster;

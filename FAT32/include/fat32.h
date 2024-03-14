@@ -5,6 +5,7 @@
 #include <ctype.h>
 
 #include "../include/diskUtils.h"
+#include "../include/structures.h"
 #include "../include/fat32Init.h"
 
 #ifndef FAT32_FAT32_H
@@ -55,5 +56,9 @@ uint32_t getSubDirectoriesByParentDirectoryEntry(DiskInfo* diskInfo, BootSector*
 uint32_t deleteDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry);
 
 uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* parentDirectoryEntry);
+
+//Given a directoryEntry, returns the file size & disk size of it and all of its direct & indirect children
+//CAUTION it returns the sizes, but actually only for descendants, its size is not count
+uint32_t getDirectoryFullByDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry, uint32_t& size, uint32_t& sizeOnDisk);
 
 #endif

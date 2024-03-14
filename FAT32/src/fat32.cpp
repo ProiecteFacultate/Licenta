@@ -9,6 +9,7 @@
 #include "../include/diskCodes.h"
 #include "../include/fat32Init.h"
 #include "../include/utils.h"
+#include "../include/structures.h"
 #include "../include/fat32FunctionUtils.h"
 #include "../include/codes/fat32ApiResponseCodes.h"
 #include "../include/codes/fat32Codes.h"
@@ -230,6 +231,7 @@ uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, BootSector* bootSector, D
         return DIR_ENTRY_ADD_FAILED;
 
     parentDirectoryEntry->FileSize += 32; //we also want to update the parent directory entry file size
+    parentDirectoryEntry->LastAccessedDate = getCurrentDateFormatted();
     //we can use parentDirectoryEntry for both with no problem
     uint32_t updateParentDirectoryEntryResult = updateDirectoryEntry(diskInfo, bootSector, parentDirectoryEntry, parentDirectoryEntry);
 
@@ -673,6 +675,7 @@ uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, BootSector* bootSect
             DirectoryEntry* newParentDirectoryEntry = new DirectoryEntry();
             memcpy(newParentDirectoryEntry, parentDirectoryEntry, 32);
             newParentDirectoryEntry->FileSize -= 32;
+            newParentDirectoryEntry->LastAccessedDate = getCurrentDateFormatted();
             uint32_t updateParentDirectoryEntryResult = updateDirectoryEntry(diskInfo, bootSector, parentDirectoryEntry, newParentDirectoryEntry);
 
             if(updateParentDirectoryEntryResult == DIRECTORY_ENTRY_UPDATE_FAILED)
@@ -719,4 +722,38 @@ uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, BootSector* bootSect
         if(readResult != EC_NO_ERROR)
             return DELETE_DIRECTORY_ENTRY_FAILED;
     }
+}
+
+uint32_t getDirectoryFullByDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry, uint32_t& size, uint32_t& sizeOnDisk)
+{
+    std::vector<DirectoryEntry*> subDirectories;
+
+    if(directoryEntry->Attributes == ATTR_DIRECTORY)
+    {
+        uint32_t getSubdirectoriesResult = getSubDirectoriesByParentDirectoryEntry(diskInfo, bootSector, directoryEntry, subDirectories);
+        if(getSubdirectoriesResult != GET_SUB_DIRECTORIES_SUCCESS)
+            return DIR_GET_FULL_SIZE_FAILED;
+
+        for(DirectoryEntry* childDirectoryEntry : subDirectories)
+        {
+            uint32_t getChildDirectorySizeResult = getDirectoryFullByDirectoryEntry(diskInfo, bootSector, childDirectoryEntry, size, sizeOnDisk);
+            if(getChildDirectorySizeResult == DIR_GET_FULL_SIZE_FAILED)
+            {
+                for(DirectoryEntry* entry : subDirectories)
+                    delete entry;
+            }
+
+            uint32_t numOfClustersOccupiedClusters = childDirectoryEntry->FileSize / getClusterSize(bootSector);
+            if(childDirectoryEntry->FileSize % getClusterSize(bootSector) == 0) //in case the size occupies the last sector at maximum
+                numOfClustersOccupiedClusters--;
+
+            sizeOnDisk += (numOfClustersOccupiedClusters + 1) * getClusterSize(bootSector);
+            size += childDirectoryEntry->FileSize - 64;
+        }
+
+        for(DirectoryEntry* entry : subDirectories)
+            delete entry;
+    }
+
+    return DIR_GET_FULL_SIZE_SUCCESS;
 }

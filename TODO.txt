@@ -1,5 +1,4 @@
 FAT32:
 
-1. Metode pt citirea dimensiunii un fisier / director (file size & size on disk)
-2. Metoda pt copierea dintr un fisier in altul (OPTIONAL)
-3. Inspect file (creation, uodate time etc)
+1. Metoda pt copierea dintr un fisier in altul (OPTIONAL)
+2. Update write / access time for directories

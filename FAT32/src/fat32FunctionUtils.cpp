@@ -134,11 +134,11 @@ void createDirectoryEntry(char* directoryName, uint8_t directoryAttribute, uint3
     directoryEntry->Reserved = 0;
     directoryEntry->CreationTimeTenths = time.wMilliseconds / 10;
     directoryEntry->CreationTime = (time.wHour * 3600 + time.wMinute * 60 + time.wSecond) / 2; //we have granularity of 2 secs, otherwise 16 bits is not enough. Multiply with 2 for real value in sec
-    directoryEntry->CreationDate = ((time.wYear - 1900) << 9) | (time.wMonth << 5) | time.wDay; //high 7 bits represent how many years since 1900, next 5 for month, last 4 for day
+    directoryEntry->CreationDate = ((time.wYear - 1900) << 9) | (time.wMonth << 5) | time.wDay; //high 7 bits represent how many years since 1900, next 4 for month, last 5 for day
     directoryEntry->LastAccessedDate = directoryEntry->CreationDate;
     directoryEntry->FirstClusterHigh = firstCluster >> 16;
     directoryEntry->LastWriteTime = directoryEntry->CreationTime;
-    directoryEntry->LastAccessedDate = directoryEntry->CreationDate;
+    directoryEntry->LastWriteDate = directoryEntry->CreationDate;
     directoryEntry->FirstClusterLow = firstCluster;
     directoryEntry->FileSize = 64; //dot and dotdot directoryEntries
 

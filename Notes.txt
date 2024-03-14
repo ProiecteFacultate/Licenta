@@ -1,8 +1,24 @@
 FAT32:
 
-We can find some info about root directory (its first cluster and size in its second entry (starting at index 0)
+0. dirEntry->FileSize means the size of the data in the directory clusters. it doesn count only the occupied space in clusters (considering
+also 64 for dot & dot dot). It doesn't contain direct or indirect children size!
+   when using a method to get full size -> It also counts direct or indirect subdirectories but without 64 (for each of them we decrease
+64 from filesize)
+   disk on size also counts direct or indirect subdirectories
+
+1.We can find some info about root directory (its first cluster and size in its second entry (starting at index 0)
 In root's first sector we have it s name 'Root       ', and in root's children's dot dot entries we also have 'Root     'name.
 A normal cluster dotdot entry contains its parent name and its size. For a normal cluster the dot entry DONT contain the cluster size!
 Both folders & files contain dot & dotdot
 
-Trash cluster : cluster marked as occupied in fat, but without being part of any cluster chain (it can happen in case of some errors)
+2. Trash cluster : cluster marked as occupied in fat, but without being part of any cluster chain (it can happen in case of some errors)
+
+3. Updating last accesed date and last write time/date
+   Last accessed date happens when - add child directory (only for direct child!)
+                                   - delete entry from it
+                                   - truncate file
+                                   - write to file
+                                   - read with success from file (some bytes must be read, but no necessarily max bytes)
+
+   Last write date/time happens    - truncate file
+                                   - write to file

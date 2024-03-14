@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../include/diskUtils.h"
+#include "../include/structures.h"
 #include "../include/fat32Init.h"
 
 #ifndef FAT32_FAT32API_H
@@ -24,7 +25,6 @@ uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, 
                uint32_t& reasonForIncompleteWrite);
 
 //Being given a directory path, a buffer to read into, and a max number of bytes, read up to the max number of bytes
-//TODO add the read starting point (from byt x)
 uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* readBuffer, uint32_t startingPosition, uint32_t maxBytesToRead, uint32_t& numberOfBytesRead,
               uint32_t& reasonForIncompleteRead);
 
@@ -32,6 +32,12 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
 //CAUTION newSize value don't have added 64 for dor & dotdot, so if newSize is 10 for example, the new file size will be 64
 uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, uint32_t newSize);
 
+//Being given a directory path deletes it, with all its direct and indirect children (if the given directory is a folder)
 uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath);
+
+//If it is a file, then its returns its size & size on disk; if it is a folder, it adds its size to all its direct and indirect children
+uint32_t getDirectoryFullSizeByPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, uint32_t& size, uint32_t& sizeOnDisk);
+
+uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, DirectoryDisplayableAttributes* attributes);
 
 #endif

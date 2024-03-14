@@ -6,6 +6,7 @@
 #include "vector"
 
 #include "../include/diskUtils.h"
+#include "../include/structures.h"
 #include "../include/fat32Init.h"
 
 #ifndef FAT32_UTILS_H
@@ -22,5 +23,9 @@ void formatDirectoryName(const char* directoryName, char* formattedName);
 void extractParentPathFromPath(const char* fullPath, char* parentPath);
 
 std::vector<std::string> splitString(const std::string& str, char delimiter);
+
+uint16_t getCurrentDateFormatted();
+
+uint16_t getCurrentTimeFormatted();
 
 #endif

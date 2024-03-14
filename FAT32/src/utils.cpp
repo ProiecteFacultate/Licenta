@@ -4,6 +4,7 @@
 #include "algorithm"
 #include "iostream"
 
+#include "../include/structures.h"
 #include "../include/fat32.h"
 
 bool checkDirectoryNameValidity(const char* directoryName) //CAUTION directoryName MUST end with null
@@ -155,4 +156,18 @@ std::vector<std::string> splitString(const std::string& str, char delimiter)
     tokens.push_back(token);
 
     return tokens;
+}
+
+uint16_t getCurrentDateFormatted()
+{
+    SYSTEMTIME time;
+    GetSystemTime(&time);
+    return ((time.wYear - 1900) << 9) | (time.wMonth << 5) | time.wDay; //high 7 bits represent how many years since 1900, next 4 for month, last 5 for day
+}
+
+uint16_t getCurrentTimeFormatted()
+{
+    SYSTEMTIME time;
+    GetSystemTime(&time);
+    return (time.wHour * 3600 + time.wMinute * 60 + time.wSecond) / 2; //we have granularity of 2 secs, otherwise 16 bits is not enough. Multiply with 2 for real value in sec
 }

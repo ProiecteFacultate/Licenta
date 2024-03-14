@@ -11,6 +11,7 @@
 
 #define GET_SUB_DIRECTORIES_FAILED                                             0
 #define GET_SUB_DIRECTORIES_SUCCESS                                            1
+#define GET_SUB_DIRECTORIES_GIVEN_DIRECTORY_CAN_NOT_CONTAIN_SUBDIRECTORIES     2                                               //if the given directory is a file
 
 #define WRITE_BYTES_TO_FILE_FAILED                                             0
 #define WRITE_BYTES_TO_FILE_SUCCESS                                            1
@@ -31,5 +32,11 @@
 #define DELETE_DIRECTORY_SUCCESS                                               1
 #define DELETE_DIRECTORY_CAN_NOT_DELETE_GIVEN_DIRECTORY                        2
 
+#define DIR_GET_FULL_SIZE_FAILED                                               0
+#define DIR_GET_FULL_SIZE_SUCCESS                                              1
+
+#define DIR_GET_DISPLAYABLE_ATTRIBUTES_FAILED                                  0
+#define DIR_GET_DISPLAYABLE_ATTRIBUTES_SUCCESS                                 1
+#define DIR_GET_DISPLAYABLE_ATTRIBUTES_FAILED_GIVEN_DIRECTORY_DO_NOT_EXIST     2
 
 #endif //FAT32_FAT32APIRESPONSECODES_H

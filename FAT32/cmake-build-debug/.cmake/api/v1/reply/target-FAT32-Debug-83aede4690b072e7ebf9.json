@@ -142,7 +142,8 @@
 				9,
 				11,
 				13,
-				14
+				14,
+				16
 			]
 		}
 	],
@@ -234,6 +235,11 @@
 			"compileGroupIndex" : 0,
 			"path" : "src/interface.cpp",
 			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/structures.h",
+			"sourceGroupIndex" : 1
 		}
 	],
 	"type" : "EXECUTABLE"

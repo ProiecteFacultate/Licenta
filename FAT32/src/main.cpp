@@ -12,6 +12,7 @@
 #include "../include/fat32Init.h"
 #include "../include/fat32.h"
 #include "../include/fat32Api.h"
+#include "../include/structures.h"
 #include "../include/fat32Attributes.h"
 #include "../include/utils.h"
 #include "../include/interface.h"
@@ -89,6 +90,8 @@ int main() {
             commandTruncateFile(diskInfo, bootSector, tokens);
         else if(tokens[0] == "rmdir")
             commandDeleteDirectory(diskInfo, bootSector, tokens);
+        else if(tokens[0] == "la")
+            commandShowDirectoryAttributes(diskInfo, bootSector, tokens);
         else
             std::cout << "Unknown command \n";
     }
