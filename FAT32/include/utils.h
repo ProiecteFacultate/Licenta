@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "vector"
 
 #include "../include/diskUtils.h"
 #include "../include/fat32Init.h"
@@ -19,5 +20,7 @@ bool compareDirectoryNames(char* expected, const char* actual);
 void formatDirectoryName(const char* directoryName, char* formattedName);
 
 void extractParentPathFromPath(const char* fullPath, char* parentPath);
+
+std::vector<std::string> splitString(const std::string& str, char delimiter);
 
 #endif

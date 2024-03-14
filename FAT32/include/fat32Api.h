@@ -24,10 +24,13 @@ uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, 
                uint32_t& reasonForIncompleteWrite);
 
 //Being given a directory path, a buffer to read into, and a max number of bytes, read up to the max number of bytes
-uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* readBuffer, uint32_t maxBytesToRead, uint32_t& numberOfBytesRead, uint32_t& reasonForIncompleteRead);
+//TODO add the read starting point (from byt x)
+uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* readBuffer, uint32_t startingPosition, uint32_t maxBytesToRead, uint32_t& numberOfBytesRead,
+              uint32_t& reasonForIncompleteRead);
 
 //Being given a directory path (for a file, not for a folder), sets its size to 64, freeing its clusters
-uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath);
+//CAUTION newSize value don't have added 64 for dor & dotdot, so if newSize is 10 for example, the new file size will be 64
+uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, uint32_t newSize);
 
 uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath);
 

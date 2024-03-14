@@ -9,7 +9,7 @@
 #include "../include/diskCodes.h"
 #include "../include/fat32Init.h"
 #include "../include/fat32.h"
-#include "../include/Utils.h"
+#include "../include/utils.h"
 #include "../include/codes/fat32Codes.h"
 #include "../include/fat32Attributes.h"
 #include "../include/fat32FunctionUtils.h"
@@ -100,7 +100,7 @@ uint32_t findNthClusterInChain(DiskInfo* diskInfo, BootSector* bootSector, uint3
     if(n == 0)
     {
         foundClusterNumber = firstCluster;
-        return CLUSTER_SEARCH_SUCCESS;
+        return CLUSTER_SEARCH_IN_CHAN_SUCCESS;
     }
 
     int index = 1;
@@ -147,6 +147,9 @@ void createDirectoryEntry(char* directoryName, uint8_t directoryAttribute, uint3
 
 uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* newDotDotEntry)
 {
+    if(givenDirectoryEntry->Attributes == ATTR_FILE) //if it is a file it doesn't contain subdirectories
+        return DIRECTORY_UPDATE_SUBDIRECTORIES_DOT_DOT_SUCCESS;
+
     uint32_t numOfSectorsRead = 0;
     uint32_t numberOfSectorsWritten = 0;
     uint32_t nextCluster = 0;
@@ -215,6 +218,9 @@ uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootS
 uint32_t findDirectoryEntryByFullPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, DirectoryEntry** directoryEntry)
 {
     char* actualDirectoryName = strtok(directoryPath, "/");
+    if(strcmp(actualDirectoryName, "Root\0") != 0)
+        return FIND_DIRECTORY_ENTRY_BY_PATH_FAILED;
+
     *directoryEntry = nullptr;
     DirectoryEntry* searchedDirectoryEntry = new DirectoryEntry();
 

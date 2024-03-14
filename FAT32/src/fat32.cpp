@@ -8,7 +8,7 @@
 #include "../include/diskUtils.h"
 #include "../include/diskCodes.h"
 #include "../include/fat32Init.h"
-#include "../include/Utils.h"
+#include "../include/utils.h"
 #include "../include/fat32FunctionUtils.h"
 #include "../include/codes/fat32ApiResponseCodes.h"
 #include "../include/codes/fat32Codes.h"

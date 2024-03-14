@@ -8,7 +8,7 @@
 #include "../include/diskUtils.h"
 #include "../include/diskCodes.h"
 #include "../include/fat32Init.h"
-#include "../include/Utils.h"
+#include "../include/utils.h"
 #include "../include/codes/fat32Codes.h"
 #include "../include/codes/fat32ApiResponseCodes.h"
 #include "../include/fat32Attributes.h"
@@ -36,7 +36,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
     if(actualDirectoryEntry->Attributes != ATTR_DIRECTORY)
     {
         delete actualDirectoryEntry;
-        return DIR_CREATION_PARENT_NOT_A_DIRECTORY;
+        return DIR_CREATION_PARENT_NOT_A_FOLDER;
     }
 
     if(parentAlreadyContainsDirectoryWithGivenName == DIR_ENTRY_FOUND)
@@ -192,10 +192,10 @@ uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, 
     return WRITE_BYTES_TO_FILE_FAILED;
 }
 
-uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* readBuffer, uint32_t maxBytesToRead, uint32_t& numberOfBytesRead, uint32_t& reasonForIncompleteRead)
+uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* readBuffer, uint32_t startingPosition, uint32_t maxBytesToRead, uint32_t& numberOfBytesRead,
+              uint32_t& reasonForIncompleteRead)
 {
-    char* clusterData = new char[getClusterSize(bootSector)]; //CAUTION we use a second buffer instead of reading directly in readBuffer because if we would do this, it could...
-    //CAUTION overflow the read buffer (since we are reading whole sectors) and this could overwrite other data in heap
+    uint32_t readResult;
     uint32_t numOfBytesReadFromThisCluster;
     uint32_t numOfSectorsRead;
     uint32_t actualCluster;
@@ -208,7 +208,7 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
     uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
                                                                      &actualDirectoryEntry);
     if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
-        return READ_BYTES_FROM_FILE_FAILED;
+        return READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST;
 
     if(actualDirectoryEntry->Attributes != ATTR_FILE)
     {
@@ -216,16 +216,36 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
         return READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE;
     }
 
+    startingPosition += 64; //if the starting position is for example 10, we will start to read from 74, because first 64 bytes are dot & dotdot
+    if(startingPosition > actualDirectoryEntry->FileSize)
+    {
+        delete actualDirectoryEntry;
+        return READ_BYTES_FROM_FILE_GIVEN_START_EXCEEDS_FILE_SIZE;
+    }
+
+    uint32_t startingPositionClusterInChain = startingPosition / getClusterSize(bootSector); //0, 1, 2
     uint32_t givenDirectoryFirstCluster = getFirstClusterForDirectory(bootSector, actualDirectoryEntry);
-    uint32_t readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, givenDirectoryFirstCluster),
-                                          clusterData, numOfSectorsRead);
+    uint32_t startingPositionOffsetInCluster = startingPosition % getClusterSize(bootSector);
+    char* clusterData = new char[getClusterSize(bootSector)]; //CAUTION we use a second buffer instead of reading directly in readBuffer because if we would do this, it could...
+    //CAUTION overflow the read buffer (since we are reading whole sectors) and this could overwrite other data in heap
 
-    if(readResult != EC_NO_ERROR)
+    uint32_t findClusterResult = findNthClusterInChain(diskInfo, bootSector, givenDirectoryFirstCluster, startingPositionClusterInChain, actualCluster);
+    if(findClusterResult != CLUSTER_SEARCH_IN_CHAN_SUCCESS)
+    {
+        delete[] clusterData, delete actualDirectoryEntry;
         return READ_BYTES_FROM_FILE_FAILED;
+    }
 
-    numberOfBytesRead = std::min(actualDirectoryEntry->FileSize - 64, std::min(getClusterSize(bootSector) - 64, maxBytesToRead));
-    memcpy(readBuffer, clusterData + 64, numberOfBytesRead);
-    actualCluster = givenDirectoryFirstCluster;
+    readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
+                                 clusterData, numOfSectorsRead);
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] clusterData, delete actualDirectoryEntry;
+        return READ_BYTES_FROM_FILE_FAILED;
+    }
+
+    numberOfBytesRead = std::min(actualDirectoryEntry->FileSize - startingPosition, std::min(getClusterSize(bootSector) - startingPositionOffsetInCluster, maxBytesToRead));
+    memcpy(readBuffer, clusterData + startingPositionOffsetInCluster, numberOfBytesRead);
 
     while(numberOfBytesRead < maxBytesToRead)
     {
@@ -233,6 +253,7 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
 
         if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED || getNextClusterResult == FAT_VALUE_EOC)
         {
+            delete[] clusterData, delete actualDirectoryEntry;
             reasonForIncompleteRead = (getNextClusterResult == FAT_VALUE_EOC) ? INCOMPLETE_BYTES_READ_DUE_TO_NO_FILE_NOT_LONG_ENOUGH : INCOMPLETE_BYTES_READ_DUE_TO_OTHER;
             return READ_BYTES_FROM_FILE_SUCCESS; //we managed to read bytes for first cluster, so it's still considered a read success
         }
@@ -242,24 +263,47 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
                                               clusterData, numOfSectorsRead);
 
         if(readResult != EC_NO_ERROR)
+        {
+            delete[] clusterData, delete actualDirectoryEntry;
             return READ_BYTES_FROM_FILE_FAILED;
+        }
 
-        numOfBytesReadFromThisCluster = std::min(actualDirectoryEntry->FileSize - 64 - numberOfBytesRead, std::min(getClusterSize(bootSector), maxBytesToRead - numberOfBytesRead));
+        numOfBytesReadFromThisCluster = std::min(actualDirectoryEntry->FileSize - startingPosition - numberOfBytesRead, std::min(getClusterSize(bootSector), maxBytesToRead - numberOfBytesRead));
         memcpy(readBuffer + numberOfBytesRead, clusterData, numOfBytesReadFromThisCluster);
         numberOfBytesRead += numOfBytesReadFromThisCluster;
     }
 
+    delete[] clusterData, delete actualDirectoryEntry;
     return READ_BYTES_FROM_FILE_SUCCESS;
 }
 
-uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath)
+uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, uint32_t newSize)
 {
-    uint32_t numberOfBytesWritten = 0;
-    uint32_t reasonForIncompleteWrite;
-    uint32_t writeFileResult = write(diskInfo, bootSector, directoryPath, new char[0], 0, numberOfBytesWritten, WRITE_WITH_TRUNCATE,
-                                     reasonForIncompleteWrite);
+    if(strcmp(directoryPath, "Root\0") == 0) //you can't truncate the root
+        return TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE;
 
-    return (writeFileResult == WRITE_BYTES_TO_FILE_SUCCESS) ? TRUNCATE_FILE_SUCCESS : TRUNCATE_FILE_FAILED;
+    DirectoryEntry* actualDirectoryEntry = nullptr;
+    uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
+                                                                     &actualDirectoryEntry);
+    if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
+        return TRUNCATE_FILE_FAILED;
+
+    if(actualDirectoryEntry->Attributes != ATTR_FILE)
+    {
+        delete actualDirectoryEntry;
+        return TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE;
+    }
+
+    newSize += 64; //the given value refers only to the size of the file content, so it is not taking in account 64 for dot & dotdot
+    if(newSize > actualDirectoryEntry->FileSize)
+        return TRUNCATE_FILE_NEW_SIZE_GREATER_THAN_ACTUAL_SIZE;
+
+    DirectoryEntry* newDirectoryEntry = new DirectoryEntry();
+    memcpy(newDirectoryEntry, actualDirectoryEntry, 32);
+    newDirectoryEntry->FileSize = newSize;
+    uint32_t directoryEntryUpdateResult = updateDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, newDirectoryEntry);
+
+    return (directoryEntryUpdateResult == DIRECTORY_ENTRY_UPDATE_SUCCESS) ? TRUNCATE_FILE_SUCCESS : TRUNCATE_FILE_FAILED;
 }
 
 uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath)

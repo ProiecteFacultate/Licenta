@@ -51,10 +51,6 @@
 #define WRITE_BYTES_TO_FILE_FAILED                                        0
 #define WRITE_BYTES_TO_FILE_SUCCESS                                       1
 
-
-#define WRITE_BYTES_TO_FILE_FAILED                                        0
-#define WRITE_BYTES_TO_FILE_SUCCESS                                       1
-
 #define INCOMPLETE_BYTES_WRITE_DUE_TO_NO_CLUSTERS_AVAILABLE               0                              //we want to specifically know about this case
 #define INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER                               1
 
