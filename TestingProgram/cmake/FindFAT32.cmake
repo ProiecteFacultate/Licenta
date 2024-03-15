@@ -1,6 +1,6 @@
 set(FIND_FAT32_PATHS D:/Facultate/Licenta/Implementare/Libraries/FAT32)
 
-find_path(FAT32_INCLUDE_DIR fat32Api.h
+find_path(FAT32_INCLUDE_DIR fat32Init.h
         PATH_SUFFIXES include
         PATHS ${FIND_FAT32_PATHS})
 

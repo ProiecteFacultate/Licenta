@@ -2,16 +2,18 @@
 #include <utils.h>
 #include <interface.h>
 
+#include "fat32Init.h"
 #include "fat32Api.h"
-#include ""
+#include "interface.h"
+#include "utils.h"
 
 int main() {
-    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_512Kib\0";
+    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_512Kib";
     DiskInfo* diskInfo = nullptr;
     BootSector* bootSector = nullptr;
     FsInfo* fsInfo = nullptr;
 
-    initialLoad(diskDirectory, &diskInfo, &bootSector, &fsInfo);
+    fat32Startup(diskDirectory, &diskInfo, &bootSector, &fsInfo, 1024, 512);
 
     std::string command;
     std::cout << "Waiting commands\n";
