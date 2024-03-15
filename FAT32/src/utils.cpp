@@ -24,7 +24,7 @@ bool checkDirectoryNameValidity(const char* directoryName) //CAUTION directoryNa
 
     int nameSize = 0;
     index = 0;
-    while(directoryName[index] < strlen(directoryName) && directoryName[index] != '.')
+    while(index < strlen(directoryName) && directoryName[index] != '.')
     {
         nameSize++;
         index++;

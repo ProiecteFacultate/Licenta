@@ -263,7 +263,6 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
 
         if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED || getNextClusterResult == FAT_VALUE_EOC)
         {
-            delete[] clusterData, delete actualDirectoryEntry;
             reasonForIncompleteRead = (getNextClusterResult == FAT_VALUE_EOC) ? INCOMPLETE_BYTES_READ_DUE_TO_NO_FILE_NOT_LONG_ENOUGH : INCOMPLETE_BYTES_READ_DUE_TO_OTHER;
 
             DirectoryEntry* newDirectoryEntry = new DirectoryEntry();
@@ -272,6 +271,7 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
             //CAUTION we don't query this, so if it fails, we have bad data for time & date(unimportant anyway)
             updateDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, newDirectoryEntry);
 
+            delete[] clusterData, delete actualDirectoryEntry;
             return READ_BYTES_FROM_FILE_SUCCESS; //we managed to read bytes for first cluster, so it's still considered a read success
         }
 

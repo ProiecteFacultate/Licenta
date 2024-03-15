@@ -1,0 +1,3 @@
+D:/Facultate/Licenta/Implementare/TestingProgram/cmake-build-debug/CMakeFiles/TestingProgram.dir
+D:/Facultate/Licenta/Implementare/TestingProgram/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/Facultate/Licenta/Implementare/TestingProgram/cmake-build-debug/CMakeFiles/rebuild_cache.dir
