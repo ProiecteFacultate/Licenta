@@ -17,50 +17,13 @@
 #include "../include/utils.h"
 #include "../include/interface.h"
 
-int initialLoad(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo)
-{
-    *diskInfo = getDisk(diskDirectory);
-    if(*diskInfo == nullptr)
-    {
-        *diskInfo = initializeDisk(diskDirectory, 1024, 512);
-        fillDiskInitialMemory(*diskInfo);
-        std::cout << "Disk initialized\n";
-    }
-    else
-    {
-        std::cout << "Sectors number: " << (*diskInfo)->diskParameters.sectorsNumber << "\n";
-        std::cout << "Sector size: " << (*diskInfo)->diskParameters.sectorSizeBytes << "\n";
-        std:: cout << "Disk size: " << (*diskInfo)->diskParameters.sectorsNumber * (*diskInfo)->diskParameters.sectorSizeBytes << "\n";
-    }
-
-    bool fat32Initialized = false;
-    if(!checkBootSectorsInitialized(*diskInfo))
-    {
-        std::cout << "Initializing boot sectors...\n";
-        initializeBootSectors(*diskInfo);
-    }
-    else
-    {
-        fat32Initialized = true;
-        std::cout << "Boot sectors already initialized\n";
-    }
-
-    *bootSector = readBootSector(*diskInfo);
-    *fsInfo = readFsInfo(*diskInfo, *bootSector);
-
-    if(fat32Initialized == false)
-    {
-        initializeFat(*diskInfo, *bootSector);   //initialize only when file system created
-    }
-}
-
 int main() {
-    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_512Kib\0";
+    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_512Kib";
     DiskInfo* diskInfo = nullptr;
     BootSector* bootSector = nullptr;
     FsInfo* fsInfo = nullptr;
 
-    initialLoad(diskDirectory, &diskInfo, &bootSector, &fsInfo);
+    fat32Startup(diskDirectory, &diskInfo, &bootSector, &fsInfo, 1024, 512);
 
     std::string command;
     std::cout << "Waiting commands\n";

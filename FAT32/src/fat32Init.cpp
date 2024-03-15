@@ -13,8 +13,81 @@
 #include "../include/fat32Init.h"
 #include "../include/fat32Attributes.h"
 
+void fat32Startup(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo, uint32_t sectorsNumber, uint32_t sectorSize)
+{
+    if(checkDiskInitialization(diskDirectory) == false)
+        initializeDisk(diskDirectory, diskInfo, 1024, 512);
+    else
+        *diskInfo = getDisk(diskDirectory);
 
-bool checkBootSectorsInitialized(DiskInfo* diskInfo)
+    bool fat32AlreadyInitialized = true;
+    if(checkFat32FileSystemInitialization(*diskInfo) == false)
+    {
+        initializeBootSectors(*diskInfo);
+        fat32AlreadyInitialized = false;
+        std::cout << "Boot sectors initialized\n";
+    }
+
+    *bootSector = readBootSector(*diskInfo);
+    *fsInfo = readFsInfo(*diskInfo, *bootSector);
+
+    if(fat32AlreadyInitialized == false)
+    {
+        initializeFat(*diskInfo, *bootSector);
+        std::cout << "File allocation table initialized\n";
+    }
+}
+
+//void fat32InitialLoad(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo, uint32_t sectorsNumber, uint32_t sectorSize)
+//{
+//    *diskInfo = getDisk(diskDirectory);
+//    if(*diskInfo == nullptr)
+//    {
+//        *diskInfo = initializeDisk(diskDirectory, sectorsNumber, sectorSize);
+//        fillDiskInitialMemory(*diskInfo);
+//        std::cout << "Disk initialized\n";
+//    }
+//    else
+//    {
+//        std::cout << "Sectors number: " << (*diskInfo)->diskParameters.sectorsNumber << "\n";
+//        std::cout << "Sector size: " << (*diskInfo)->diskParameters.sectorSizeBytes << "\n";
+//        std:: cout << "Disk size: " << (*diskInfo)->diskParameters.sectorsNumber * (*diskInfo)->diskParameters.sectorSizeBytes << "\n";
+//    }
+//
+//    bool fat32Initialized = false;
+//    if(!checkFat32FileSystemInitialization(*diskInfo))
+//    {
+//        std::cout << "Initializing boot sectors...\n";
+//        initializeBootSectors(*diskInfo);
+//    }
+//    else
+//    {
+//        fat32Initialized = true;
+//        std::cout << "Boot sectors already initialized\n";
+//    }
+//
+//    *bootSector = readBootSector(*diskInfo);
+//    *fsInfo = readFsInfo(*diskInfo, *bootSector);
+//
+//    if(fat32Initialized == false)
+//    {
+//        initializeFat(*diskInfo, *bootSector);   //initialize only when file system created
+//    }
+//}
+
+bool checkDiskInitialization(char* diskDirectory)
+{
+    return !(getDisk(diskDirectory) == nullptr);
+}
+
+void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
+{
+    *diskInfo = initializeDisk(diskDirectory, sectorsNumber, sectorSize);
+    fillDiskInitialMemory(*diskInfo);
+    std::cout << "Disk initialized\n";
+}
+
+bool checkFat32FileSystemInitialization(DiskInfo* diskInfo)
 {
     char* firstBootSectorBuffer = new char[diskInfo->diskParameters.sectorSizeBytes];
 
@@ -116,7 +189,6 @@ void initializeBootSectors(DiskInfo* diskInfo)
         throw std::runtime_error("Failed to initialize second boot sector");
     }
 
-    //TODO root directoryEntry
     char* rootFileName = new char[11];
     memset(rootFileName, ' ', 11);
     memcpy(rootFileName, "Root", 4); //in root its name 'Root' is in first dir entry, while in root's children will be in dot dot

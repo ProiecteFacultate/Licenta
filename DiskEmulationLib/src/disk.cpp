@@ -78,9 +78,10 @@ DiskInfo* getDisk(const char* diskDirectory)
     DWORD dwBytesRead = 0;
     DiskMetadata diskMetadata;
     bool readFileResult = ReadFile(fileHandle, &diskMetadata, sizeof(diskMetadata), &dwBytesRead, nullptr);
+    CloseHandle(fileHandle);
+
     if(!readFileResult)
     {
-        CloseHandle(fileHandle);
         delete[] metadataFilePath;
         return nullptr;
     }

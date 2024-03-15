@@ -12,6 +12,8 @@ find_package(DiskEmulation REQUIRED)
 include_directories(${DISKEMULATION_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${DISKEMULATION_LIBRARY})
 
-
+#to export this as a library
+set(SOURCE_FILES src/fat32Init.cpp src/fat32Api.cpp src/fat32.cpp src/fat32FunctionUtils.cpp include/fat32Attributes.h include/codes/fat32ApiResponseCodes.h include/codes/fat32Codes.h)
+add_library(fat32_lib ${SOURCE_FILES})
 
 

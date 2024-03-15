@@ -15,7 +15,8 @@
 					"source" : ".",
 					"targetIndexes" : 
 					[
-						0
+						0,
+						1
 					]
 				}
 			],
@@ -30,7 +31,8 @@
 					"name" : "FAT32",
 					"targetIndexes" : 
 					[
-						0
+						0,
+						1
 					]
 				}
 			],
@@ -41,6 +43,13 @@
 					"id" : "FAT32::@6890427a1f51a3e7e1df",
 					"jsonFile" : "target-FAT32-Debug-83aede4690b072e7ebf9.json",
 					"name" : "FAT32",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "fat32_lib::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-fat32_lib-Debug-48293d90b794a05ffb2d.json",
+					"name" : "fat32_lib",
 					"projectIndex" : 0
 				}
 			]

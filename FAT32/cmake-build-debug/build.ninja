@@ -131,6 +131,68 @@ build FAT32.exe: CXX_EXECUTABLE_LINKER__FAT32_Debug CMakeFiles/FAT32.dir/src/mai
   TARGET_IMPLIB = libFAT32.dll.a
   TARGET_PDB = FAT32.pdb
 
+# =============================================================================
+# Object build statements for STATIC_LIBRARY target fat32_lib
+
+
+#############################################
+# Order-only phony target for fat32_lib
+
+build cmake_object_order_depends_target_fat32_lib: phony || CMakeFiles/fat32_lib.dir
+
+build CMakeFiles/fat32_lib.dir/src/fat32Init.cpp.obj: CXX_COMPILER__fat32_lib_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32Init.cpp || cmake_object_order_depends_target_fat32_lib
+  DEP_FILE = CMakeFiles\fat32_lib.dir\src\fat32Init.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\fat32_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\fat32_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\fat32_lib.dir\fat32_lib.pdb
+  TARGET_PDB = libfat32_lib.pdb
+
+build CMakeFiles/fat32_lib.dir/src/fat32Api.cpp.obj: CXX_COMPILER__fat32_lib_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32Api.cpp || cmake_object_order_depends_target_fat32_lib
+  DEP_FILE = CMakeFiles\fat32_lib.dir\src\fat32Api.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\fat32_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\fat32_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\fat32_lib.dir\fat32_lib.pdb
+  TARGET_PDB = libfat32_lib.pdb
+
+build CMakeFiles/fat32_lib.dir/src/fat32.cpp.obj: CXX_COMPILER__fat32_lib_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32.cpp || cmake_object_order_depends_target_fat32_lib
+  DEP_FILE = CMakeFiles\fat32_lib.dir\src\fat32.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\fat32_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\fat32_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\fat32_lib.dir\fat32_lib.pdb
+  TARGET_PDB = libfat32_lib.pdb
+
+build CMakeFiles/fat32_lib.dir/src/fat32FunctionUtils.cpp.obj: CXX_COMPILER__fat32_lib_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32FunctionUtils.cpp || cmake_object_order_depends_target_fat32_lib
+  DEP_FILE = CMakeFiles\fat32_lib.dir\src\fat32FunctionUtils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\fat32_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\fat32_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\fat32_lib.dir\fat32_lib.pdb
+  TARGET_PDB = libfat32_lib.pdb
+
+
+# =============================================================================
+# Link build statements for STATIC_LIBRARY target fat32_lib
+
+
+#############################################
+# Link the static library libfat32_lib.a
+
+build libfat32_lib.a: CXX_STATIC_LIBRARY_LINKER__fat32_lib_Debug CMakeFiles/fat32_lib.dir/src/fat32Init.cpp.obj CMakeFiles/fat32_lib.dir/src/fat32Api.cpp.obj CMakeFiles/fat32_lib.dir/src/fat32.cpp.obj CMakeFiles/fat32_lib.dir/src/fat32FunctionUtils.cpp.obj
+  LANGUAGE_COMPILE_FLAGS = -g
+  OBJECT_DIR = CMakeFiles\fat32_lib.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\fat32_lib.dir\fat32_lib.pdb
+  TARGET_FILE = libfat32_lib.a
+  TARGET_PDB = libfat32_lib.pdb
+
 
 #############################################
 # Utility command for edit_cache
@@ -159,6 +221,8 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 
 build FAT32: phony FAT32.exe
 
+build fat32_lib: phony libfat32_lib.a
+
 # =============================================================================
 # Folder targets.
 
@@ -167,7 +231,7 @@ build FAT32: phony FAT32.exe
 #############################################
 # Folder: D:/Facultate/Licenta/Implementare/FAT32/cmake-build-debug
 
-build all: phony FAT32.exe
+build all: phony FAT32.exe libfat32_lib.a
 
 # =============================================================================
 # Built-in targets
