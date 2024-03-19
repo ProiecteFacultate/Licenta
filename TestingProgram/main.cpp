@@ -5,6 +5,7 @@
 #include "fat32Init.h"
 #include "fat32Api.h"
 #include "interface.h"
+#include "fat32Attributes.h"
 #include "utils.h"
 
 int main() {
@@ -12,42 +13,32 @@ int main() {
     DiskInfo* diskInfo = nullptr;
     BootSector* bootSector = nullptr;
     FsInfo* fsInfo = nullptr;
-
     fat32Startup(diskDirectory, &diskInfo, &bootSector, &fsInfo, 1024, 512);
 
-    std::string command;
-    std::cout << "Waiting commands\n";
 
-    while(true)
-    {
-        std::cout << '\n';
-        std::getline(std::cin, command);
+    char* filePath = new char[100];
+    memset(filePath, 0, 100);
+    memcpy(filePath, "Root/File_1", 11);
 
-        if(command == "exit")
-        {
-            std::cout << "Process terminated with exit";
-            break;
-        }
+////WRITE
+    uint32_t numberOfBytesWritten = 0;
+    uint32_t reasonForIncompleteWrite;
+    char* dataBuffer = new char[400000];
+    memset(dataBuffer, '1', 400000);
+    write(diskInfo, bootSector, filePath, dataBuffer, 400000, numberOfBytesWritten, WRITE_WITH_TRUNCATE, reasonForIncompleteWrite);
+    std::cout << "Bytes written: " << numberOfBytesWritten << '\n';
 
-        std::vector<std::string> tokens = splitString(command, ' ');
+////READ
+    memset(filePath, 0, 100);
+    memcpy(filePath, "Root/File_1", 11);
 
-        if(tokens[0] == "mkdir")
-            commandCreateDirectory(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "ls")
-            commandListSubdirectories(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "write")
-            commandWriteFile(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "read")
-            commandReadFile(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "truncate")
-            commandTruncateFile(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "rmdir")
-            commandDeleteDirectory(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "la")
-            commandShowDirectoryAttributes(diskInfo, bootSector, tokens);
-        else
-            std::cout << "Unknown command \n";
-    }
+    uint32_t numberOfBytesRead = 0;
+    uint32_t reasonForIncompleteRead;
+    char* readBuffer = new char[100000];
+    memset(readBuffer, 0, 100000);
+    read(diskInfo, bootSector, filePath, readBuffer, 0, 100000,numberOfBytesRead, reasonForIncompleteRead);
+    std::cout << "Bytes read: " << numberOfBytesRead << '\n';
+//    std::cout.write(readBuffer, numberOfBytesRead);
 
     return 0;
 }

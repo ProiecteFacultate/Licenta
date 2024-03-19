@@ -332,8 +332,20 @@ uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* director
     if(directoryEntryUpdateResult == DIRECTORY_ENTRY_UPDATE_FAILED)
         return TRUNCATE_FILE_FAILED;
 
+    uint32_t remainedOccupiedClusters = newDirectoryEntry->FileSize / getClusterSize(bootSector) + 1;
+    if(newDirectoryEntry->FileSize % getClusterSize(bootSector) == 0)
+        remainedOccupiedClusters--;
+
+    //CAUTION we don't query the result for the next operations so we can have a truncate success, but the fat would be corrupted (we will have trash clusters)
+    uint32_t cluster;
+    uint32_t nextCluster;
     uint32_t firstClusterInDirectory = getFirstClusterForDirectory(bootSector, newDirectoryEntry);
-    freeClustersInChainStartingWithGivenCluster(diskInfo, bootSector, firstClusterInDirectory);
+    findNthClusterInChain(diskInfo, bootSector, firstClusterInDirectory,remainedOccupiedClusters - 1, cluster); //now cluster is the last cluster in the directory (after truncate)
+    uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, cluster, nextCluster);
+    updateFat(diskInfo, bootSector, cluster, "\xFF\xFF\xFF\x0F"); //sets last cluster after truncate as EOC
+
+    if(!(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED || getNextClusterResult == FAT_VALUE_EOC)) //if it fails to retrieve, then we will have trash clusters
+        freeClustersInChainStartingWithGivenCluster(diskInfo, bootSector, nextCluster);
 
     return TRUNCATE_FILE_SUCCESS; //even if fails to free the no longer occupied clusters, the truncate still worked, so it's considered a success, but will remain some trash clusters
 }

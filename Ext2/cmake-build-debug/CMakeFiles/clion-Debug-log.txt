@@ -1,0 +1,5 @@
+"D:\Softs\CLion\CLion 2023.1.3\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=D:/Softs/CLion/CLion 2023.1.3/bin/ninja/win/x64/ninja.exe" -G Ninja -S D:\Facultate\Licenta\Implementare\Ext2 -B D:\Facultate\Licenta\Implementare\Ext2\cmake-build-debug
+-- Could NOT find PkgConfig (missing: PKG_CONFIG_EXECUTABLE) 
+-- Configuring done
+-- Generating done
+-- Build files have been written to: D:/Facultate/Licenta/Implementare/Ext2/cmake-build-debug

@@ -28,6 +28,18 @@ int main() {
     std::string command;
     std::cout << "Waiting commands\n";
 
+//    char* filePath = new char[100];
+//    memset(filePath, 0, 100);
+//    memcpy(filePath, "Root/File_1", 11);
+//
+//    uint32_t numberOfBytesRead;
+//    uint32_t reasonForIncompleteRead;
+//    char* readBuffer = new char[100000];
+//    memset(readBuffer, 0, 100000);
+//    read(diskInfo, bootSector, filePath, readBuffer, 0, 100000,numberOfBytesRead, reasonForIncompleteRead);
+//    std::cout << "Bytes read: " << numberOfBytesRead << '\n';
+//    std::cout.write(readBuffer, numberOfBytesRead);
+
     while(true)
     {
         std::cout << '\n';

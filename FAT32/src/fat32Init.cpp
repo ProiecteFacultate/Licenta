@@ -38,43 +38,6 @@ void fat32Startup(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSec
     }
 }
 
-//void fat32InitialLoad(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo, uint32_t sectorsNumber, uint32_t sectorSize)
-//{
-//    *diskInfo = getDisk(diskDirectory);
-//    if(*diskInfo == nullptr)
-//    {
-//        *diskInfo = initializeDisk(diskDirectory, sectorsNumber, sectorSize);
-//        fillDiskInitialMemory(*diskInfo);
-//        std::cout << "Disk initialized\n";
-//    }
-//    else
-//    {
-//        std::cout << "Sectors number: " << (*diskInfo)->diskParameters.sectorsNumber << "\n";
-//        std::cout << "Sector size: " << (*diskInfo)->diskParameters.sectorSizeBytes << "\n";
-//        std:: cout << "Disk size: " << (*diskInfo)->diskParameters.sectorsNumber * (*diskInfo)->diskParameters.sectorSizeBytes << "\n";
-//    }
-//
-//    bool fat32Initialized = false;
-//    if(!checkFat32FileSystemInitialization(*diskInfo))
-//    {
-//        std::cout << "Initializing boot sectors...\n";
-//        initializeBootSectors(*diskInfo);
-//    }
-//    else
-//    {
-//        fat32Initialized = true;
-//        std::cout << "Boot sectors already initialized\n";
-//    }
-//
-//    *bootSector = readBootSector(*diskInfo);
-//    *fsInfo = readFsInfo(*diskInfo, *bootSector);
-//
-//    if(fat32Initialized == false)
-//    {
-//        initializeFat(*diskInfo, *bootSector);   //initialize only when file system created
-//    }
-//}
-
 bool checkDiskInitialization(char* diskDirectory)
 {
     return !(getDisk(diskDirectory) == nullptr);
