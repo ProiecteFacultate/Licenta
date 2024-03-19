@@ -13,7 +13,7 @@ void startup()
     if(diskInfo == nullptr)
     {
         diskInfo = initializeDisk(diskDirectory, 16, 512);
-        fillDiskInitialMemory(diskInfo);
+        fillDiskInitialMemory(diskInfo, 1000);
         std::cout << "Disk initialized\n";
     }
     else
@@ -48,23 +48,9 @@ void startup()
     //  formatDiskSectors(&diskInfo, 0);
 }
 
-struct Test {
-    uint32_t val1;
-    uint32_t val2;
-    uint32_t val3;
-    uint32_t val4;
-    uint32_t val5;
-    uint32_t val6;
-    uint32_t val7;
-    uint32_t val8;
-}__attribute__((packed));
-
 int main() {
-    uint32_t x = 17;
-    char* y = new char[4];
-    memset(y, '\0', 4);
-    y = (char*) &(x);
-
-   // startup();
+    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_2Mib\0";
+    DiskInfo* diskInfo = initializeDisk(diskDirectory, 2097152, 512);
+    fillDiskInitialMemory(diskInfo, 1000);
     return 0;
 }

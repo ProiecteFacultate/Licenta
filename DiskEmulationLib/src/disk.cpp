@@ -14,39 +14,59 @@ DiskInfo* initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint
         return nullptr;
     }
 
-    for(uint32_t sector = 0; sector < sectorsNumber; sector++) {
-        char *fullFilePath = buildFilePath(diskDirectory, sector);
+    char* fullFilePath = new char[200];
+    memset(fullFilePath, 0, 100);
+    memcpy(fullFilePath, diskDirectory, strlen(diskDirectory));
+    strcat(fullFilePath, "\\Data");
 
-        HANDLE fileHandle = CreateFile(fullFilePath,GENERIC_READ,FILE_SHARE_READ,nullptr,CREATE_ALWAYS,
-                   FILE_ATTRIBUTE_NORMAL,nullptr);
+    HANDLE fileHandle = CreateFile(fullFilePath,GENERIC_READ,FILE_SHARE_READ,nullptr,CREATE_ALWAYS,
+                                   FILE_ATTRIBUTE_NORMAL,nullptr);
 
-        if(fileHandle == INVALID_HANDLE_VALUE && GetLastError() != ERROR_ALREADY_EXISTS)
-        {
-            CloseHandle(fileHandle);
-            delete[] fullFilePath;
-            return nullptr;
-        }
-
-        delete[] fullFilePath;
+    if(fileHandle == INVALID_HANDLE_VALUE && GetLastError() != ERROR_ALREADY_EXISTS)
+    {
         CloseHandle(fileHandle);
+        delete[] fullFilePath;
+        return nullptr;
     }
+
+    delete[] fullFilePath;
+    CloseHandle(fileHandle);
 
     return new DiskInfo(diskDirectory, sectorsNumber, sectorSize, EC_NO_ERROR);
 }
 
-int fillDiskInitialMemory(DiskInfo *diskInfo)
+int fillDiskInitialMemory(DiskInfo *diskInfo, uint32_t batchSize)
 {
     uint32_t numOfSectorsWritten = 0;
-    char* buffer = new char[diskInfo->diskParameters.sectorSizeBytes];
+    char* buffer = new char[diskInfo->diskParameters.sectorSizeBytes * batchSize];
+    uint32_t startSector;
+    int retryWriteCount = 2;
     memset(buffer, '\0', diskInfo->diskParameters.sectorSizeBytes);
 
-    for(uint32_t sector = 0; sector < diskInfo->diskParameters.sectorsNumber; sector++)
+    for(startSector = 0; startSector + batchSize < diskInfo->diskParameters.sectorsNumber; startSector += batchSize)
     {
-        int writeResult = writeDiskSectors(diskInfo, 1, sector, buffer, numOfSectorsWritten);
-        int retryWriteCount = 2;
+        int writeResult = writeSectorsEfficientlyForInitialization(diskInfo, batchSize, startSector, buffer, numOfSectorsWritten);
         while(writeResult != EC_NO_ERROR && retryWriteCount > 0)
         {
-            writeResult = writeDiskSectors(diskInfo, 1, sector, buffer, numOfSectorsWritten);
+            writeResult = writeSectorsEfficientlyForInitialization(diskInfo, batchSize, startSector, buffer, numOfSectorsWritten);
+            retryWriteCount--;
+        }
+
+        if(writeResult != EC_NO_ERROR && retryWriteCount == 0)
+        {
+            throw std::runtime_error("Failed to fill disk initial memory");
+        }
+    }
+
+    if(startSector <= diskInfo->diskParameters.sectorsNumber)
+    {
+        retryWriteCount = 2;
+        uint32_t numOfRemainedSectors = diskInfo->diskParameters.sectorsNumber - startSector;
+
+        int writeResult = writeSectorsEfficientlyForInitialization(diskInfo, numOfRemainedSectors, startSector, buffer, numOfSectorsWritten);
+        while(writeResult != EC_NO_ERROR && retryWriteCount > 0)
+        {
+            writeResult = writeSectorsEfficientlyForInitialization(diskInfo, numOfRemainedSectors, startSector, buffer, numOfSectorsWritten);
             retryWriteCount--;
         }
 
@@ -163,71 +183,6 @@ int writeDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToWrite, uint32_t 
     return EC_NO_ERROR;
 }
 
-int verifyDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToVerify, uint32_t sector, char* buffer, uint32_t &numOfSectorsVerified)
-{
-    for(uint32_t sectorNum = 0; sectorNum < numOfSectorsToVerify; sectorNum++)
-    {
-        if(sector + sectorNum > diskInfo->diskParameters.sectorsNumber)
-        {
-            numOfSectorsVerified = sectorNum;
-            diskInfo->status = EC_SECTOR_NOT_FOUND;
-            return EC_SECTOR_NOT_FOUND;
-        }
-
-        int verifySectorResult = verifySector(diskInfo, sector + sectorNum, buffer);
-
-        if(verifySectorResult == SECTOR_VERIFY_FAILED)  //this error can appear only if reading sector operation fails
-        {
-            numOfSectorsVerified = sectorNum;
-            diskInfo->status = EC_READ_ERROR;
-            return EC_READ_ERROR;
-        }
-        else if (verifySectorResult == SECTOR_VERIFY_UNEQUAL_DATA)
-        {
-            numOfSectorsVerified = sectorNum;
-            diskInfo->status = EC_NO_ERROR;
-            return MULTIPLE_SECTORS_VERIFY_UNEQUAL_DATA; //here we have a special case, where disk status != return value, so we can make difference between verify error & content mismatch
-        }
-
-        buffer += diskInfo->diskParameters.sectorSizeBytes;
-    }
-
-    numOfSectorsVerified = numOfSectorsToVerify;
-    diskInfo->status = EC_NO_ERROR;
-    return EC_NO_ERROR;
-}
-
-int formatDiskSectors(DiskInfo *diskInfo, uint32_t sector)
-{
-    char* formatBuffer = new char [diskInfo->diskParameters.sectorSizeBytes];
-    memset(formatBuffer, '\0', diskInfo->diskParameters.sectorSizeBytes);
-
-    for(uint32_t sectorNum = sector; sectorNum < diskInfo->diskParameters.sectorsNumber; sectorNum++)
-    {
-        if(sector >= diskInfo->diskParameters.sectorsNumber)
-        {
-            diskInfo->status = EC_SECTOR_NOT_FOUND;
-            delete[] formatBuffer;
-            return EC_SECTOR_NOT_FOUND;
-        }
-
-        int writeSectorResult = writeSector(diskInfo, sector + sectorNum, formatBuffer);
-
-        if(writeSectorResult == SECTOR_WRITE_FAILED)
-        {
-            diskInfo->status = EC_ERROR_IN_DISK_CONTROLLER;
-            delete[] formatBuffer;
-            return EC_ERROR_IN_DISK_CONTROLLER;
-        }
-    }
-
-    diskInfo->status = EC_NO_ERROR;
-
-    delete[] formatBuffer;
-
-    return EC_NO_ERROR;
-}
-
 //////////////
 //
 //
@@ -266,18 +221,19 @@ static int createMetadataFile(const char* diskDirectory, uint32_t sectorsNumber,
     return METADATA_SECTOR_WRITE_SUCCESS;
 }
 
-static char* buildFilePath(const char* diskDirectory, uint32_t sector)
+static char* buildFilePath(const char* diskDirectory)
 {
-    size_t fullFilePathLen = strlen(diskDirectory) + 32;
-    char* fullFilePath = new char[fullFilePathLen];
-    snprintf(fullFilePath, fullFilePathLen, "%s\\sector_%d", diskDirectory, sector);
+    char* fullFilePath = new char[200];
+    memset(fullFilePath, 0, 100);
+    memcpy(fullFilePath, diskDirectory, strlen(diskDirectory));
+    strcat(fullFilePath, "\\Data");
 
     return fullFilePath;
 }
 
 static int readSector(DiskInfo *diskInfo, uint32_t sector, char *buffer)
 {
-    char *fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
+    char *fullFilePath = buildFilePath(diskInfo->diskDirectory);
 
     HANDLE fileHandle = CreateFile(fullFilePath,OFN_READONLY,0,nullptr,OPEN_EXISTING,
                                    FILE_ATTRIBUTE_NORMAL,nullptr);
@@ -289,8 +245,13 @@ static int readSector(DiskInfo *diskInfo, uint32_t sector, char *buffer)
         return SECTOR_READ_FAILED;
     }
 
+    OVERLAPPED overlapped;
+    memset(&overlapped, 0, sizeof(OVERLAPPED));
+    overlapped.Offset = diskInfo->diskParameters.sectorSizeBytes * sector;
+    overlapped.hEvent = nullptr;
+
     DWORD dwBytesRead = 0;
-    bool readFileResult = ReadFile(fileHandle, buffer, diskInfo->diskParameters.sectorSizeBytes, &dwBytesRead, nullptr);
+    bool readFileResult = ReadFile(fileHandle, buffer, diskInfo->diskParameters.sectorSizeBytes, &dwBytesRead, &overlapped);
 
     if(!readFileResult || dwBytesRead < diskInfo->diskParameters.sectorSizeBytes)
     {
@@ -307,7 +268,7 @@ static int readSector(DiskInfo *diskInfo, uint32_t sector, char *buffer)
 
 static int writeSector(DiskInfo *diskInfo, uint32_t sector, char *buffer)
 {
-    char* fullFilePath = buildFilePath(diskInfo->diskDirectory, sector);
+    char* fullFilePath = buildFilePath(diskInfo->diskDirectory);
 
     HANDLE fileHandle = CreateFile(fullFilePath,OF_READWRITE,0,nullptr,OPEN_EXISTING,
                                    FILE_ATTRIBUTE_NORMAL,nullptr);
@@ -322,8 +283,13 @@ static int writeSector(DiskInfo *diskInfo, uint32_t sector, char *buffer)
     char* writeBuffer = new char[diskInfo->diskParameters.sectorSizeBytes];
     memcpy(writeBuffer, buffer, diskInfo->diskParameters.sectorSizeBytes);
 
+    OVERLAPPED overlapped;
+    memset(&overlapped, 0, sizeof(OVERLAPPED));
+    overlapped.Offset = diskInfo->diskParameters.sectorSizeBytes * sector;
+    overlapped.hEvent = nullptr;
+
     DWORD bytesWritten = 0;
-    bool writeFileResult = WriteFile(fileHandle,writeBuffer,diskInfo->diskParameters.sectorSizeBytes, &bytesWritten,nullptr);
+    bool writeFileResult = WriteFile(fileHandle,writeBuffer,diskInfo->diskParameters.sectorSizeBytes, &bytesWritten, &overlapped);
     if(!writeFileResult || bytesWritten != diskInfo->diskParameters.sectorSizeBytes)
     {
         CloseHandle(fileHandle);
@@ -339,25 +305,44 @@ static int writeSector(DiskInfo *diskInfo, uint32_t sector, char *buffer)
     return  SECTOR_WRITE_SUCCESS;
 }
 
-static int verifySector(DiskInfo *diskInfo, uint32_t sector, char* buffer)
+static int writeSectorsEfficientlyForInitialization(DiskInfo *diskInfo, uint32_t numOfSectorsToWrite, uint32_t sector, char* buffer, uint32_t &numOfSectorsWritten)
 {
-    char* sectorDataBuffer = new char[diskInfo->diskParameters.sectorSizeBytes];
-    int readSectorResult = readSector(diskInfo, sector, sectorDataBuffer);
+    char* fullFilePath = buildFilePath(diskInfo->diskDirectory);
 
-    if(readSectorResult == SECTOR_READ_FAILED)
+    HANDLE fileHandle = CreateFile(fullFilePath,OF_READWRITE,0,nullptr,OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL,nullptr);
+
+    if(fileHandle == INVALID_HANDLE_VALUE)
     {
-        delete[] sectorDataBuffer;
-        return SECTOR_VERIFY_FAILED;
+        numOfSectorsWritten = 0;
+        CloseHandle(fileHandle);
+        delete[] fullFilePath;
+        return EC_ERROR_IN_DISK_CONTROLLER;
     }
 
-    for(int i = 0; i < diskInfo->diskParameters.sectorSizeBytes; i++)
-        if(sectorDataBuffer[i] != buffer[i])
-        {
-            delete[] sectorDataBuffer;
-            return SECTOR_VERIFY_UNEQUAL_DATA;
-        }
+    uint32_t numOfBytesToWrite = diskInfo->diskParameters.sectorSizeBytes * numOfSectorsToWrite;
+    char* writeBuffer = new char[numOfBytesToWrite];
+    memcpy(writeBuffer, buffer, numOfBytesToWrite);
 
-    delete[] sectorDataBuffer;
-    return SECTOR_VERIFY_EQUAL_DATA;
+    OVERLAPPED overlapped;
+    memset(&overlapped, 0, sizeof(OVERLAPPED));
+    overlapped.Offset = diskInfo->diskParameters.sectorSizeBytes * sector;
+    overlapped.hEvent = nullptr;
+
+    DWORD bytesWritten = 0;
+    bool writeFileResult = WriteFile(fileHandle,writeBuffer,numOfBytesToWrite, &bytesWritten, &overlapped);
+    if(!writeFileResult || bytesWritten < numOfBytesToWrite)
+    {
+        numOfSectorsWritten = bytesWritten / diskInfo->diskParameters.sectorSizeBytes;
+        CloseHandle(fileHandle);
+        delete[] fullFilePath;
+        delete[] writeBuffer;
+        return EC_ERROR_IN_DISK_CONTROLLER;
+    }
+
+    CloseHandle(fileHandle);
+    delete[] fullFilePath;
+    delete[] writeBuffer;
+
+    return EC_NO_ERROR;
 }
-
