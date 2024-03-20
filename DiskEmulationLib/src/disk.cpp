@@ -41,7 +41,7 @@ int fillDiskInitialMemory(DiskInfo *diskInfo, uint32_t batchSize)
     char* buffer = new char[diskInfo->diskParameters.sectorSizeBytes * batchSize];
     uint32_t startSector;
     int retryWriteCount = 2;
-    memset(buffer, '\0', diskInfo->diskParameters.sectorSizeBytes);
+    memset(buffer, '\0', diskInfo->diskParameters.sectorSizeBytes * batchSize);
 
     for(startSector = 0; startSector + batchSize < diskInfo->diskParameters.sectorsNumber; startSector += batchSize)
     {

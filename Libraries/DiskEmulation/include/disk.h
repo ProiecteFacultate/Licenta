@@ -1,4 +1,4 @@
-//V 1.04
+//V 1.05
 
 #ifndef DISKEMULATIONLIB_DISK_H
 #define DISKEMULATIONLIB_DISK_H
@@ -8,7 +8,8 @@
 //the disk methods are based on x86 INT 13 - Diskette BIOS Services
 
 DiskInfo* initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize);
-int fillDiskInitialMemory(DiskInfo *diskInfo);
+//Batch size represents how many sectors to fill with 0 at once when writing to the Data file
+int fillDiskInitialMemory(DiskInfo *diskInfo, uint32_t batchSize);
 DiskInfo* getDisk(const char* diskDirectory);
 
 //Disk services
@@ -23,14 +24,15 @@ int writeDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToWrite, uint32_t 
 int verifyDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToVerify, uint32_t sector, char* buffer, uint32_t &numOfSectorsVerified);
 //INT 13, 07
 //clears sector data
-int formatDiskSectors(DiskInfo *diskInfo, uint32_t sector);
+//int formatDiskSectors(DiskInfo *diskInfo, uint32_t sector);
 
 
 //Helper methods
 static int createMetadataFile(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize);
-static char* buildFilePath(const char* diskDirectory, uint32_t sector);
+static char* buildFilePath(const char* diskDirectory);
 static int readSector(DiskInfo *diskInfo, uint32_t sector, char *buffer);
 static int writeSector(DiskInfo *diskInfo, uint32_t sector, char *buffer);
 static int verifySector(DiskInfo *diskInfo, uint32_t sector, char* buffer);
+static int writeSectorsEfficientlyForInitialization(DiskInfo *diskInfo, uint32_t numOfSectorsToWrite, uint32_t sector, char* buffer, uint32_t &numOfSectorsWritten);
 
 #endif 

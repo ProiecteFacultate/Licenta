@@ -46,7 +46,8 @@ bool checkDiskInitialization(char* diskDirectory)
 void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
 {
     *diskInfo = initializeDisk(diskDirectory, sectorsNumber, sectorSize);
-    fillDiskInitialMemory(*diskInfo);
+    uint32_t batchSize = 1000;
+    fillDiskInitialMemory(*diskInfo, batchSize);
     std::cout << "Disk initialized\n";
 }
 
