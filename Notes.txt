@@ -26,6 +26,7 @@ Both folders & files contain dot & dotdot
 
 EXT2:
 -WORK WITH SECTORS <= 1024 OR BREAK!!
+-Preferably to make blocks the same syze as sectors so 1024
 -Indexare blockurilor se face de la 1 (super blockul primului grup are indexul 1)
 -Indexare group blockurilor se face de la 0
 -Block size trb sa fie multiplu de sector size (al diskului)! deci nu putem avea un block mai mic decat un sector

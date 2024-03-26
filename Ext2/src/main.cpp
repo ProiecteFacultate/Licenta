@@ -9,7 +9,7 @@ int main() {
 
     char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_16Mib\0";
     DiskInfo* diskInfo = nullptr;
-    ext2Startup(diskDirectory, &diskInfo, 32770, 512); //16Mib + 1 kb
+    ext2Startup(diskDirectory, &diskInfo, 32760, 512); //16Mib
 
     uint32_t numOfSectorsRead;
     char* readBuffer = new char[1024];
