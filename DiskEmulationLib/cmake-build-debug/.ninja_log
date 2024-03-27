@@ -1,11 +1,9 @@
 # ninja log v5
 1344	1510	7325835674507792	DiskEmulationLib.exe	655a366355ecabe8
-0	213	7326621868769518	build.ninja	4e54658db19188bc
-2	2016	7325836752995728	CMakeFiles/disk_emulation.dir/src/disk.cpp.obj	3a997fd98cd2765b
-2016	2204	7325836754859312	libdisk_emulation.a	78081639b4d61a5b
+0	213	7332004842159310	build.ninja	4e54658db19188bc
+4	2130	7326622338943916	CMakeFiles/disk_emulation.dir/src/disk.cpp.obj	3a997fd98cd2765b
+2131	2323	7326622340849036	libdisk_emulation.a	78081639b4d61a5b
 6	1370	7325834901143657	CMakeFiles/DiskEmulationLib.dir/src/diskUtils.cpp.obj	743636cdd6a803bc
 5	1804	7325836750870210	CMakeFiles/disk_emulation.dir/src/diskUtils.cpp.obj	73a7edd28cc967a1
 2	1344	7325835672946024	CMakeFiles/DiskEmulationLib.dir/src/main.cpp.obj	be31a52d2ec21cbb
 4	1406	7325834901642323	CMakeFiles/DiskEmulationLib.dir/src/disk.cpp.obj	8f42e98840efe2a5
-4	2130	7326622338943916	CMakeFiles/disk_emulation.dir/src/disk.cpp.obj	3a997fd98cd2765b
-2131	2323	7326622340849036	libdisk_emulation.a	78081639b4d61a5b

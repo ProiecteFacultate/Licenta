@@ -9,6 +9,7 @@
 #include "../include/ext2FunctionUtils.h"
 #include "../include/ext2Attributes.h"
 #include "../include/ext2.h"
+#include "../include/codes/ext2Codes.h"
 #include "../include/ext2Init.h"
 
 void ext2Startup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
@@ -31,6 +32,7 @@ void ext2Startup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumbe
     if(ext2AlreadyInitialized == false)
     {
         initializeGroups(*diskInfo, firstSuperBlock);
+        initializeRootDirectory(*diskInfo, firstSuperBlock);
         std::cout << "Groups initialized\n";
     }
 }
@@ -147,7 +149,7 @@ static void initializeFirstSuperBlockInFirstGroup(DiskInfo* diskInfo)
     ext2SuperBlock->s_log_frag_size = blocksSize; //we don't have fragmentation
     ext2SuperBlock->s_blocks_per_group = blocksPerGroup;
     ext2SuperBlock->s_frags_per_group = 999;
-    ext2SuperBlock->s_inodes_per_group = ext2SuperBlock->s_inodes_count / totalNumberOfBlocks; //1 inode for each bit in inode bitmap, so for block size * 8
+    ext2SuperBlock->s_inodes_per_group = ext2SuperBlock->s_inodes_count / numOfGroups;
     ext2SuperBlock->s_mtime = 999;
     ext2SuperBlock->s_wtime = 999; //TODO
     ext2SuperBlock->s_mnt_count = 999;
@@ -225,11 +227,11 @@ static void initializeGroups(DiskInfo* diskInfo, ext2_super_block* superBlock)
     uint32_t writeResult;
     char* blockBuffer = new char[superBlock->s_log_block_size];
     uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
-    uint32_t numOfGroupDescriptorsBlocksPerGroup = getNumberOfGroupDescriptorsInFullGroup(superBlock);
+    uint32_t numOfGroupDescriptorsBlocksPerGroup = getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock);
     char* groupDescriptorsBlocksBuffer = new char[numOfGroupDescriptorsBlocksPerGroup * superBlock->s_log_block_size];
 
     std::vector<ext2_group_desc*> groupDescriptors;
-    initializeGroupDescriptors(diskInfo, superBlock, groupDescriptors);
+    initializeGroupDescriptors(superBlock, groupDescriptors);
 
     for(uint32_t group = 0; group < getNumberOfGroups(superBlock); group++)
     {
@@ -255,10 +257,10 @@ static void initializeGroups(DiskInfo* diskInfo, ext2_super_block* superBlock)
     }
 }
 
-static void initializeGroupDescriptors(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<ext2_group_desc*>& groupDescriptors)
+static void initializeGroupDescriptors(ext2_super_block* superBlock, std::vector<ext2_group_desc*>& groupDescriptors)
 {
     uint32_t numberOfGroups = getNumberOfGroups(superBlock);
-    uint32_t numOfGroupDescriptorsTablesPerGroup = getNumberOfGroupDescriptorsInFullGroup(superBlock);
+    uint32_t numOfGroupDescriptorsTablesPerGroup = getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock);
 
     for(uint32_t group = 0; group < numberOfGroups; group++)
     {
@@ -278,8 +280,17 @@ static void initializeGroupDescriptors(DiskInfo* diskInfo, ext2_super_block* sup
     }
 }
 
-static void addRootDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock)
+static void initializeRootDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock)
 {
-    ext2_inode* rootInode = new ext2_inode();
-   // createNewInode(superBlock, rootInode, nullptr, FILE_TYPE_DIRECTORY);
+    uint32_t addRootInodeResult = addInodeToGroup(diskInfo, superBlock, 0, FILE_TYPE_DIRECTORY);
+
+    int retryWriteCount = 2;
+    while(addRootInodeResult != ADD_INODE_TO_GROUP_SUCCESS && retryWriteCount > 0)
+    {
+        addRootInodeResult = addInodeToGroup(diskInfo, superBlock, 0, FILE_TYPE_DIRECTORY);
+        retryWriteCount--;
+    }
+
+    if(retryWriteCount == 0)
+        throw std::runtime_error("Failed to initialize root inode");
 }

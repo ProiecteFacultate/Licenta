@@ -5,7 +5,7 @@
 #define EXT2_EXT2FUNCTIONUTILS_H
 
 uint32_t getNumberOfGroups(ext2_super_block* superBlock);
-uint32_t getNumberOfGroupDescriptorsInFullGroup(ext2_super_block* superBlock);
+uint32_t getNumberOfGroupDescriptorsBlocksInFullGroup(ext2_super_block* superBlock);
 uint32_t getNumberOfInodesBlocksInFullGroup(ext2_super_block* superBlock);
 uint32_t getNumberOfDataBlocksInFullGroup(ext2_super_block* superBlock);
 
@@ -19,6 +19,7 @@ uint32_t getNumberOfInodesBlocksForGivenGroup(ext2_super_block* superBlock, uint
 uint32_t getFirstInodeBlockForGivenGroup(ext2_super_block* superBlock, uint32_t group);
 uint32_t getDataBitmapBlockForGivenGroup(ext2_super_block* superBlock, uint32_t group);
 uint32_t getInodeBitmapBlockForGivenGroup(ext2_super_block* superBlock, uint32_t group);
+uint32_t getFirstInodeTableBlockForGivenGroup(ext2_super_block* superBlock, uint32_t group);
 
 uint32_t getNumberOfInodesForGivenGroup(ext2_super_block* superBlock, uint32_t group);
 
@@ -32,7 +33,9 @@ uint32_t getGlobalIndexOfInode(ext2_super_block* superBlock, uint32_t group, uin
 //Being given the index of an inode inside a group, get the block where that inode is located (global value of the block)
 uint32_t getInodeBlockForInodeIndexInGroup(ext2_super_block* superBlock, uint32_t group, uint32_t localInodeIndex);
 
-uint32_t getGroupDescriptorOfGivenGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, ext2_group_desc* searchedGroupDescriptor);
+//Being given a group, it returns its group descriptor from the main group descriptors (group 0 group descriptors) and also the block where it is located, and the offset inside the block
+uint32_t getGroupDescriptorOfGivenGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, ext2_group_desc* searchedGroupDescriptor, uint32_t& groupDescriptorBlock,
+                                        uint32_t& groupDescriptorOffsetInsideBlock);
 
 uint32_t getBitFromByte(uint8_t byte, uint32_t bitIndexInByte);
 //CAUTION new bit value is given as a byte, but it should be either 0 or 1

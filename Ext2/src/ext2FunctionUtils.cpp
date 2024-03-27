@@ -16,7 +16,7 @@ uint32_t getNumberOfGroups(ext2_super_block* superBlock)
     return numOfGroups;
 }
 
-uint32_t getNumberOfGroupDescriptorsInFullGroup(ext2_super_block* superBlock)
+uint32_t getNumberOfGroupDescriptorsBlocksInFullGroup(ext2_super_block* superBlock)
 {
     uint32_t numOfGroupDescriptors = (getNumberOfGroups(superBlock) * sizeof(ext2_group_desc)) / superBlock->s_log_block_size + 1;
     if(getNumberOfGroups(superBlock) * sizeof(ext2_group_desc) % superBlock->s_log_block_size == 0)
@@ -36,8 +36,7 @@ uint32_t getNumberOfInodesBlocksInFullGroup(ext2_super_block* superBlock)
 
 uint32_t getNumberOfDataBlocksInFullGroup(ext2_super_block* superBlock)
 {
-    return superBlock->s_blocks_per_group - getNumberOfGroupDescriptorsInFullGroup(superBlock) -
-            getNumberOfInodesBlocksInFullGroup(superBlock) - 3;
+    return superBlock->s_blocks_per_group - getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) - getNumberOfInodesBlocksInFullGroup(superBlock) - 3;
 }
 
 //////////////////////////
@@ -63,7 +62,8 @@ uint32_t getNumberOfDataBlocksForGivenGroup(ext2_super_block* superBlock, uint32
         return getNumberOfDataBlocksInFullGroup(superBlock);
 
     //this is the case for the last group which is most probably incomplete
-    uint32_t numOfNonDataBlocksInFullBlock = getNumberOfGroupDescriptorsInFullGroup(superBlock) + getNumberOfInodesBlocksInFullGroup(superBlock) + 3;
+    uint32_t numOfNonDataBlocksInFullBlock =
+            getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) + getNumberOfInodesBlocksInFullGroup(superBlock) + 3;
     if(getNumberOfBlocksForGivenGroup(superBlock, group) <= numOfNonDataBlocksInFullBlock) //we don't use max instead because we have uint and will underflow
         return 0;
 
@@ -82,16 +82,16 @@ uint32_t getFirstDataBlockForGivenGroup(ext2_super_block* superBlock, uint32_t g
 uint32_t getNumberOfGroupDescriptorsBlocksForGivenGroup(ext2_super_block* superBlock, uint32_t group)
 {
     if(group < getNumberOfGroups(superBlock) - 1)
-        return getNumberOfGroupDescriptorsInFullGroup(superBlock);
+        return getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock);
 
     //this is the case for the last group which is most probably incomplete
     if(getNumberOfBlocksForGivenGroup(superBlock, group) < 2) //it means that this group contains only the super block
         return 0;
 
-    if(getNumberOfBlocksForGivenGroup(superBlock, group) < getNumberOfGroupDescriptorsInFullGroup(superBlock) + 1) //we got some group descriptors blocks but not all of them
+    if(getNumberOfBlocksForGivenGroup(superBlock, group) < getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) + 1) //we got some group descriptors blocks but not all of them
         return getNumberOfBlocksForGivenGroup(superBlock, group) - 1;
 
-    return getNumberOfGroupDescriptorsInFullGroup(superBlock);
+    return getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock);
 }
 
 uint32_t getFirstGroupDescriptorsBlockForGivenGroup(ext2_super_block* superBlock, uint32_t group)
@@ -108,10 +108,11 @@ uint32_t getNumberOfInodesBlocksForGivenGroup(ext2_super_block* superBlock, uint
         return getNumberOfInodesBlocksInFullGroup(superBlock);
 
     //this is the case for the last group which is most probably incomplete
-    if(getNumberOfBlocksForGivenGroup(superBlock, group) < getNumberOfGroupDescriptorsInFullGroup(superBlock) + 3)
+    if(getNumberOfBlocksForGivenGroup(superBlock, group) < getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) + 3)
         return 0;
 
-    if(getNumberOfBlocksForGivenGroup(superBlock, group) < getNumberOfGroupDescriptorsInFullGroup(superBlock) + getNumberOfInodesBlocksInFullGroup(superBlock) + 3)
+    if(getNumberOfBlocksForGivenGroup(superBlock, group) <
+            getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) + getNumberOfInodesBlocksInFullGroup(superBlock) + 3)
         return getNumberOfBlocksForGivenGroup(superBlock, group) - getNumberOfInodesBlocksInFullGroup(superBlock) - 3;
 
     return getNumberOfInodesBlocksInFullGroup(superBlock);
@@ -122,23 +123,31 @@ uint32_t getFirstInodeBlockForGivenGroup(ext2_super_block* superBlock, uint32_t 
     if(getNumberOfInodesBlocksForGivenGroup(superBlock, group) == 0)
         return 0;
 
-    return getFirstBlockForGivenGroup(superBlock, group) + getNumberOfGroupDescriptorsInFullGroup(superBlock) + 3;
+    return getFirstBlockForGivenGroup(superBlock, group) + getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) + 3;
 }
 
 uint32_t getDataBitmapBlockForGivenGroup(ext2_super_block* superBlock, uint32_t group)
 {
-    if(getNumberOfBlocksForGivenGroup(superBlock, group) < getNumberOfGroupDescriptorsBlocksForGivenGroup(superBlock, group) + 3)
+    if(getNumberOfBlocksForGivenGroup(superBlock, group) < getNumberOfGroupDescriptorsBlocksForGivenGroup(superBlock, group) + 2)
         return 0;
 
-    return getFirstBlockForGivenGroup(superBlock, group) + getNumberOfGroupDescriptorsInFullGroup(superBlock) + 2;
+    return getFirstBlockForGivenGroup(superBlock, group) + getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) + 1;
 }
 
 uint32_t getInodeBitmapBlockForGivenGroup(ext2_super_block* superBlock, uint32_t group)
 {
+    if(getNumberOfBlocksForGivenGroup(superBlock, group) < getNumberOfGroupDescriptorsBlocksForGivenGroup(superBlock, group) + 3)
+        return 0;
+
+    return getFirstBlockForGivenGroup(superBlock, group) + getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) + 2;
+}
+
+uint32_t getFirstInodeTableBlockForGivenGroup(ext2_super_block* superBlock, uint32_t group)
+{
     if(getNumberOfBlocksForGivenGroup(superBlock, group) < getNumberOfGroupDescriptorsBlocksForGivenGroup(superBlock, group) + 4)
         return 0;
 
-    return getFirstBlockForGivenGroup(superBlock, group) + getNumberOfGroupDescriptorsInFullGroup(superBlock) + 3;
+    return getFirstBlockForGivenGroup(superBlock, group) + getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) + 3;
 }
 
 ///////////////////
@@ -189,20 +198,20 @@ uint32_t getInodeBlockForInodeIndexInGroup(ext2_super_block* superBlock, uint32_
 
 /////////////////////////
 
-uint32_t getGroupDescriptorOfGivenGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, ext2_group_desc* searchedGroupDescriptor)
+uint32_t getGroupDescriptorOfGivenGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, ext2_group_desc* searchedGroupDescriptor, uint32_t& groupDescriptorBlock,
+                                        uint32_t& groupDescriptorOffsetInsideBlock)
 {
-    uint32_t groupDescriptorLocalIndexOfGivenGroup = (group * sizeof(ext2_group_desc)) / superBlock->s_log_block_size;
-    if(group * sizeof(ext2_group_desc) % superBlock->s_log_block_size == 0)
-        groupDescriptorLocalIndexOfGivenGroup--;
-
     //when we want to read a group descriptor we don't read from the given group's group descriptors, but from the first one
-    uint32_t firstGroupDescriptorsBlockInFirstGroup = getFirstGroupDescriptorsBlockForGivenGroup(superBlock, 0);
-    uint32_t groupDescriptorOffsetInsideBlock = (group * sizeof(ext2_group_desc)) % superBlock->s_log_block_size;
+    groupDescriptorBlock = getFirstGroupDescriptorsBlockForGivenGroup(superBlock, 0) + (group * sizeof(ext2_group_desc)) / superBlock->s_log_block_size;
+    if(group != 0 && (group * sizeof(ext2_group_desc)) % superBlock->s_log_block_size == 0)
+        groupDescriptorBlock--;
+
+    groupDescriptorOffsetInsideBlock = (group * sizeof(ext2_group_desc)) % superBlock->s_log_block_size;
 
     char* blockBuffer = new char[superBlock->s_log_block_size];
     uint32_t numberOfSectorsRead;
     uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
-                                          getFirstSectorForGivenBlock(diskInfo, superBlock, firstGroupDescriptorsBlockInFirstGroup),blockBuffer, numberOfSectorsRead);
+                                          getFirstSectorForGivenBlock(diskInfo, superBlock, groupDescriptorBlock),blockBuffer, numberOfSectorsRead);
 
     if(readResult != EC_NO_ERROR)
     {

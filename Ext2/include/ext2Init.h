@@ -22,6 +22,7 @@ static bool checkExt2FileSystemInitialization(DiskInfo* diskInfo);
 static void initializeFirstSuperBlockInFirstGroup(DiskInfo* diskInfo);
 //initialize super block for all blocks, and also groups descriptors
 static void initializeGroups(DiskInfo* diskInfo, ext2_super_block* superBlock);
-static void initializeGroupDescriptors(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<ext2_group_desc *>& groupDescriptors);
+static void initializeGroupDescriptors(ext2_super_block* superBlock, std::vector<ext2_group_desc *>& groupDescriptors);
+static void initializeRootDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock);
 
 #endif

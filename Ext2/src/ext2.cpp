@@ -10,10 +10,13 @@
 #include "../include/codes/ext2Codes.h"
 #include "../include/ext2.h"
 
-uint32_t addInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t group, uint32_t fileType)
+uint32_t addInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, uint32_t fileType)
 {
     ext2_group_desc* groupDescriptor = new ext2_group_desc();
-    uint32_t getGroupDescriptorResult = getGroupDescriptorOfGivenGroup(diskInfo, superBlock, group, groupDescriptor);
+    uint32_t groupDescriptorBlock;
+    uint32_t groupDescriptorOffsetInsideBlock;
+    uint32_t getGroupDescriptorResult = getGroupDescriptorOfGivenGroup(diskInfo, superBlock, group, groupDescriptor, groupDescriptorBlock,
+                                                                       groupDescriptorOffsetInsideBlock);
 
     if(getGroupDescriptorResult == GET_GROUP_DESCRIPTOR_FOR_GIVEN_GROUP_FAILED)
         return ADD_INODE_TO_GROUP_FAILED_FOR_OTHER_REASON;
@@ -43,9 +46,11 @@ uint32_t addInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_
         dataBlocks.push_back(firstFreeDataBlock);
     }
 
-    uint32_t blockWithFirstFreeInode;
+    uint32_t blockWithFirstFreeInodeInInodeTable;
     uint32_t offsetOfFirstFreeInode;
-    uint32_t searchEmptyInodeInGroupResult = searchEmptyInodeInGroup(diskInfo, superBlock, group, blockWithFirstFreeInode, offsetOfFirstFreeInode);
+    uint32_t searchEmptyInodeInGroupResult = searchAndOccupyEmptyInodeInGroup(diskInfo, superBlock, group,
+                                                                              blockWithFirstFreeInodeInInodeTable,
+                                                                              offsetOfFirstFreeInode);
 
     if(searchEmptyInodeInGroupResult != SEARCH_EMPTY_INODE_IN_GROUP_SUCCESS)
         return ADD_INODE_TO_GROUP_FAILED_FOR_OTHER_REASON;
@@ -56,7 +61,7 @@ uint32_t addInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_
     char* blockBuffer = new char[superBlock->s_log_block_size];
     uint32_t numberOfSectorsRead = 0;
     uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
-                                          getFirstSectorForGivenBlock(diskInfo, superBlock, blockWithFirstFreeInode), blockBuffer, numberOfSectorsRead);
+                                          getFirstSectorForGivenBlock(diskInfo, superBlock, blockWithFirstFreeInodeInInodeTable), blockBuffer, numberOfSectorsRead);
 
     if(readResult != EC_NO_ERROR)
     {
@@ -67,11 +72,18 @@ uint32_t addInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_
     memcpy(blockBuffer + offsetOfFirstFreeInode, newInode, sizeof(ext2_inode));
     uint32_t numOfSectorsWritten;
     uint32_t writeResult = writeDiskSectors(diskInfo , getNumberOfSectorsPerBlock(diskInfo, superBlock),
-                                            getFirstSectorForGivenBlock(diskInfo, superBlock, blockWithFirstFreeInode), blockBuffer, numOfSectorsWritten);
+                                            getFirstSectorForGivenBlock(diskInfo, superBlock, blockWithFirstFreeInodeInInodeTable), blockBuffer, numOfSectorsWritten);
 
     delete[] blockBuffer;
     if(writeResult != EC_NO_ERROR)
         return ADD_INODE_TO_GROUP_FAILED_FOR_OTHER_REASON;
+
+    ext2_group_desc* newGroupDescriptor = new ext2_group_desc();
+    memcpy(newGroupDescriptor, groupDescriptor, sizeof(ext2_group_desc));
+    newGroupDescriptor->bg_free_inodes_count--;
+    newGroupDescriptor->bg_free_blocks_count -= preallocNumberOfBlocks;
+    //CAUTION we don't query the result for this, so we could get add inode success, but fail on updating the group descriptor
+    updateMainGroupDescriptor(diskInfo, superBlock, newGroupDescriptor, groupDescriptorBlock, groupDescriptorOffsetInsideBlock);
 
     return ADD_INODE_TO_GROUP_SUCCESS;
 }
@@ -117,7 +129,7 @@ uint32_t searchAndOccupyFirstFreeDataBlockInGroup(DiskInfo* diskInfo, ext2_super
     return SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_SUCCESS;
 }
 
-uint32_t searchEmptyInodeInGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, uint32_t& blockWithFirstFreeInode, uint32_t& offsetOfFirstFreeInode)
+uint32_t searchAndOccupyEmptyInodeInGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, uint32_t& blockWithFirstFreeInodeInInodeTable, uint32_t& offsetOfFirstFreeInode)
 {
     uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
     uint32_t inodeBitmapBlock = getInodeBitmapBlockForGivenGroup(superBlock, group);
@@ -130,7 +142,7 @@ uint32_t searchEmptyInodeInGroup(DiskInfo* diskInfo, ext2_super_block* superBloc
     if(readResult != EC_NO_ERROR)
     {
         delete[] blockBuffer;
-        return SEARCH_EMPTY_INODE_IN_GROUP_OTHER_ERROR;
+        return SEARCH_EMPTY_INODE_IN_GROUP_FAILED;
     }
 
     uint32_t firstFreeInodeInGroup = 99999;
@@ -138,13 +150,27 @@ uint32_t searchEmptyInodeInGroup(DiskInfo* diskInfo, ext2_super_block* superBloc
         if(getBitFromByte(blockBuffer[bitIndex / 8], bitIndex % 8) == 0)
         {
             firstFreeInodeInGroup = bitIndex;
+            uint8_t newByteValue = changeBitValue(blockBuffer[bitIndex / 8], bitIndex % 8, 1);
+            memset(blockBuffer + bitIndex / 8, newByteValue, 1);
+
+            uint32_t numOfSectorsWritten;
+            uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBitmapBlock),
+                                                    blockBuffer, numOfSectorsWritten);
+
+            delete[] blockBuffer;
+
+            if(writeResult != EC_NO_ERROR)
+                SEARCH_EMPTY_INODE_IN_GROUP_FAILED;
+
             break;
         }
 
-    blockWithFirstFreeInode = getInodeBlockForInodeIndexInGroup(superBlock, group, firstFreeInodeInGroup);
+    blockWithFirstFreeInodeInInodeTable = getFirstInodeTableBlockForGivenGroup(superBlock, group) + (firstFreeInodeInGroup * 128) / superBlock->s_log_block_size;
+    if(firstFreeInodeInGroup != 0 && (firstFreeInodeInGroup * 128) % superBlock->s_log_block_size == 0)
+        blockWithFirstFreeInodeInInodeTable--;
+
     offsetOfFirstFreeInode = (firstFreeInodeInGroup * 128) % superBlock->s_log_block_size;
 
-    delete[] blockBuffer;
     return SEARCH_EMPTY_INODE_IN_GROUP_SUCCESS;
 }
 
@@ -170,14 +196,30 @@ uint32_t createNewInode(ext2_super_block* superBlock, ext2_inode* newInode, uint
     for(uint32_t blockIndex = 0; blockIndex < newInode->i_blocks; blockIndex++)
         newInode->i_block[blockIndex] = blocks[blockIndex];
 
-//    if(parentDirectoryInode == nullptr) //it means this we are creating the newInode for root, which doesn't have a parent
-//    {
-//        uint32_t firstGroupBlock = getFirstDataBlockForGivenGroup(superBlock, 0);
-//        for(uint32_t preallocBlock = firstGroupBlock, index = 0; preallocBlock < firstGroupBlock + superBlock->s_prealloc_dir_blocks; preallocBlock++, index++)
-//            newInode->i_block[index] = preallocBlock;
-//    }
-
     newInode->i_file_acl = 0;
     newInode->i_dir_acl = 0;
     newInode->i_faddr = 0;
+}
+
+uint32_t updateMainGroupDescriptor(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_group_desc* newGroupDescriptor, uint32_t groupDescriptorBlock, uint32_t groupDescriptorOffset)
+{
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t numberOfSectorsRead = 0;
+    uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                          getFirstSectorForGivenBlock(diskInfo, superBlock, groupDescriptorBlock), blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return UPDATE_MAIN_GROUP_DESCRIPTOR_FAILED;
+    }
+
+    memcpy(blockBuffer + groupDescriptorOffset, newGroupDescriptor, sizeof(ext2_group_desc));
+    uint32_t numOfSectorsWritten;
+    uint32_t writeResult = writeDiskSectors(diskInfo , getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                            getFirstSectorForGivenBlock(diskInfo, superBlock, groupDescriptorBlock), blockBuffer, numOfSectorsWritten);
+
+    delete[] blockBuffer;
+
+    return (writeResult == EC_NO_ERROR) ? UPDATE_MAIN_GROUP_DESCRIPTOR_SUCCESS : UPDATE_MAIN_GROUP_DESCRIPTOR_FAILED;
 }

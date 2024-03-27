@@ -80,6 +80,7 @@ typedef struct
     uint32_t i_dir_acl;
     uint32_t i_faddr;
   //  union osd2;
+    uint16_t i_padding[8]; //padding to 128 bytes
 } __attribute__((packed)) ext2_inode;
 
 typedef struct
