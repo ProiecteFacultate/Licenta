@@ -1,12 +1,13 @@
 #include "windows.h"
 #include "string.h"
+#include "string"
 #include "vector"
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
 #include "../include/structures.h"
 #include "../include/ext2FunctionUtils.h"
-#include "../include/ext2Attributes.h"
+#include "../include/codes/ext2Attributes.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/ext2.h"
 
@@ -174,7 +175,7 @@ uint32_t searchAndOccupyEmptyInodeInGroup(DiskInfo* diskInfo, ext2_super_block* 
     return SEARCH_EMPTY_INODE_IN_GROUP_SUCCESS;
 }
 
-uint32_t createNewInode(ext2_super_block* superBlock, ext2_inode* newInode, uint32_t fileType, std::vector<uint32_t>& blocks)
+void createNewInode(ext2_super_block* superBlock, ext2_inode* newInode, uint32_t fileType, std::vector<uint32_t>& blocks)
 {
     SYSTEMTIME time;
     GetSystemTime(&time);
@@ -224,38 +225,44 @@ uint32_t updateMainGroupDescriptor(DiskInfo* diskInfo, ext2_super_block* superBl
     return (writeResult == EC_NO_ERROR) ? UPDATE_MAIN_GROUP_DESCRIPTOR_SUCCESS : UPDATE_MAIN_GROUP_DESCRIPTOR_FAILED;
 }
 
-uint32_t findInodeByFullPath(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, ext2_inode** inode)
+uint32_t searchInodeByFullPath(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, ext2_inode** inode)
 {
     char* actualDirectoryName = strtok(directoryPath, "/");
     if(strcmp(actualDirectoryName, "Root\0") != 0)
-        return FIND_INODE_BY_PATH_INVALID_PARENT_NAME;
+        return SEARCH_INODE_BY_FULL_PATH_PARENT_DO_NOT_EXIST;
 
     *inode = nullptr;
     ext2_inode* searchedInode = new ext2_inode();
 
     while(actualDirectoryName != nullptr)
     {
-        uint32_t searchedInodeResult = findInodeByDirectoryNameInParent(diskInfo, superBlock, *inode, actualDirectoryName, searchedInode);
+        uint32_t searchedInodeResult = searchInodeByDirectoryNameInParent(diskInfo, superBlock, *inode,
+                                                                          actualDirectoryName, searchedInode);
 
-        if(searchedInodeResult == INODE_FOUND)
+        if(searchedInodeResult == SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_SUCCESS)
             *inode = searchedInode;
         else
         {
             delete searchedInode;
-            return FIND_INODE_BY_PATH_FAILED;
+
+            if(searchedInodeResult == SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_INODE_DO_NOT_EXIST)
+                return SEARCH_INODE_BY_FULL_PATH_PARENT_DO_NOT_EXIST;
+
+            return SEARCH_INODE_BY_FULL_PATH_FAILED;
         }
 
         actualDirectoryName = strtok(nullptr, "/");
     }
 
-    return FIND_INODE_BY_PATH_SUCCESS;
+    return SEARCH_INODE_BY_FULL_PATH_SUCCESS;
 }
 
-uint32_t findInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, char* searchedDirectoryName, ext2_inode* searchedInode)
+uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, char* searchedDirectoryName, ext2_inode* searchedInode)
 {
     char* blockBuffer = new char[superBlock->s_log_block_size];
     uint32_t numberOfSectorsRead;
     uint32_t blockGlobalIndex;
+    uint32_t searchedInodeGlobalIndex;
 
     if(parentInode == nullptr) //it means that searched inode is Root
     {
@@ -267,12 +274,12 @@ uint32_t findInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block* 
         if(readResult != EC_NO_ERROR)
         {
             delete[] blockBuffer;
-            return INODE_SEARCH_FAILED;
+            return SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_FAILED;
         }
 
         memcpy(searchedInode, blockBuffer, sizeof(ext2_inode));
         delete[] blockBuffer;
-        return INODE_SEARCH_SUCCESS;
+        return SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_SUCCESS;
     }
 
     for(uint32_t blockLocalIndex = 0; blockLocalIndex < parentInode->i_blocks; blockLocalIndex++)
@@ -280,17 +287,17 @@ uint32_t findInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block* 
         uint32_t occupiedBytesInBlock = parentInode->i_size >= superBlock->s_log_block_size * (blockLocalIndex + 1) ? superBlock->s_log_block_size :
                 parentInode->i_size % superBlock->s_log_block_size;
 
-        if(occupiedBytesInBlock == 0)
+        if(occupiedBytesInBlock == 0) //it means that we haven't found the inode, and there isn't any other place to find it
         {
             delete[] blockBuffer;
-            return INODE_SEARCH_DO_NOT_EXIST;
+            return SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_INODE_DO_NOT_EXIST;
         }
 
         uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, parentInode, blockLocalIndex, blockGlobalIndex);
         if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
         {
             delete[] blockBuffer;
-            return INODE_SEARCH_FAILED;
+            return SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_FAILED;
         }
 
         uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
@@ -299,16 +306,23 @@ uint32_t findInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block* 
         if(readResult != EC_NO_ERROR)
         {
             delete[] blockBuffer;
-            return INODE_SEARCH_FAILED;
+            return SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_FAILED;
         }
 
-        
+        uint32_t searchDirectoryInBlockDataResult = searchDirectoryWithGivenNameInGivenBlockData(searchedDirectoryName, blockBuffer, occupiedBytesInBlock, searchedInodeGlobalIndex);
 
+        if(searchDirectoryInBlockDataResult == SEARCH_DIRECTORY_ENTRY_BY_NAME_IN_GIVEN_BLOCK_DATA_FOUND)
+        {
+            uint32_t getInodeByIndexResult = getInodeByInodeGlobalIndex(diskInfo, superBlock, searchedInodeGlobalIndex, searchedInode);
+            return (getInodeByIndexResult == GET_INODE_BY_INODE_GLOBAL_INDEX_SUCCESS) ? SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_SUCCESS : SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_FAILED;
+        }
     }
+
+    delete[] blockBuffer;
+    return SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_INODE_DO_NOT_EXIST;
 }
 
-uint32_t findDirectoryWithGivenNameInGivenBlockData(DiskInfo* diskInfo, ext2_super_block* superBlock, char* searchedName, char* blockBuffer, uint32_t occupiedBytesInBlock,
-                                                    uint32_t& searchedInode)
+uint32_t searchDirectoryWithGivenNameInGivenBlockData(char* searchedName, char* blockBuffer, uint32_t occupiedBytesInBlock, uint32_t& searchedInodeGlobalIndex)
 {
     uint32_t offset = 0;
     while(true)
@@ -319,16 +333,16 @@ uint32_t findDirectoryWithGivenNameInGivenBlockData(DiskInfo* diskInfo, ext2_sup
 
         if(strcmp(searchedName, directoryEntry->name) == 0)
         {
-            searchedInode = directoryEntry->inode;
+            searchedInodeGlobalIndex = directoryEntry->inode;
             delete directoryEntry;
-            return DIRECTORY_ENTRY_SEARCH_BY_NAME_SEARCH_FOUND;
+            return SEARCH_DIRECTORY_ENTRY_BY_NAME_IN_GIVEN_BLOCK_DATA_FOUND;
         }
 
         offset += directoryEntryLength;
         if(offset >= occupiedBytesInBlock)
         {
             delete directoryEntry;
-            return DIRECTORY_ENTRY_SEARCH_BY_NAME_SEARCH_NOT_FOUND;
+            return SEARCH_DIRECTORY_ENTRY_BY_NAME_IN_GIVEN_BLOCK_DATA_NOT_FOUND;
         }
     }
 }

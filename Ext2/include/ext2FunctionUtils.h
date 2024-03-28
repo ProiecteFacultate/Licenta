@@ -43,5 +43,6 @@ uint32_t changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitVa
 
 //Being given a local index for a data block of a inode (for example the 50321th data block of the inode), calculate its global value, respecting the multi ordering schema
 uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t searchedBlockLocalIndexInInode, uint32_t& searchedBlockGlobalIndex);
+uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, ext2_inode* searchedInode);
 
 #endif

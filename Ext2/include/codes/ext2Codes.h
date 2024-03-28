@@ -18,20 +18,21 @@
 #define UPDATE_MAIN_GROUP_DESCRIPTOR_FAILED                                                            0
 #define UPDATE_MAIN_GROUP_DESCRIPTOR_SUCCESS                                                           1
 
-#define FIND_INODE_BY_PATH_FAILED                                                                      0
-#define FIND_INODE_BY_PATH_INVALID_PARENT_NAME                                                         1
-#define FIND_INODE_BY_PATH_SUCCESS                                                                     2
+#define SEARCH_INODE_BY_FULL_PATH_PARENT_DO_NOT_EXIST                                                  0
+#define SEARCH_INODE_BY_FULL_PATH_FAILED                                                               1
+#define SEARCH_INODE_BY_FULL_PATH_SUCCESS                                                              2
 
-#define INODE_FOUND                                                                                    1
+#define SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_FAILED                                                0
+#define SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_INODE_DO_NOT_EXIST                                    1
+#define SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_SUCCESS                                               2
 
-#define INODE_SEARCH_FAILED                                                                            0
-#define INODE_SEARCH_DO_NOT_EXIST                                                                      1
-#define INODE_SEARCH_SUCCESS                                                                           2
-
-#define DIRECTORY_ENTRY_SEARCH_BY_NAME_SEARCH_FOUND                                                    0
-#define DIRECTORY_ENTRY_SEARCH_BY_NAME_SEARCH_NOT_FOUND                                                1
+#define SEARCH_DIRECTORY_ENTRY_BY_NAME_IN_GIVEN_BLOCK_DATA_FOUND                                       0
+#define SEARCH_DIRECTORY_ENTRY_BY_NAME_IN_GIVEN_BLOCK_DATA_NOT_FOUND                                   1
 
 #define GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED                                                           0
 #define GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS                                                          1
+
+#define GET_INODE_BY_INODE_GLOBAL_INDEX_FAILED                                                         0
+#define GET_INODE_BY_INODE_GLOBAL_INDEX_SUCCESS                                                        1
 
 #endif

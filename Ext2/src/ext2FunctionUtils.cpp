@@ -374,3 +374,26 @@ uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_bloc
     delete[] blockBuffer;
     return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
 }
+
+uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, ext2_inode* searchedInode)
+{
+    uint32_t groupOfTheInode = inodeGlobalIndex / superBlock->s_inodes_per_group; //inodes global index is counted from 0
+    uint32_t inodeTableBlockForGivenInode = getFirstInodeTableBlockForGivenGroup(superBlock, groupOfTheInode) + inodeGlobalIndex % superBlock->s_inodes_per_group;
+
+    char* blockBuffer = new char[getNumberOfSectorsPerBlock(diskInfo, superBlock)];
+    uint32_t numberOfSectorsRead;
+    uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                 getFirstSectorForGivenBlock(diskInfo, superBlock, inodeTableBlockForGivenInode),blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return GET_INODE_BY_INODE_GLOBAL_INDEX_FAILED;
+    }
+
+    uint32_t inodeOffsetInsideBlock = inodeGlobalIndex % (superBlock->s_log_block_size / sizeof(ext2_inode));
+    memcpy(searchedInode, blockBuffer + inodeOffsetInsideBlock, sizeof(ext2_inode));
+
+    delete[] blockBuffer;
+    return GET_INODE_BY_INODE_GLOBAL_INDEX_SUCCESS;
+}

@@ -1,3 +1,5 @@
+#include "vector"
+
 #include "../include/disk.h"
 #include "../include/structures.h"
 
@@ -14,11 +16,14 @@ uint32_t searchAndOccupyFirstFreeDataBlockInGroup(DiskInfo* diskInfo, ext2_super
 //of this free inode is located
 uint32_t searchAndOccupyEmptyInodeInGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, uint32_t& blockWithFirstFreeInodeInInodeTable, uint32_t& offsetOfFirstFreeInode);
 
-uint32_t createNewInode(ext2_super_block* superBlock, ext2_inode* newInode, uint32_t fileType, std::vector<uint32_t>& blocks);
+void createNewInode(ext2_super_block* superBlock, ext2_inode* newInode, uint32_t fileType, std::vector<uint32_t>& blocks);
 
 uint32_t updateMainGroupDescriptor(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_group_desc* newGroupDescriptor, uint32_t groupDescriptorBlock, uint32_t groupDescriptorOffset);
 
-uint32_t findInodeByFullPath(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, ext2_inode** inode);
+uint32_t searchInodeByFullPath(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, ext2_inode** inode);
 
-uint32_t findInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, char* searchedDirectoryName, ext2_inode* searchedInode);
+uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, char* searchedDirectoryName, ext2_inode* searchedInode);
+
+uint32_t searchDirectoryWithGivenNameInGivenBlockData(char* searchedName, char* blockBuffer, uint32_t occupiedBytesInBlock, uint32_t& searchedInodeGlobalIndex);
+
 #endif

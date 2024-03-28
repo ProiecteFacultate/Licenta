@@ -7,7 +7,7 @@
 #include "../include/diskCodes.h"
 #include "../include/structures.h"
 #include "../include/ext2FunctionUtils.h"
-#include "../include/ext2Attributes.h"
+#include "../include/codes/ext2Attributes.h"
 #include "../include/ext2.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/ext2Init.h"
