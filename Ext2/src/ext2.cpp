@@ -223,3 +223,112 @@ uint32_t updateMainGroupDescriptor(DiskInfo* diskInfo, ext2_super_block* superBl
 
     return (writeResult == EC_NO_ERROR) ? UPDATE_MAIN_GROUP_DESCRIPTOR_SUCCESS : UPDATE_MAIN_GROUP_DESCRIPTOR_FAILED;
 }
+
+uint32_t findInodeByFullPath(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, ext2_inode** inode)
+{
+    char* actualDirectoryName = strtok(directoryPath, "/");
+    if(strcmp(actualDirectoryName, "Root\0") != 0)
+        return FIND_INODE_BY_PATH_INVALID_PARENT_NAME;
+
+    *inode = nullptr;
+    ext2_inode* searchedInode = new ext2_inode();
+
+    while(actualDirectoryName != nullptr)
+    {
+        uint32_t searchedInodeResult = findInodeByDirectoryNameInParent(diskInfo, superBlock, *inode, actualDirectoryName, searchedInode);
+
+        if(searchedInodeResult == INODE_FOUND)
+            *inode = searchedInode;
+        else
+        {
+            delete searchedInode;
+            return FIND_INODE_BY_PATH_FAILED;
+        }
+
+        actualDirectoryName = strtok(nullptr, "/");
+    }
+
+    return FIND_INODE_BY_PATH_SUCCESS;
+}
+
+uint32_t findInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, char* searchedDirectoryName, ext2_inode* searchedInode)
+{
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t numberOfSectorsRead;
+    uint32_t blockGlobalIndex;
+
+    if(parentInode == nullptr) //it means that searched inode is Root
+    {
+        uint32_t rootInodeBlock = getFirstInodeTableBlockForGivenGroup(superBlock, 0);
+
+        uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                              getFirstSectorForGivenBlock(diskInfo, superBlock, rootInodeBlock), blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return INODE_SEARCH_FAILED;
+        }
+
+        memcpy(searchedInode, blockBuffer, sizeof(ext2_inode));
+        delete[] blockBuffer;
+        return INODE_SEARCH_SUCCESS;
+    }
+
+    for(uint32_t blockLocalIndex = 0; blockLocalIndex < parentInode->i_blocks; blockLocalIndex++)
+    {
+        uint32_t occupiedBytesInBlock = parentInode->i_size >= superBlock->s_log_block_size * (blockLocalIndex + 1) ? superBlock->s_log_block_size :
+                parentInode->i_size % superBlock->s_log_block_size;
+
+        if(occupiedBytesInBlock == 0)
+        {
+            delete[] blockBuffer;
+            return INODE_SEARCH_DO_NOT_EXIST;
+        }
+
+        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, parentInode, blockLocalIndex, blockGlobalIndex);
+        if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
+        {
+            delete[] blockBuffer;
+            return INODE_SEARCH_FAILED;
+        }
+
+        uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                              getFirstSectorForGivenBlock(diskInfo, superBlock, blockGlobalIndex), blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return INODE_SEARCH_FAILED;
+        }
+
+        
+
+    }
+}
+
+uint32_t findDirectoryWithGivenNameInGivenBlockData(DiskInfo* diskInfo, ext2_super_block* superBlock, char* searchedName, char* blockBuffer, uint32_t occupiedBytesInBlock,
+                                                    uint32_t& searchedInode)
+{
+    uint32_t offset = 0;
+    while(true)
+    {
+        uint32_t directoryEntryLength = *(uint16_t*)&blockBuffer[offset + 4];
+        ext2_dir_entry* directoryEntry = new ext2_dir_entry();
+        memcpy(directoryEntry, blockBuffer + offset, directoryEntryLength);
+
+        if(strcmp(searchedName, directoryEntry->name) == 0)
+        {
+            searchedInode = directoryEntry->inode;
+            delete directoryEntry;
+            return DIRECTORY_ENTRY_SEARCH_BY_NAME_SEARCH_FOUND;
+        }
+
+        offset += directoryEntryLength;
+        if(offset >= occupiedBytesInBlock)
+        {
+            delete directoryEntry;
+            return DIRECTORY_ENTRY_SEARCH_BY_NAME_SEARCH_NOT_FOUND;
+        }
+    }
+}

@@ -1,16 +1,7 @@
 # ninja log v5
-0	152	7332054847454084	build.ninja	cd76e6ccc1d3fe19
-23	3292	7332051073803990	CMakeFiles/Ext2.dir/src/ext2.cpp.obj	de4acb4c614e00dd
-8	1376	7332051054265908	CMakeFiles/Ext2.dir/src/main.cpp.obj	f04b9d4bc5c07227
-3293	3599	7332051076596858	Ext2.exe	d5736c42f913e11b
-16	2799	7332051068857321	CMakeFiles/Ext2.dir/src/ext2FunctionUtils.cpp.obj	fdaa2c9d2a757560
-4	1542	7332051056264166	CMakeFiles/Ext2.dir/src/ext2Init.cpp.obj	41de4153cd3a770f
-5	1292	7332056354394487	CMakeFiles/Ext2.dir/src/main.cpp.obj	f04b9d4bc5c07227
-2	1320	7332056354683721	CMakeFiles/Ext2.dir/src/ext2Init.cpp.obj	41de4153cd3a770f
-10	1413	7332056355592000	CMakeFiles/Ext2.dir/src/ext2FunctionUtils.cpp.obj	fdaa2c9d2a757560
-7	1564	7332056357106927	CMakeFiles/Ext2.dir/src/ext2.cpp.obj	de4acb4c614e00dd
-1565	1715	7332056358423356	Ext2.exe	d5736c42f913e11b
-2	1053	7332056671414667	CMakeFiles/Ext2.dir/src/ext2.cpp.obj	de4acb4c614e00dd
-1054	1155	7332056672242226	Ext2.exe	d5736c42f913e11b
+0	152	7332221265194232	build.ninja	cd76e6ccc1d3fe19
 2	1028	7332056808745476	CMakeFiles/Ext2.dir/src/ext2.cpp.obj	de4acb4c614e00dd
+5	1292	7332056354394487	CMakeFiles/Ext2.dir/src/main.cpp.obj	f04b9d4bc5c07227
 1028	1117	7332056809566536	Ext2.exe	d5736c42f913e11b
+10	1413	7332056355592000	CMakeFiles/Ext2.dir/src/ext2FunctionUtils.cpp.obj	fdaa2c9d2a757560
+2	1320	7332056354683721	CMakeFiles/Ext2.dir/src/ext2Init.cpp.obj	41de4153cd3a770f

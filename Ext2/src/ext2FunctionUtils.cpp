@@ -4,6 +4,7 @@
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
 #include "../include/structures.h"
+#include "../include/ext2.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/ext2FunctionUtils.h"
 
@@ -269,4 +270,107 @@ uint32_t changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitVa
         case 7:
             return (byte & 0xFE) | newBitValue;
     }
+}
+
+//////////////////////////////////////////////
+
+uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t searchedBlockLocalIndexInInode, uint32_t& searchedBlockGlobalIndex)
+{
+    if(searchedBlockLocalIndexInInode < 12) //searched block is in a direct block
+    {
+        searchedBlockGlobalIndex = inode->i_block[searchedBlockLocalIndexInInode];
+        return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
+    }
+
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t blockSize = superBlock->s_log_block_size;
+    uint32_t numberOfSectorsRead;
+    uint32_t readResult;
+
+    if(searchedBlockLocalIndexInInode < blockSize / 4 + 11) //searched block is in a second order block
+    {
+        readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                              getFirstSectorForGivenBlock(diskInfo, superBlock, inode->i_block[12]),blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
+        }
+
+        uint32_t indexInSecondOrderArray = searchedBlockLocalIndexInInode - 12;
+        searchedBlockGlobalIndex = *(uint32_t*)&blockBuffer[indexInSecondOrderArray];
+
+        delete[] blockBuffer;
+        return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
+    }
+
+    if(searchedBlockLocalIndexInInode < blockSize * blockSize / 16 + blockSize / 4 + 11)
+    {
+        readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                     getFirstSectorForGivenBlock(diskInfo, superBlock, inode->i_block[13]),blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
+        }
+
+        uint32_t indexInSecondOrderArray = (searchedBlockLocalIndexInInode - blockSize / 4 - 12) / (blockSize / 4);
+        uint32_t thirdOrderArrayBlock = *(uint32_t*)&blockBuffer[indexInSecondOrderArray];
+
+        readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                     getFirstSectorForGivenBlock(diskInfo, superBlock, thirdOrderArrayBlock),blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
+        }
+
+        uint32_t indexInThirdOrderArray = (searchedBlockLocalIndexInInode - blockSize / 4 - 12) % (blockSize / 4);
+        searchedBlockGlobalIndex = *(uint32_t*)&blockBuffer[indexInThirdOrderArray];
+        delete[] blockBuffer;
+        return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
+    }
+
+    //ELSE there is in 4 level
+
+    readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                 getFirstSectorForGivenBlock(diskInfo, superBlock, inode->i_block[14]),blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
+    }
+
+    uint32_t indexInSecondOrderArray = (searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) / (blockSize * blockSize / 16);
+    uint32_t thirdOrderArrayBlock = *(uint32_t*)&blockBuffer[indexInSecondOrderArray];
+
+    readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                 getFirstSectorForGivenBlock(diskInfo, superBlock, thirdOrderArrayBlock),blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
+    }
+
+    uint32_t indexInThirdOrderArray = (searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) % (blockSize * blockSize / 16);
+    uint32_t forthOrderArrayBlock = *(uint32_t*)&blockBuffer[indexInThirdOrderArray];
+
+    readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                 getFirstSectorForGivenBlock(diskInfo, superBlock, forthOrderArrayBlock),blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
+    }
+
+    uint32_t indexInForthOrderArray = (searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) % (blockSize / 4);
+    searchedBlockGlobalIndex =  *(uint32_t*)&blockBuffer[indexInForthOrderArray];
+    delete[] blockBuffer;
+    return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
 }
