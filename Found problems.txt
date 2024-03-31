@@ -1,1 +1,3 @@
-read Root/Dir_1/File_1 0 101
+EXT2:
+
+What if all groups has same number of free inoed or blocks when looking for a free inode for a new directory?

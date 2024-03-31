@@ -7,9 +7,59 @@
 #include "../include/diskCodes.h"
 #include "../include/structures.h"
 #include "../include/ext2FunctionUtils.h"
+#include "../include/ext2Heuristics.h"
 #include "../include/codes/ext2Attributes.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/ext2.h"
+
+uint32_t createInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, uint32_t fileType, bool& isParentRoot)
+{
+    uint32_t createInodeResult;
+
+    if(fileType == FILE_TYPE_DIRECTORY)
+        createInodeResult = createDirectoryInode(diskInfo, superBlock, parentInode, isParentRoot);
+    else if(fileType == FILE_TYPE_REGULAR_FILE)
+        createInodeResult = createFileInode(diskInfo, superBlock, parentInode);
+
+    if(createInodeResult == SEARCH_FREE_INODE_NO_FREE_INODES)
+        return CREATE_INODE_FAILED_NO_FREE_INODES;
+    else if(createInodeResult == SEARCH_FREE_INODE_FAILED_FOR_OTHER_REASON)
+        return CREATE_INODE_FAILED_FOR_OTHER_REASON;
+}
+
+uint32_t createDirectoryInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, bool& isParentRoot)
+{
+    uint32_t searchFreeInodeResult, inodeGlobalIndex;
+
+    if(isParentRoot == true)
+        searchFreeInodeResult = searchFreeInodeForDirectoryHavingParentRoot(diskInfo, superBlock, inodeGlobalIndex);
+    else
+        searchFreeInodeResult = searchFreeInodeForNestedDirectory(diskInfo, superBlock, parentInode, inodeGlobalIndex);
+
+    switch (searchFreeInodeResult) {
+        case SEARCH_FREE_INODE_NO_FREE_INODES:
+            return CREATE_INODE_FAILED_NO_FREE_INODES;
+        case SEARCH_FREE_INODE_FAILED_FOR_OTHER_REASON:
+            return CREATE_INODE_FAILED_FOR_OTHER_REASON;
+        default:
+            return CREATE_INODE_SUCCESS;
+    }
+}
+
+uint32_t createFileInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode)
+{
+    uint32_t inodeGlobalIndex;
+    uint32_t searchFreeInodeResult = searchFreeInodeForRegularFile(diskInfo, superBlock, parentInode, inodeGlobalIndex);
+
+    switch (searchFreeInodeResult) {
+        case SEARCH_FREE_INODE_NO_FREE_INODES:
+            return CREATE_INODE_FAILED_NO_FREE_INODES;
+        case SEARCH_FREE_INODE_FAILED_FOR_OTHER_REASON:
+            return CREATE_INODE_FAILED_FOR_OTHER_REASON;
+        default:
+            return CREATE_INODE_SUCCESS;
+    }
+}
 
 uint32_t addInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, uint32_t fileType)
 {
@@ -225,7 +275,7 @@ uint32_t updateMainGroupDescriptor(DiskInfo* diskInfo, ext2_super_block* superBl
     return (writeResult == EC_NO_ERROR) ? UPDATE_MAIN_GROUP_DESCRIPTOR_SUCCESS : UPDATE_MAIN_GROUP_DESCRIPTOR_FAILED;
 }
 
-uint32_t searchInodeByFullPath(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, ext2_inode** inode)
+uint32_t searchInodeByFullPath(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, ext2_inode** inode, bool& isSearchedInodeRoot)
 {
     char* actualDirectoryName = strtok(directoryPath, "/");
     if(strcmp(actualDirectoryName, "Root\0") != 0)
@@ -237,7 +287,7 @@ uint32_t searchInodeByFullPath(DiskInfo* diskInfo, ext2_super_block* superBlock,
     while(actualDirectoryName != nullptr)
     {
         uint32_t searchedInodeResult = searchInodeByDirectoryNameInParent(diskInfo, superBlock, *inode,
-                                                                          actualDirectoryName, searchedInode);
+                                                                          actualDirectoryName, searchedInode, isSearchedInodeRoot);
 
         if(searchedInodeResult == SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_SUCCESS)
             *inode = searchedInode;
@@ -257,7 +307,8 @@ uint32_t searchInodeByFullPath(DiskInfo* diskInfo, ext2_super_block* superBlock,
     return SEARCH_INODE_BY_FULL_PATH_SUCCESS;
 }
 
-uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, char* searchedDirectoryName, ext2_inode* searchedInode)
+uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, char* searchedDirectoryName, ext2_inode* searchedInode,
+                                            bool& isSearchedInodeRoot)
 {
     char* blockBuffer = new char[superBlock->s_log_block_size];
     uint32_t numberOfSectorsRead;
@@ -278,6 +329,7 @@ uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block
         }
 
         memcpy(searchedInode, blockBuffer, sizeof(ext2_inode));
+        isSearchedInodeRoot = true;
         delete[] blockBuffer;
         return SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_SUCCESS;
     }

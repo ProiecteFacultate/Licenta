@@ -15,13 +15,14 @@
 uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char* parentDirectoryPath, char* newDirectoryName, uint32_t newDirectoryType)
 {
     ext2_inode* actualInode = nullptr;
-    uint32_t searchInodeResult = searchInodeByFullPath(diskInfo, superBlock, parentDirectoryPath, &actualInode);
+    bool isSearchedInodeRoot;
+    uint32_t searchInodeResult = searchInodeByFullPath(diskInfo, superBlock, parentDirectoryPath, &actualInode, isSearchedInodeRoot);
 
     if(searchInodeResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
         return DIRECTORY_CREATION_PARENT_DO_NOT_EXIST;
 
     uint32_t parentAlreadyContainsDirectoryWithGivenName = searchInodeByDirectoryNameInParent(diskInfo, superBlock, actualInode,
-                                                                                              newDirectoryName, new ext2_inode());
+                                                                                              newDirectoryName, new ext2_inode(), isSearchedInodeRoot);
 
     if(actualInode->i_mode != FILE_TYPE_DIRECTORY)
     {

@@ -397,3 +397,25 @@ uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superB
     delete[] blockBuffer;
     return GET_INODE_BY_INODE_GLOBAL_INDEX_SUCCESS;
 }
+
+uint32_t getNumberOfOccupiedInodesInGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, uint32_t& numberOfOccupiedInodes)
+{
+    numberOfOccupiedInodes = 0;
+    uint32_t inodeBitmapBlock = getInodeBitmapBlockForGivenGroup(superBlock, group);
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t numberOfSectorsRead = 0;
+    uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                          getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBitmapBlock), blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return GET_NUMBER_OF_OCCUPIED_INODE_IN_BLOCK_FAILED;
+    }
+
+    while(getBitFromByte(blockBuffer[numberOfOccupiedInodes / 8], numberOfOccupiedInodes % 8) == 1)
+        numberOfOccupiedInodes++;
+
+    delete[] blockBuffer;
+    return GET_NUMBER_OF_OCCUPIED_INODE_IN_BLOCK_SUCCESS;
+}
