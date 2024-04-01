@@ -91,6 +91,20 @@ build CMakeFiles/Ext2.dir/src/ext2Heuristics.cpp.obj: CXX_COMPILER__Ext2_unscann
   OBJECT_DIR = CMakeFiles\Ext2.dir
   OBJECT_FILE_DIR = CMakeFiles\Ext2.dir\src
 
+build CMakeFiles/Ext2.dir/src/ext2Utils.cpp.obj: CXX_COMPILER__Ext2_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/ext2Utils.cpp || cmake_object_order_depends_target_Ext2
+  DEP_FILE = CMakeFiles\Ext2.dir\src\ext2Utils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\Ext2.dir
+  OBJECT_FILE_DIR = CMakeFiles\Ext2.dir\src
+
+build CMakeFiles/Ext2.dir/src/ext2RootInit.cpp.obj: CXX_COMPILER__Ext2_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/ext2RootInit.cpp || cmake_object_order_depends_target_Ext2
+  DEP_FILE = CMakeFiles\Ext2.dir\src\ext2RootInit.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\Ext2.dir
+  OBJECT_FILE_DIR = CMakeFiles\Ext2.dir\src
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Ext2
@@ -99,7 +113,7 @@ build CMakeFiles/Ext2.dir/src/ext2Heuristics.cpp.obj: CXX_COMPILER__Ext2_unscann
 #############################################
 # Link the executable Ext2.exe
 
-build Ext2.exe: CXX_EXECUTABLE_LINKER__Ext2_Debug CMakeFiles/Ext2.dir/src/main.cpp.obj CMakeFiles/Ext2.dir/src/ext2Init.cpp.obj CMakeFiles/Ext2.dir/src/ext2FunctionUtils.cpp.obj CMakeFiles/Ext2.dir/src/ext2.cpp.obj CMakeFiles/Ext2.dir/src/ext2Api.cpp.obj CMakeFiles/Ext2.dir/src/ext2Heuristics.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
+build Ext2.exe: CXX_EXECUTABLE_LINKER__Ext2_Debug CMakeFiles/Ext2.dir/src/main.cpp.obj CMakeFiles/Ext2.dir/src/ext2Init.cpp.obj CMakeFiles/Ext2.dir/src/ext2FunctionUtils.cpp.obj CMakeFiles/Ext2.dir/src/ext2.cpp.obj CMakeFiles/Ext2.dir/src/ext2Api.cpp.obj CMakeFiles/Ext2.dir/src/ext2Heuristics.cpp.obj CMakeFiles/Ext2.dir/src/ext2Utils.cpp.obj CMakeFiles/Ext2.dir/src/ext2RootInit.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
   FLAGS = -g
   LINK_LIBRARIES = D:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\Ext2.dir

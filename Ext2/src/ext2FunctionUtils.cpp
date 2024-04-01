@@ -6,6 +6,7 @@
 #include "../include/structures.h"
 #include "../include/ext2.h"
 #include "../include/codes/ext2Codes.h"
+#include "../include/ext2Utils.h"
 #include "../include/ext2FunctionUtils.h"
 
 uint32_t getNumberOfGroups(ext2_super_block* superBlock)
@@ -203,9 +204,6 @@ uint32_t getGroupDescriptorOfGivenGroup(DiskInfo* diskInfo, ext2_super_block* su
 {
     //when we want to read a group descriptor we don't read from the given group's group descriptors, but from the first one
     groupDescriptorBlock = getFirstGroupDescriptorsBlockForGivenGroup(superBlock, 0) + (group * sizeof(ext2_group_desc)) / superBlock->s_log_block_size;
-    if(group != 0 && (group * sizeof(ext2_group_desc)) % superBlock->s_log_block_size == 0)
-        groupDescriptorBlock--;
-
     groupDescriptorOffsetInsideBlock = (group * sizeof(ext2_group_desc)) % superBlock->s_log_block_size;
 
     char* blockBuffer = new char[superBlock->s_log_block_size];
@@ -223,52 +221,6 @@ uint32_t getGroupDescriptorOfGivenGroup(DiskInfo* diskInfo, ext2_super_block* su
 
     delete[] blockBuffer;
     return GET_GROUP_DESCRIPTOR_FOR_GIVEN_GROUP_SUCCESS;
-}
-
-/////////////////////////
-
-uint32_t getBitFromByte(uint8_t byte, uint32_t bitIndexInByte)
-{
-    switch (bitIndexInByte) {
-        case 0:
-            return byte & 0x80;
-        case 1:
-            return byte & 0x40;
-        case 2:
-            return byte & 0x20;
-        case 3:
-            return byte & 0x10;
-        case 4:
-            return byte & 0x08;
-        case 5:
-            return byte & 0x04;
-        case 6:
-            return byte & 0x02;
-        case 7:
-            return byte & 0x01;
-    }
-}
-
-uint32_t changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitValue)
-{
-    switch (bitIndexInByte) {
-        case 0:
-            return (byte & 0x7F) | (newBitValue << 7);
-        case 1:
-            return (byte & 0xBF) | (newBitValue << 6);
-        case 2:
-            return (byte & 0xDF) | (newBitValue << 5);
-        case 3:
-            return (byte & 0xEF) | (newBitValue << 4);
-        case 4:
-            return (byte & 0xF7) | (newBitValue << 3);
-        case 5:
-            return (byte & 0xFB) | (newBitValue << 2);
-        case 6:
-            return (byte & 0xFD) | (newBitValue << 1);
-        case 7:
-            return (byte & 0xFE) | newBitValue;
-    }
 }
 
 //////////////////////////////////////////////
@@ -463,9 +415,10 @@ uint32_t addInodeToInodeTable(DiskInfo* diskInfo, ext2_super_block* superBlock, 
     uint32_t numberOfOccupiedInodesInGroup;
     uint32_t getNumberOfOccupiedInodesResult = getNumberOfOccupiedInodesInGroup(diskInfo, superBlock, inode->i_group, numberOfOccupiedInodesInGroup);
     if(getNumberOfOccupiedInodesResult == GET_NUMBER_OF_OCCUPIED_INODE_IN_BLOCK_FAILED)
-        return ADD_INODE_TO_GROUP_FAILED_FOR_OTHER_REASON;
+        return ADD_INODE_TO_INODE_TABLE_FAILED;
 
-    uint32_t inodeBlockGlobalIndex = getFirstInodeTableBlockForGivenGroup(superBlock, inode->i_group) + (inode->i_global_index % superBlock->s_inodes_per_group) / sizeof(ext2_inode);
+    uint32_t inodesPerBlock = superBlock->s_log_block_size / sizeof(ext2_inode);
+    uint32_t inodeBlockGlobalIndex = getFirstInodeTableBlockForGivenGroup(superBlock, inode->i_group) + (inode->i_global_index % superBlock->s_inodes_per_group) / inodesPerBlock;
     uint32_t offsetInsideInodeTableBlock = (inode->i_global_index * sizeof(ext2_inode)) % superBlock->s_log_block_size;
     char* blockBuffer = new char[superBlock->s_log_block_size];
     uint32_t numberOfSectorsRead = 0;
@@ -475,7 +428,7 @@ uint32_t addInodeToInodeTable(DiskInfo* diskInfo, ext2_super_block* superBlock, 
     if(readResult != EC_NO_ERROR)
     {
         delete[] blockBuffer;
-        return ADD_INODE_TO_GROUP_FAILED_FOR_OTHER_REASON;
+        return ADD_INODE_TO_INODE_TABLE_FAILED;
     }
 
     memcpy(blockBuffer + offsetInsideInodeTableBlock, inode, sizeof(ext2_inode));
@@ -485,7 +438,7 @@ uint32_t addInodeToInodeTable(DiskInfo* diskInfo, ext2_super_block* superBlock, 
 
     delete[] blockBuffer;
 
-    return (writeResult == EC_NO_ERROR) ? ADD_INODE_TO_GROUP_SUCCESS : ADD_INODE_TO_GROUP_FAILED_FOR_OTHER_REASON;
+    return (writeResult == EC_NO_ERROR) ? ADD_INODE_TO_INODE_TABLE_SUCCESS : ADD_INODE_TO_INODE_TABLE_FAILED;
 }
 
 uint32_t updateValueInInodeBitmap(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, uint8_t newValue)
@@ -513,13 +466,8 @@ uint32_t updateValueInInodeBitmap(DiskInfo* diskInfo, ext2_super_block* superBlo
     uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBitmapBlock),
                                             blockBuffer, numOfSectorsWritten);
 
-    if(writeResult != EC_NO_ERROR)
-    {
-        delete[] blockBuffer;
-        return UPDATE_VALUE_IN_INODE_BITMAP_FAILED;
-    }
-
-    return UPDATE_VALUE_IN_INODE_BITMAP_SUCCESS;
+    delete[] blockBuffer;
+    return (writeResult == EC_NO_ERROR) ? UPDATE_VALUE_IN_INODE_BITMAP_SUCCESS : UPDATE_VALUE_IN_INODE_BITMAP_FAILED;
 }
 
 uint32_t updateValueInDataBlockBitmap(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t dataBlockGlobalIndex, uint8_t newValue)

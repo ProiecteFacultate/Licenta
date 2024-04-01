@@ -23,14 +23,6 @@
 #define GET_GROUP_DESCRIPTOR_FOR_GIVEN_GROUP_FAILED                                                    0
 #define GET_GROUP_DESCRIPTOR_FOR_GIVEN_GROUP_SUCCESS                                                   1
 
-#define ADD_INODE_TO_GROUP_FAILED_FOR_OTHER_REASON                                                     0 //TO DEPRECATE
-#define ADD_INODE_TO_GROUP_NO_FREE_INODES_IN_GROUP                                                     1 //TO DEPRECATE
-#define ADD_INODE_TO_GROUP_NO_ENOUGH_FREE_DATA_BLOCKS_IN_GROUP                                         2 //TO DEPRECATE
-#define ADD_INODE_TO_GROUP_SUCCESS                                                                     3 //TO DEPRECATE
-
-#define UPDATE_MAIN_GROUP_DESCRIPTOR_FAILED                                                            0
-#define UPDATE_MAIN_GROUP_DESCRIPTOR_SUCCESS                                                           1
-
 #define SEARCH_INODE_BY_FULL_PATH_PARENT_DO_NOT_EXIST                                                  0
 #define SEARCH_INODE_BY_FULL_PATH_FAILED                                                               1
 #define SEARCH_INODE_BY_FULL_PATH_SUCCESS                                                              2
@@ -77,5 +69,8 @@
 
 #define UPDATE_VALUE_IN_DATA_BLOCK_BITMAP_FAILED                                                       0
 #define UPDATE_VALUE_IN_DATA_BLOCK_BITMAP_SUCCESS                                                      1
+
+#define ADD_INODE_TO_INODE_TABLE_FAILED                                                                0
+#define ADD_INODE_TO_INODE_TABLE_SUCCESS                                                               1
 
 #endif

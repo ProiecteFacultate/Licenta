@@ -1,57 +1,34 @@
-#include "windows.h"
+#include "string"
 #include "string.h"
 #include "vector"
+#include "iostream"
+#include "windows.h"
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
 #include "../include/structures.h"
 #include "../include/ext2FunctionUtils.h"
-#include "../include/codes/ext2Attributes.h"
 #include "../include/codes/ext2Codes.h"
+#include "../include/codes/ext2Attributes.h"
+#include "../include/ext2Utils.h"
 #include "../include/codes/ext2ApiResponseCodes.h"
 #include "../include/ext2.h"
-#include "../include/ext2Api.h"
+#include "../include/ext2RootInit.h"
 
-uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char* parentDirectoryPath, char* newDirectoryName, uint32_t newDirectoryType)
+#define BIG_VALUE 99999999
+
+uint32_t addInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock)
 {
-    ext2_inode* actualInode = nullptr;
-    bool isParentRoot;
-    uint32_t searchInodeResult = searchInodeByFullPath(diskInfo, superBlock, parentDirectoryPath, &actualInode, isParentRoot);
-
-    if(searchInodeResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
-        return DIRECTORY_CREATION_PARENT_DO_NOT_EXIST;
-
-    uint32_t parentAlreadyContainsDirectoryWithGivenName = searchInodeByDirectoryNameInParent(diskInfo, superBlock, actualInode,
-                                                                                              newDirectoryName, new ext2_inode(), isParentRoot);
-
-    if(actualInode->i_mode != FILE_TYPE_DIRECTORY)
-        return DIRECTORY_CREATION_PARENT_NOT_A_FOLDER;
-
-    if(parentAlreadyContainsDirectoryWithGivenName == SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_SUCCESS)
-        return DIRECTORY_CREATION_NEW_NAME_ALREADY_EXISTS;
-
     //create the new inode (without preallocate blocks yet)
     ext2_inode* newInode = new ext2_inode();
-    uint32_t createInodeResult = createInode(diskInfo, superBlock, actualInode, newInode, newDirectoryType, isParentRoot);
-
-    if(createInodeResult == CREATE_INODE_FAILED_NO_FREE_INODES)
-        return DIRECTORY_CREATION_NO_FREE_INODES;
-    else if(createInodeResult == CREATE_INODE_FAILED_FOR_OTHER_REASON)
-        return DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
+    createNewInode(superBlock, newInode);
 
     //mark the inode as occupied in the inode bitmap
     uint32_t updateValueInInodeBitmapResult = updateValueInInodeBitmap(diskInfo, superBlock, newInode->i_global_index, 1);
-
     if(updateValueInInodeBitmapResult == UPDATE_VALUE_IN_INODE_BITMAP_FAILED)
         return DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
 
-    //now we look for blocks to preallocate
-    uint32_t preallocateNumberOfBlocks;
-    if(newDirectoryType == FILE_TYPE_DIRECTORY)
-        preallocateNumberOfBlocks = superBlock->s_prealloc_dir_blocks;
-    else if(newDirectoryType == FILE_TYPE_REGULAR_FILE)
-        preallocateNumberOfBlocks = superBlock->s_prealloc_blocks;
-
+    uint32_t preallocateNumberOfBlocks = superBlock->s_prealloc_dir_blocks;
     std::vector<uint32_t> preallocateBlocks;
     uint32_t searchPreallocateBlocksResult;
     do {
@@ -88,5 +65,26 @@ uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char*
     uint32_t preallocateBlocksDescriptorUpdate = updateGroupDescriptor(diskInfo, superBlock, preallocateBlocksGroup, 0, -preallocateBlocks.size());
 
     return (inodeGroupDescriptorUpdate == UPDATE_GROUP_DESCRIPTOR_SUCCESS && preallocateBlocksDescriptorUpdate == UPDATE_GROUP_DESCRIPTOR_SUCCESS) ? DIRECTORY_CREATION_SUCCESS
-                                                                                         : DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
+                                                                                                        : DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
+}
+
+void createNewInode(ext2_super_block* superBlock, ext2_inode* newInode)
+{
+    SYSTEMTIME time;
+    GetSystemTime(&time);
+
+    memset(newInode, 0, sizeof(ext2_inode));
+
+    newInode->i_mode = FILE_TYPE_DIRECTORY;
+    newInode->i_size = 0;
+    //high 7 bits represent how many years since 1900, next 4 for month, next 5 for day and the low 16 represent the second in that day with a granularity of 2 (see in fat)
+    newInode->i_atime = ((time.wYear - 1900) << 25) | (time.wMonth << 21) | (time.wDay << 16) | ((time.wHour * 3600 + time.wMinute * 60 + time.wSecond) / 2);
+    newInode->i_ctime = newInode->i_atime;
+    newInode->i_mtime = newInode->i_atime;
+    newInode->i_blocks = superBlock->s_prealloc_dir_blocks;
+    newInode->i_file_acl = 0;
+    newInode->i_dir_acl = 0;
+    newInode->i_faddr = 0;
+    newInode->i_group = 0; //the root is in group 0
+    newInode->i_global_index = 0; //the group inode is first inode globally
 }

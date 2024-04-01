@@ -10,6 +10,9 @@
 #include "../include/codes/ext2Attributes.h"
 #include "../include/ext2.h"
 #include "../include/codes/ext2Codes.h"
+#include "../include/codes/ext2ApiResponseCodes.h"
+#include "../include/ext2Api.h"
+#include "../include/ext2RootInit.h"
 #include "../include/ext2Init.h"
 
 void ext2Startup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
@@ -282,12 +285,12 @@ static void initializeGroupDescriptors(ext2_super_block* superBlock, std::vector
 
 static void initializeRootDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock)
 {
-    uint32_t addRootInodeResult = addInodeToGroup(diskInfo, superBlock, 0, FILE_TYPE_DIRECTORY);
+    uint32_t addRootInodeResult = addInodeToGroup(diskInfo, superBlock);
 
     int retryWriteCount = 2;
-    while(addRootInodeResult != ADD_INODE_TO_GROUP_SUCCESS && retryWriteCount > 0)
+    while(addRootInodeResult != DIRECTORY_CREATION_SUCCESS && retryWriteCount > 0)
     {
-        addRootInodeResult = addInodeToGroup(diskInfo, superBlock, 0, FILE_TYPE_DIRECTORY);
+        addRootInodeResult = addInodeToGroup(diskInfo, superBlock);
         retryWriteCount--;
     }
 

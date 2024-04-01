@@ -10,7 +10,10 @@
 #include "../include/ext2FunctionUtils.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/codes/ext2Attributes.h"
+#include "../include/ext2Utils.h"
 #include "../include/ext2Heuristics.h"
+
+#define BIG_VALUE 99999999
 
 uint32_t searchFreeInodeForDirectoryHavingParentRoot(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t& foundInodeGlobalIndex)
 {
@@ -63,6 +66,7 @@ uint32_t searchFreeInodeForNestedDirectory(DiskInfo* diskInfo, ext2_super_block*
     if(getParentNumberOfOccupiedInodesResult == GET_NUMBER_OF_OCCUPIED_INODE_IN_BLOCK_FAILED)
         return SEARCH_FREE_INODE_FAILED_FOR_OTHER_REASON;
 
+    //firstly we try to find a free inode in the parent's group
     if(numOfOccupiedInodesInParent < getNumberOfInodesForGivenGroup(superBlock, parentInode->i_group))
     {
         int32_t debt;
@@ -98,7 +102,7 @@ uint32_t searchFreeInodeForNestedDirectory(DiskInfo* diskInfo, ext2_super_block*
     }
 
     //ELSE it means there are no free inodes in parent group OR that the parent group debt is too high (> than average); in this case we apply fallback rule (case 2.c in book)
-    uint32_t foundGroup;
+    uint32_t foundGroup = BIG_VALUE;
     uint32_t freeInodesAverage = 0;
     std::vector<std::pair<uint16_t, uint16_t>> groupFreeInodesAndFreeBlocksList;
 
@@ -116,12 +120,14 @@ uint32_t searchFreeInodeForNestedDirectory(DiskInfo* diskInfo, ext2_super_block*
     if(groupFreeInodesAndFreeBlocksList[parentInode->i_group].second > freeInodesAverage)
         foundGroup = parentInode->i_group;
 
-    for(uint32_t group = 0; group < numberOfGroups; group++)
-        if(groupFreeInodesAndFreeBlocksList[group].first > freeInodesAverage)
-        {
-            foundGroup = group;
-            break;
-        }
+    if(foundGroup == BIG_VALUE)  //if it is BIG_VALUE it means we found a free inode in the parent respecting the average condition
+    {
+        for (uint32_t group = 0; group < numberOfGroups; group++)
+            if (groupFreeInodesAndFreeBlocksList[group].first > freeInodesAverage) {
+                foundGroup = group;
+                break;
+            }
+    }
 
     uint32_t searchFirstFreeInodeInGroupResult = searchFirstFreeInodeInGroup(diskInfo, superBlock, foundGroup, foundInodeGlobalIndex);
 
@@ -140,7 +146,9 @@ uint32_t searchFreeInodeForRegularFile(DiskInfo* diskInfo, ext2_super_block* sup
     uint32_t numberOfGroups = getNumberOfGroups(superBlock);
 
     uint32_t searchFirstFreeInodeInGroupResult = searchFirstFreeInodeInGroup(diskInfo, superBlock, parentInode->i_group, foundInodeGlobalIndex);
-    if(searchFirstFreeInodeInGroupResult == SEARCH_FIRST_EMPTY_INODE_IN_GROUP_SUCCESS)
+    if(searchFirstFreeInodeInGroupResult == SEARCH_FIRST_EMPTY_INODE_IN_GROUP_FAILED_FOR_OTHER_REASON)
+        return SEARCH_FREE_INODE_FAILED_FOR_OTHER_REASON;
+    else if(searchFirstFreeInodeInGroupResult == SEARCH_FIRST_EMPTY_INODE_IN_GROUP_SUCCESS)
         return SEARCH_FREE_INODE_SUCCESS;
 
     for(uint32_t maxSumPower = 0; pow(2, maxSumPower) <= numberOfGroups; maxSumPower++)
@@ -151,7 +159,9 @@ uint32_t searchFreeInodeForRegularFile(DiskInfo* diskInfo, ext2_super_block* sup
 
         group %= numberOfGroups;
         searchFirstFreeInodeInGroupResult = searchFirstFreeInodeInGroup(diskInfo, superBlock, group, foundInodeGlobalIndex);
-        if(searchFirstFreeInodeInGroupResult == SEARCH_FIRST_EMPTY_INODE_IN_GROUP_SUCCESS)
+        if(searchFirstFreeInodeInGroupResult == SEARCH_FIRST_EMPTY_INODE_IN_GROUP_FAILED_FOR_OTHER_REASON)
+            return SEARCH_FREE_INODE_FAILED_FOR_OTHER_REASON;
+        else if(searchFirstFreeInodeInGroupResult == SEARCH_FIRST_EMPTY_INODE_IN_GROUP_SUCCESS)
             return SEARCH_FREE_INODE_SUCCESS;
     }
 
@@ -159,7 +169,9 @@ uint32_t searchFreeInodeForRegularFile(DiskInfo* diskInfo, ext2_super_block* sup
     for(uint32_t group = 0; group < numberOfGroups; group++)
     {
         searchFirstFreeInodeInGroupResult = searchFirstFreeInodeInGroup(diskInfo, superBlock, group, foundInodeGlobalIndex);
-        if(searchFirstFreeInodeInGroupResult == SEARCH_FIRST_EMPTY_INODE_IN_GROUP_SUCCESS)
+        if(searchFirstFreeInodeInGroupResult == SEARCH_FIRST_EMPTY_INODE_IN_GROUP_FAILED_FOR_OTHER_REASON)
+            return SEARCH_FREE_INODE_FAILED_FOR_OTHER_REASON;
+        else if(searchFirstFreeInodeInGroupResult == SEARCH_FIRST_EMPTY_INODE_IN_GROUP_SUCCESS)
             return SEARCH_FREE_INODE_SUCCESS;
     }
 
@@ -257,15 +269,15 @@ static uint32_t calculateGroupDebt(DiskInfo* diskInfo, ext2_super_block* superBl
                     delete[] blockBuffer, delete[] blockBuffer_2, delete actualInode;
                     return CALCULATE_GROUP_DEBT_FAILED;
                 }
-
-                actualInode = (ext2_inode*)&blockBuffer_2[(inodeIndex * sizeof(ext2_inode)) % superBlock->s_log_block_size];
-                (actualInode->i_mode == FILE_TYPE_DIRECTORY) ? debt++ : debt--;
             }
         }
-        else
+        else //when we encounter a free inode, it means there are no free inodes left in the group
         {
             delete[] blockBuffer, delete[] blockBuffer_2, delete actualInode;
             return CALCULATE_GROUP_DEBT_SUCCESS;
         }
+
+        actualInode = (ext2_inode*)&blockBuffer_2[(inodeIndex * sizeof(ext2_inode)) % superBlock->s_log_block_size];
+        (actualInode->i_mode == FILE_TYPE_DIRECTORY) ? debt++ : debt--;
     }
 }
