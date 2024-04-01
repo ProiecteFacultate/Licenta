@@ -33,7 +33,8 @@ uint32_t getGlobalIndexOfInode(ext2_super_block* superBlock, uint32_t group, uin
 //Being given the index of an inode inside a group, get the block where that inode is located (global value of the block)
 uint32_t getInodeBlockForInodeIndexInGroup(ext2_super_block* superBlock, uint32_t group, uint32_t localInodeIndex);
 
-//Being given a group, it returns its group descriptor from the main group descriptors (group 0 group descriptors) and also the block where it is located, and the offset inside the block
+//Being given a group, it returns its group descriptor from the main group descriptors (group 0 group descriptors) and also the block (global index) where it is located, and the offset
+//inside the block
 uint32_t getGroupDescriptorOfGivenGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, ext2_group_desc* searchedGroupDescriptor, uint32_t& groupDescriptorBlock,
                                         uint32_t& groupDescriptorOffsetInsideBlock);
 
@@ -47,5 +48,14 @@ uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_bloc
 uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, ext2_inode* searchedInode);
 //Being given a group, iterates through its inodes bitmap counting the number of occupied inodes for that group
 uint32_t getNumberOfOccupiedInodesInGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, uint32_t& numberOfOccupiedInodes);
+//Being given the group for which to update the group descriptor, and a change (positive or negative) in free inodes & free blocks, it updates the group descriptor
+uint32_t updateGroupDescriptor(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, int32_t freeInodesChange, int32_t freeDataBlocksChange);
+//Being given an inode, it adds it to it's group inodes table. The inode is automatically taken from the i_group field in the ext2_inode structure
+//CAUTION this method only adds the inode tot the inode table, it does not mark its corresponding bit as occupied in the bitmap, nor update the number of free inodes in group descriptor
+uint32_t addInodeToInodeTable(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode);
+//Being given a global index for an inode, and a new value (0 or 1) updates the value in the corresponding inode bitmap
+uint32_t updateValueInInodeBitmap(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, uint8_t newValue);
+//Being given a global index for a data block, and a new value (0 or 1) updates the value in the corresponding data block bitmap
+uint32_t updateValueInDataBlockBitmap(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t dataBlockGlobalIndex, uint8_t newValue);
 
 #endif

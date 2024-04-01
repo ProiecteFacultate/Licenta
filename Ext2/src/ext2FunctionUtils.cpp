@@ -19,17 +19,17 @@ uint32_t getNumberOfGroups(ext2_super_block* superBlock)
 
 uint32_t getNumberOfGroupDescriptorsBlocksInFullGroup(ext2_super_block* superBlock)
 {
-    uint32_t numOfGroupDescriptors = (getNumberOfGroups(superBlock) * sizeof(ext2_group_desc)) / superBlock->s_log_block_size + 1;
+    uint32_t numOfGroupDescriptorsBlocks = (getNumberOfGroups(superBlock) * sizeof(ext2_group_desc)) / superBlock->s_log_block_size + 1;
     if(getNumberOfGroups(superBlock) * sizeof(ext2_group_desc) % superBlock->s_log_block_size == 0)
-        numOfGroupDescriptors--;
+        numOfGroupDescriptorsBlocks--;
 
-    return numOfGroupDescriptors;
+    return numOfGroupDescriptorsBlocks;
 }
 
 uint32_t getNumberOfInodesBlocksInFullGroup(ext2_super_block* superBlock)
 {
-    uint32_t numOfInodeTables = (superBlock->s_inodes_per_group * 128) / superBlock->s_log_block_size + 1;
-    if(superBlock->s_inodes_per_group * 128 % superBlock->s_log_block_size == 0)
+    uint32_t numOfInodeTables = (superBlock->s_inodes_per_group * sizeof(ext2_inode)) / superBlock->s_log_block_size + 1;
+    if(superBlock->s_inodes_per_group * sizeof(ext2_inode) % superBlock->s_log_block_size == 0)
         numOfInodeTables--;
 
     return numOfInodeTables;
@@ -54,7 +54,7 @@ uint32_t getNumberOfBlocksForGivenGroup(ext2_super_block* superBlock, uint32_t g
 
 uint32_t getFirstBlockForGivenGroup(ext2_super_block* superBlock, uint32_t group)
 {
-    return superBlock->s_blocks_per_group * group + 1; //first block of the first group is considered to be block index 1 globally
+    return superBlock->s_blocks_per_group * group; //first block of the first group is considered to be block index 0 globally, even if the book says from 1
 }
 
 uint32_t getNumberOfDataBlocksForGivenGroup(ext2_super_block* superBlock, uint32_t group)
@@ -63,8 +63,7 @@ uint32_t getNumberOfDataBlocksForGivenGroup(ext2_super_block* superBlock, uint32
         return getNumberOfDataBlocksInFullGroup(superBlock);
 
     //this is the case for the last group which is most probably incomplete
-    uint32_t numOfNonDataBlocksInFullBlock =
-            getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) + getNumberOfInodesBlocksInFullGroup(superBlock) + 3;
+    uint32_t numOfNonDataBlocksInFullBlock =getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) + getNumberOfInodesBlocksInFullGroup(superBlock) + 3;
     if(getNumberOfBlocksForGivenGroup(superBlock, group) <= numOfNonDataBlocksInFullBlock) //we don't use max instead because we have uint and will underflow
         return 0;
 
@@ -187,8 +186,8 @@ uint32_t getGlobalIndexOfInode(ext2_super_block* superBlock, uint32_t group, uin
 
 uint32_t getInodeBlockForInodeIndexInGroup(ext2_super_block* superBlock, uint32_t group, uint32_t localInodeIndex)
 {
-    uint32_t localIndexOfInodeBlockForGivenInodeIndex = (localInodeIndex * 128) / superBlock->s_log_block_size; //indexing is done from 0
-    if(localInodeIndex * 128 % superBlock->s_log_block_size == 0)
+    uint32_t localIndexOfInodeBlockForGivenInodeIndex = (localInodeIndex * sizeof(ext2_inode)) / superBlock->s_log_block_size; //indexing is done from 0
+    if(localInodeIndex * sizeof(ext2_inode) % superBlock->s_log_block_size == 0)
         localIndexOfInodeBlockForGivenInodeIndex--;
 
     if(getNumberOfInodesBlocksForGivenGroup(superBlock, group) < localIndexOfInodeBlockForGivenInodeIndex + 1)
@@ -378,7 +377,8 @@ uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_bloc
 uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, ext2_inode* searchedInode)
 {
     uint32_t groupOfTheInode = inodeGlobalIndex / superBlock->s_inodes_per_group; //inodes global index is counted from 0
-    uint32_t inodeTableBlockForGivenInode = getFirstInodeTableBlockForGivenGroup(superBlock, groupOfTheInode) + inodeGlobalIndex % superBlock->s_inodes_per_group;
+    uint32_t inodesPerBlock = superBlock->s_log_block_size / sizeof(ext2_inode);
+    uint32_t inodeTableBlockForGivenInode = getFirstInodeTableBlockForGivenGroup(superBlock, groupOfTheInode) + (inodeGlobalIndex % superBlock->s_inodes_per_group) / inodesPerBlock;
 
     char* blockBuffer = new char[getNumberOfSectorsPerBlock(diskInfo, superBlock)];
     uint32_t numberOfSectorsRead;
@@ -418,4 +418,140 @@ uint32_t getNumberOfOccupiedInodesInGroup(DiskInfo* diskInfo, ext2_super_block* 
 
     delete[] blockBuffer;
     return GET_NUMBER_OF_OCCUPIED_INODE_IN_BLOCK_SUCCESS;
+}
+
+uint32_t updateGroupDescriptor(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, int32_t freeInodesChange, int32_t freeDataBlocksChange)
+{
+    uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
+    ext2_group_desc* groupDescriptor = new ext2_group_desc();
+    uint32_t groupDescriptorBlock;
+    uint32_t groupDescriptorOffsetInsideBlock;
+    uint32_t getGroupDescriptorResult = getGroupDescriptorOfGivenGroup(diskInfo, superBlock, group, groupDescriptor, groupDescriptorBlock,
+                                                                       groupDescriptorOffsetInsideBlock);
+
+    if(getGroupDescriptorResult == GET_GROUP_DESCRIPTOR_FOR_GIVEN_GROUP_FAILED)
+    {
+        delete groupDescriptor;
+        return UPDATE_GROUP_DESCRIPTOR_FAILED;
+    }
+
+    groupDescriptor->bg_free_inodes_count += freeInodesChange;
+    groupDescriptor->bg_free_blocks_count += freeDataBlocksChange;
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t numOfSectorsRead;
+    uint32_t readResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, groupDescriptorBlock),
+                                           blockBuffer, numOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        UPDATE_GROUP_DESCRIPTOR_FAILED;
+    }
+
+    memcpy(blockBuffer + groupDescriptorOffsetInsideBlock, groupDescriptor, sizeof(ext2_group_desc));
+
+    uint32_t numOfSectorsWritten;
+    uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, groupDescriptorBlock),
+                                            blockBuffer, numOfSectorsWritten);
+
+    delete[] blockBuffer;
+    return (writeResult == EC_NO_ERROR) ? UPDATE_GROUP_DESCRIPTOR_SUCCESS : UPDATE_GROUP_DESCRIPTOR_FAILED;
+}
+
+uint32_t addInodeToInodeTable(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode)
+{
+    uint32_t numberOfOccupiedInodesInGroup;
+    uint32_t getNumberOfOccupiedInodesResult = getNumberOfOccupiedInodesInGroup(diskInfo, superBlock, inode->i_group, numberOfOccupiedInodesInGroup);
+    if(getNumberOfOccupiedInodesResult == GET_NUMBER_OF_OCCUPIED_INODE_IN_BLOCK_FAILED)
+        return ADD_INODE_TO_GROUP_FAILED_FOR_OTHER_REASON;
+
+    uint32_t inodeBlockGlobalIndex = getFirstInodeTableBlockForGivenGroup(superBlock, inode->i_group) + (inode->i_global_index % superBlock->s_inodes_per_group) / sizeof(ext2_inode);
+    uint32_t offsetInsideInodeTableBlock = (inode->i_global_index * sizeof(ext2_inode)) % superBlock->s_log_block_size;
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t numberOfSectorsRead = 0;
+    uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                          getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBlockGlobalIndex), blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return ADD_INODE_TO_GROUP_FAILED_FOR_OTHER_REASON;
+    }
+
+    memcpy(blockBuffer + offsetInsideInodeTableBlock, inode, sizeof(ext2_inode));
+    uint32_t numOfSectorsWritten;
+    uint32_t writeResult = writeDiskSectors(diskInfo , getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                            getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBlockGlobalIndex), blockBuffer, numOfSectorsWritten);
+
+    delete[] blockBuffer;
+
+    return (writeResult == EC_NO_ERROR) ? ADD_INODE_TO_GROUP_SUCCESS : ADD_INODE_TO_GROUP_FAILED_FOR_OTHER_REASON;
+}
+
+uint32_t updateValueInInodeBitmap(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, uint8_t newValue)
+{
+    uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
+    uint32_t groupOfInode = inodeGlobalIndex / superBlock->s_inodes_per_group;
+    uint32_t inodeBitmapBlock = getInodeBitmapBlockForGivenGroup(superBlock, groupOfInode);
+
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t numberOfSectorsRead = 0;
+    uint32_t readResult = readDiskSectors(diskInfo, numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBitmapBlock),
+                                          blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return UPDATE_VALUE_IN_INODE_BITMAP_FAILED;
+    }
+
+    uint32_t inodeLocalIndex = inodeGlobalIndex % superBlock->s_inodes_per_group;
+    uint8_t newByteValue = changeBitValue(blockBuffer[inodeLocalIndex / 8], inodeLocalIndex % 8, newValue);
+    memset(blockBuffer + inodeLocalIndex / 8, newByteValue, 1);
+
+    uint32_t numOfSectorsWritten;
+    uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBitmapBlock),
+                                            blockBuffer, numOfSectorsWritten);
+
+    if(writeResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return UPDATE_VALUE_IN_INODE_BITMAP_FAILED;
+    }
+
+    return UPDATE_VALUE_IN_INODE_BITMAP_SUCCESS;
+}
+
+uint32_t updateValueInDataBlockBitmap(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t dataBlockGlobalIndex, uint8_t newValue)
+{
+    uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
+    uint32_t groupOfBlock = dataBlockGlobalIndex / superBlock->s_inodes_per_group;
+    uint32_t dataBitmapBlock = getDataBitmapBlockForGivenGroup(superBlock, groupOfBlock);
+
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t numberOfSectorsRead = 0;
+    uint32_t readResult = readDiskSectors(diskInfo, numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, dataBitmapBlock),
+                                          blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return UPDATE_VALUE_IN_DATA_BLOCK_BITMAP_FAILED;
+    }
+
+    uint32_t dataBlockLocalIndex = dataBlockGlobalIndex % getNumberOfDataBlocksInFullGroup(superBlock);
+    uint8_t newByteValue = changeBitValue(blockBuffer[dataBlockLocalIndex / 8], dataBlockLocalIndex % 8, newValue);
+    memset(blockBuffer + dataBlockLocalIndex / 8, newByteValue, 1);
+
+    uint32_t numOfSectorsWritten;
+    uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, dataBitmapBlock),
+                                            blockBuffer, numOfSectorsWritten);
+
+    if(writeResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return UPDATE_VALUE_IN_DATA_BLOCK_BITMAP_FAILED;
+    }
+
+    return UPDATE_VALUE_IN_DATA_BLOCK_BITMAP_SUCCESS;
 }

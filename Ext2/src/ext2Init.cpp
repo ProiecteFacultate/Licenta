@@ -171,7 +171,7 @@ static void initializeFirstSuperBlockInFirstGroup(DiskInfo* diskInfo)
     ext2SuperBlock->s_feature_incompat = 1;
     ext2SuperBlock->s_feature_ro_compat = 1;
     ext2SuperBlock->s_algorithm_usage_bitmap = 0;
-    ext2SuperBlock->s_prealloc_blocks = 2;
+    ext2SuperBlock->s_prealloc_blocks = 4;
     ext2SuperBlock->s_prealloc_dir_blocks = 8;
     ext2SuperBlock->s_padding1 = 0;
 

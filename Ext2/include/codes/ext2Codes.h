@@ -4,8 +4,21 @@
 #define SEARCH_EMPTY_INODE_IN_GROUP_FAILED                                                             0 //TO DEPRECATE
 #define SEARCH_EMPTY_INODE_IN_GROUP_SUCCESS                                                            1 //TO DEPRECATE
 
-#define SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_FAILED                                                        0
-#define SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_SUCCESS                                                       1
+#define SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_NO_FREE_BLOCKS                                                0
+#define SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_FAILED_FOR_OTHER_REASON                                       1
+#define SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_SUCCESS                                                       2
+
+#define SEARCH_EMPTY_DATA_BLOCK_NO_FREE_BLOCKS                                                         0
+#define SEARCH_EMPTY_DATA_BLOCK_FAILED_FOR_OTHER_REASON                                                1
+#define SEARCH_EMPTY_DATA_BLOCK_SUCCESS                                                                2
+
+#define SEARCH_MULTIPLE_DATA_BLOCKS_IN_GROUP_NO_ENOUGH_CONSECUTIVE_FREE_BLOCKS                         0
+#define SEARCH_MULTIPLE_DATA_BLOCKS_IN_GROUP_FAILED_FOR_OTHER_REASON                                   1
+#define SEARCH_MULTIPLE_DATA_BLOCKS_IN_GROUP_SUCCESS                                                   2
+
+#define SEARCH_MULTIPLE_DATA_BLOCKS_NO_ENOUGH_CONSECUTIVE_FREE_BLOCKS                                  0
+#define SEARCH_MULTIPLE_DATA_BLOCKS_FAILED_FOR_OTHER_REASON                                            1
+#define SEARCH_MULTIPLE_DATA_BLOCKS_SUCCESS                                                            2
 
 #define GET_GROUP_DESCRIPTOR_FOR_GIVEN_GROUP_FAILED                                                    0
 #define GET_GROUP_DESCRIPTOR_FOR_GIVEN_GROUP_SUCCESS                                                   1
@@ -55,5 +68,14 @@
 #define SEARCH_FIRST_EMPTY_INODE_IN_GROUP_NO_FREE_INODE_IN_GROUP                                       0
 #define SEARCH_FIRST_EMPTY_INODE_IN_GROUP_FAILED_FOR_OTHER_REASON                                      1
 #define SEARCH_FIRST_EMPTY_INODE_IN_GROUP_SUCCESS                                                      2
+
+#define UPDATE_GROUP_DESCRIPTOR_FAILED                                                                 0
+#define UPDATE_GROUP_DESCRIPTOR_SUCCESS                                                                1
+
+#define UPDATE_VALUE_IN_INODE_BITMAP_FAILED                                                            0
+#define UPDATE_VALUE_IN_INODE_BITMAP_SUCCESS                                                           1
+
+#define UPDATE_VALUE_IN_DATA_BLOCK_BITMAP_FAILED                                                       0
+#define UPDATE_VALUE_IN_DATA_BLOCK_BITMAP_SUCCESS                                                      1
 
 #endif

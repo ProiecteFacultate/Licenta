@@ -27,7 +27,11 @@ Both folders & files contain dot & dotdot
 EXT2:
 -WORK WITH SECTORS <= 1024 OR BREAK!!
 -Preferably to make blocks the same syze as sectors so 1024
--Indexare blockurilor se face de la 1 (super blockul primului grup are indexul 1)
+-Indexare blockurilor se face de la 0 (chiar daca in carte zice ca de la 1)
 -Indexare group blockurilor se face de la 0
 -Block size trb sa fie multiplu de sector size (al diskului)! deci nu putem avea un block mai mic decat un sector
--
+-Search block for file heuristic (NOT ON PREALLOCATE, BUT WHEN ADDING ANOTHER BLOCK): firstly try to allocate the block immediately after
+the last block of the file, if the next block is not empty try to find a free block in its group (the group of the last block), no matter if
+before or after this last block, and if not find, look for a free block in any group
+-Preallocate blocks for directory/file: firstly we try to look for 8 contigious blocks in the group of the inode, if not found look for 8 in
+any other group. If not found we divide by 2 and repeat the same process until found (so for 4, 2, 1)
