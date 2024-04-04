@@ -285,12 +285,12 @@ static void initializeGroupDescriptors(ext2_super_block* superBlock, std::vector
 
 static void initializeRootDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock)
 {
-    uint32_t addRootInodeResult = addInodeToGroup(diskInfo, superBlock);
+    uint32_t addRootInodeResult = addRootInodeToGroup(diskInfo, superBlock);
 
     int retryWriteCount = 2;
     while(addRootInodeResult != DIRECTORY_CREATION_SUCCESS && retryWriteCount > 0)
     {
-        addRootInodeResult = addInodeToGroup(diskInfo, superBlock);
+        addRootInodeResult = addRootInodeToGroup(diskInfo, superBlock);
         retryWriteCount--;
     }
 

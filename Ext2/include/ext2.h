@@ -35,6 +35,10 @@ uint32_t searchInodeByFullPath(DiskInfo* diskInfo, ext2_super_block* superBlock,
 uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, char* searchedDirectoryName, ext2_inode* searchedInode,
                                             bool& isSearchedInodeRoot);
 
-uint32_t searchDirectoryWithGivenNameInGivenBlockData(char* searchedName, char* blockBuffer, uint32_t occupiedBytesInBlock, uint32_t& searchedInodeGlobalIndex);
+uint32_t searchDirectoryWithGivenNameInGivenBlockData(char* searchedName, char* blockBuffer, uint32_t occupiedBytesInBlock, ext2_dir_entry* searchedDirectoryEntry, uint32_t& directoryEntryOffsetInBlock);
+
+
+//TODO completely remake this, respecting the multi level of blocks and others
+uint32_t addBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t& newBlockGlobalIndex);
 
 #endif

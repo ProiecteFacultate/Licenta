@@ -91,7 +91,7 @@ typedef struct
     uint16_t rec_len;
     uint8_t name_len;
     uint8_t file_type;
-    char name[EXT2_N_BLOCKS];
+    char name[120]; //normally the directory entry structure is of dynamic size, and so does the name, but to make it easier, we make it 128 bytes, and the name max 120
 } __attribute__((packed)) ext2_dir_entry;
 
 

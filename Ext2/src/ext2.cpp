@@ -95,7 +95,7 @@ uint32_t searchAndOccupyMultipleBlocksInGivenGroup(DiskInfo* diskInfo, ext2_supe
                 continue;
 
         //if not continue, it means we found enough consecutive free blocks
-        for(bitIndex = startingBitIndex; bitIndex < bitIndex + numOfBlocks; bitIndex++)
+        for(bitIndex = startingBitIndex; bitIndex < startingBitIndex + numOfBlocks; bitIndex++)
             newBlocks.push_back(firstDataBlockForGivenGroup + bitIndex);
 
         delete[] blockBuffer;
@@ -216,9 +216,7 @@ uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block
                                             bool& isSearchedInodeRoot)
 {
     char* blockBuffer = new char[superBlock->s_log_block_size];
-    uint32_t numberOfSectorsRead;
-    uint32_t blockGlobalIndex;
-    uint32_t searchedInodeGlobalIndex;
+    uint32_t numberOfSectorsRead, directoryEntryOffsetInBlock, blockGlobalIndex;
 
     if(parentInode == nullptr) //it means that searched inode is Root
     {
@@ -266,11 +264,16 @@ uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block
             return SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_FAILED;
         }
 
-        uint32_t searchDirectoryInBlockDataResult = searchDirectoryWithGivenNameInGivenBlockData(searchedDirectoryName, blockBuffer, occupiedBytesInBlock, searchedInodeGlobalIndex);
+        ext2_dir_entry* directoryEntry = new ext2_dir_entry();
+        uint32_t searchDirectoryInBlockDataResult = searchDirectoryWithGivenNameInGivenBlockData(searchedDirectoryName, blockBuffer, occupiedBytesInBlock,
+                                                                                                 directoryEntry, directoryEntryOffsetInBlock);
 
         if(searchDirectoryInBlockDataResult == SEARCH_DIRECTORY_ENTRY_BY_NAME_IN_GIVEN_BLOCK_DATA_FOUND)
         {
-            uint32_t getInodeByIndexResult = getInodeByInodeGlobalIndex(diskInfo, superBlock, searchedInodeGlobalIndex, searchedInode);
+            uint32_t inodeBlockGlobalIndex, inodeOffsetInsideBlock;
+            uint32_t getInodeByIndexResult = getInodeByInodeGlobalIndex(diskInfo, superBlock, directoryEntry->inode, searchedInode, inodeBlockGlobalIndex,
+                                                                        inodeOffsetInsideBlock);
+            delete directoryEntry;
             return (getInodeByIndexResult == GET_INODE_BY_INODE_GLOBAL_INDEX_SUCCESS) ? SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_SUCCESS : SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_FAILED;
         }
     }
@@ -279,27 +282,63 @@ uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block
     return SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_INODE_DO_NOT_EXIST;
 }
 
-uint32_t searchDirectoryWithGivenNameInGivenBlockData(char* searchedName, char* blockBuffer, uint32_t occupiedBytesInBlock, uint32_t& searchedInodeGlobalIndex)
+uint32_t searchDirectoryWithGivenNameInGivenBlockData(char* searchedName, char* blockBuffer, uint32_t occupiedBytesInBlock, ext2_dir_entry* searchedDirectoryEntry, uint32_t& directoryEntryOffsetInBlock)
 {
     uint32_t offset = 0;
     while(true)
     {
-        uint32_t directoryEntryLength = *(uint16_t*)&blockBuffer[offset + 4];
         ext2_dir_entry* directoryEntry = new ext2_dir_entry();
-        memcpy(directoryEntry, blockBuffer + offset, directoryEntryLength);
+        memcpy(directoryEntry, blockBuffer + offset, sizeof(ext2_dir_entry));
 
         if(strcmp(searchedName, directoryEntry->name) == 0)
         {
-            searchedInodeGlobalIndex = directoryEntry->inode;
+            memcpy(searchedDirectoryEntry, directoryEntry, sizeof(ext2_dir_entry));
+            directoryEntryOffsetInBlock = offset;
             delete directoryEntry;
             return SEARCH_DIRECTORY_ENTRY_BY_NAME_IN_GIVEN_BLOCK_DATA_FOUND;
         }
 
-        offset += directoryEntryLength;
+        offset += sizeof(ext2_dir_entry);
         if(offset >= occupiedBytesInBlock)
         {
             delete directoryEntry;
             return SEARCH_DIRECTORY_ENTRY_BY_NAME_IN_GIVEN_BLOCK_DATA_NOT_FOUND;
         }
     }
+}
+
+//TODO completely remake this, respecting the multi level of blocks and others
+uint32_t addBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t& newBlockGlobalIndex)
+{
+    uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
+    uint32_t numberOfInodesPerBlock = superBlock->s_log_block_size / sizeof(ext2_inode);
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t numberOfSectorsRead;
+
+    for(uint32_t group; group < getNumberOfGroups(superBlock); group++)
+    {
+        uint32_t inodeBitmapBlock = getInodeBitmapBlockForGivenGroup(superBlock, group);
+        uint32_t readResult = readDiskSectors(diskInfo, numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBitmapBlock),
+                                              blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return ADD_BLOCK_TO_DIRECTORY_FAILED;
+        }
+
+        for(uint32_t inodeIndex = 0; inodeIndex < getNumberOfDataBlocksForGivenGroup(superBlock, group) ; inodeIndex++)
+            if(getBitFromByte(blockBuffer[inodeIndex / 8], inodeIndex % 8) == 0)
+            {
+                getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, inode, inodeIndex, newBlockGlobalIndex);
+                inode->i_block[inode->i_blocks] = newBlockGlobalIndex;
+                inode->i_blocks++;
+                //TODO update inode
+                uint32_t updateValueInInodeBitmapResult = updateValueInInodeBitmap(diskInfo, superBlock, inode->i_global_index, 1);
+                delete[] blockBuffer;
+                return (updateValueInInodeBitmapResult == UPDATE_VALUE_IN_INODE_BITMAP_SUCCESS) ? ADD_BLOCK_TO_DIRECTORY_SUCCESS : ADD_BLOCK_TO_DIRECTORY_FAILED;
+            }
+    }
+
+    return ADD_BLOCK_TO_DIRECTORY_FAILED;
 }

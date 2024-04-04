@@ -226,7 +226,7 @@ static uint32_t searchFirstFreeInodeInGroup(DiskInfo* diskInfo, ext2_super_block
     for(uint32_t bitIndex = 0; bitIndex < getNumberOfInodesForGivenGroup(superBlock, group); bitIndex++)
         if(getBitFromByte(blockBuffer[bitIndex / 8], bitIndex % 8) == 0)
         {
-            firstFreeInodeInGroupGlobalIndex = group * getNumberOfInodesBlocksInFullGroup(superBlock) + bitIndex;
+            firstFreeInodeInGroupGlobalIndex = group * getNumberOfInodesForGivenGroup(superBlock, 0) + bitIndex;
             delete[] blockBuffer;
             return SEARCH_FIRST_EMPTY_INODE_IN_GROUP_SUCCESS;
         }

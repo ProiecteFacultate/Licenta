@@ -800,8 +800,8 @@
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "D:/Facultate/Licenta/Implementare/FAT32/cmake-build-debug",
-		"source" : "D:/Facultate/Licenta/Implementare/FAT32"
+		"build" : "D:/Facultate/Licenta/Implementare/Ext2/cmake-build-debug",
+		"source" : "D:/Facultate/Licenta/Implementare/Ext2"
 	},
 	"version" : 
 	{

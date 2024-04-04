@@ -41,7 +41,9 @@ uint32_t getGroupDescriptorOfGivenGroup(DiskInfo* diskInfo, ext2_super_block* su
 //Being given a local index for a data block of a inode (for example the 50321th data block of the inode), calculate its global value, respecting the multi ordering schema
 uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t searchedBlockLocalIndexInInode, uint32_t& searchedBlockGlobalIndex);
 //Being given a global index of an inode, searches and returns the ext2_inode for the inode
-uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, ext2_inode* searchedInode);
+//HIDDEN FEATURE it also returns the block and offset where is located the inode, so you can give the global index for an inode (eventually taken from the inode) and obtain its block
+uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, ext2_inode* searchedInode, uint32_t& inodeBlock,
+                                    uint32_t& inodeOffsetInsideBlock);
 //Being given a group, iterates through its inodes bitmap counting the number of occupied inodes for that group
 uint32_t getNumberOfOccupiedInodesInGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, uint32_t& numberOfOccupiedInodes);
 //Being given the group for which to update the group descriptor, and a change (positive or negative) in free inodes & free blocks, it updates the group descriptor
@@ -53,5 +55,10 @@ uint32_t addInodeToInodeTable(DiskInfo* diskInfo, ext2_super_block* superBlock, 
 uint32_t updateValueInInodeBitmap(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, uint8_t newValue);
 //Being given a global index for a data block, and a new value (0 or 1) updates the value in the corresponding data block bitmap
 uint32_t updateValueInDataBlockBitmap(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t dataBlockGlobalIndex, uint8_t newValue);
+//Being given the actual inode (to extract its global index from) and the updated version, updates it into its corresponding inode table
+uint32_t updateInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, ext2_inode* newInode);
+//Being given the parent inode to which to add the new directory entry and the newInode of the new directory (in order to retrieve required info for the new directory entry), it
+//adds the new directory to parent CAUTION it also updates the parentInode size (adds the length of ext2_dir_entry)
+uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, ext2_inode* newInode, char* newDirectoryName);
 
 #endif

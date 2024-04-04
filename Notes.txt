@@ -35,3 +35,5 @@ the last block of the file, if the next block is not empty try to find a free bl
 before or after this last block, and if not find, look for a free block in any group
 -Preallocate blocks for directory/file: firstly we try to look for 8 contigious blocks in the group of the inode, if not found look for 8 in
 any other group. If not found we divide by 2 and repeat the same process until found (so for 4, 2, 1)
+-The standard says that directory entry is dynamic in size, but we make it 128 for easier implementation. When a directory entry is deleted
+we don't extend the previous one, instead we proceed like in fat, where we move the last directory entry to its location

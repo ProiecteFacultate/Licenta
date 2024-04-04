@@ -170,7 +170,7 @@ uint32_t getNumberOfSectorsPerBlock(DiskInfo* diskInfo, ext2_super_block* superB
 
 uint32_t getFirstSectorForGivenBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t block)
 {
-    return (1024 / diskInfo->diskParameters.sectorSizeBytes) + getNumberOfSectorsPerBlock(diskInfo, superBlock) * (block - 1); //-1 because blocks are indexed from 1 globally
+    return (1024 / diskInfo->diskParameters.sectorSizeBytes) + getNumberOfSectorsPerBlock(diskInfo, superBlock) * block; //we index blocks from 0, even if the standard is from 1
 }
 
 uint32_t getFirstSectorForGivenGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group)
@@ -326,16 +326,17 @@ uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_bloc
     return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
 }
 
-uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, ext2_inode* searchedInode)
+uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, ext2_inode* searchedInode, uint32_t& inodeBlock,
+                                    uint32_t& inodeOffsetInsideBlock)
 {
     uint32_t groupOfTheInode = inodeGlobalIndex / superBlock->s_inodes_per_group; //inodes global index is counted from 0
     uint32_t inodesPerBlock = superBlock->s_log_block_size / sizeof(ext2_inode);
-    uint32_t inodeTableBlockForGivenInode = getFirstInodeTableBlockForGivenGroup(superBlock, groupOfTheInode) + (inodeGlobalIndex % superBlock->s_inodes_per_group) / inodesPerBlock;
+    inodeBlock = getFirstInodeTableBlockForGivenGroup(superBlock, groupOfTheInode) + (inodeGlobalIndex % superBlock->s_inodes_per_group) / inodesPerBlock;
 
-    char* blockBuffer = new char[getNumberOfSectorsPerBlock(diskInfo, superBlock)];
+    char* blockBuffer = new char[superBlock->s_log_block_size];
     uint32_t numberOfSectorsRead;
     uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
-                                 getFirstSectorForGivenBlock(diskInfo, superBlock, inodeTableBlockForGivenInode),blockBuffer, numberOfSectorsRead);
+                                 getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBlock),blockBuffer, numberOfSectorsRead);
 
     if(readResult != EC_NO_ERROR)
     {
@@ -343,7 +344,7 @@ uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superB
         return GET_INODE_BY_INODE_GLOBAL_INDEX_FAILED;
     }
 
-    uint32_t inodeOffsetInsideBlock = inodeGlobalIndex % (superBlock->s_log_block_size / sizeof(ext2_inode));
+    inodeOffsetInsideBlock = inodeGlobalIndex % (superBlock->s_log_block_size / sizeof(ext2_inode));
     memcpy(searchedInode, blockBuffer + inodeOffsetInsideBlock, sizeof(ext2_inode));
 
     delete[] blockBuffer;
@@ -389,9 +390,10 @@ uint32_t updateGroupDescriptor(DiskInfo* diskInfo, ext2_super_block* superBlock,
 
     groupDescriptor->bg_free_inodes_count += freeInodesChange;
     groupDescriptor->bg_free_blocks_count += freeDataBlocksChange;
+
     char* blockBuffer = new char[superBlock->s_log_block_size];
     uint32_t numOfSectorsRead;
-    uint32_t readResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, groupDescriptorBlock),
+    uint32_t readResult = readDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, groupDescriptorBlock),
                                            blockBuffer, numOfSectorsRead);
 
     if(readResult != EC_NO_ERROR)
@@ -473,7 +475,7 @@ uint32_t updateValueInInodeBitmap(DiskInfo* diskInfo, ext2_super_block* superBlo
 uint32_t updateValueInDataBlockBitmap(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t dataBlockGlobalIndex, uint8_t newValue)
 {
     uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
-    uint32_t groupOfBlock = dataBlockGlobalIndex / superBlock->s_inodes_per_group;
+    uint32_t groupOfBlock = dataBlockGlobalIndex / superBlock->s_blocks_per_group;
     uint32_t dataBitmapBlock = getDataBitmapBlockForGivenGroup(superBlock, groupOfBlock);
 
     char* blockBuffer = new char[superBlock->s_log_block_size];
@@ -502,4 +504,105 @@ uint32_t updateValueInDataBlockBitmap(DiskInfo* diskInfo, ext2_super_block* supe
     }
 
     return UPDATE_VALUE_IN_DATA_BLOCK_BITMAP_SUCCESS;
+}
+
+uint32_t updateInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, ext2_inode* newInode)
+{
+    uint32_t inodeBlockGlobalIndex, inodeOffsetInsideBlock, numberOfSectorsRead, numOfSectorsWritten;
+    ext2_inode* dummy = new ext2_inode();
+    uint32_t getInodeByIndexResult = getInodeByInodeGlobalIndex(diskInfo, superBlock, inode->i_global_index, dummy, inodeBlockGlobalIndex,
+                                                                inodeOffsetInsideBlock);
+
+    if(getInodeByIndexResult == GET_INODE_BY_INODE_GLOBAL_INDEX_FAILED)
+        return UPDATE_INODE_FAILED;
+
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                          getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBlockGlobalIndex), blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return UPDATE_INODE_FAILED;
+    }
+
+    memcpy(blockBuffer + inodeOffsetInsideBlock, newInode, sizeof(ext2_inode));
+    uint32_t writeResult = writeDiskSectors(diskInfo , getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                            getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBlockGlobalIndex), blockBuffer, numOfSectorsWritten);
+
+    delete[] blockBuffer;
+    return (writeResult == EC_NO_ERROR) ? UPDATE_INODE_SUCCESS : UPDATE_INODE_FAILED;
+}
+
+uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, ext2_inode* newInode, char* newDirectoryName)
+{
+    uint32_t newDirectoryEntryBlockGlobalIndex, parentInodeBlockGlobalIndex, parentInodeOffsetInsideBlock, numberOfSectorsRead, numOfSectorsWritten, dummy;
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+
+    ext2_dir_entry* directoryEntry = new ext2_dir_entry();
+    memset(directoryEntry, 0, sizeof(ext2_dir_entry));
+    directoryEntry->inode = newInode->i_global_index;
+    directoryEntry->name_len = strlen(newDirectoryName);
+    directoryEntry->file_type = newInode->i_mode;
+    memcpy(&directoryEntry->name, newDirectoryName, directoryEntry->name_len);
+
+    uint32_t blockToAddDirectoryEntryLocalIndex = parentInode->i_size / superBlock->s_log_block_size; //the block where is the last data of the directory
+    if(parentInode->i_size != 0 && parentInode->i_size % superBlock->s_log_block_size == 0) //it means the data ends at the end of a block
+    {
+        if(parentInode->i_blocks == blockToAddDirectoryEntryLocalIndex) //it means there aren't anymore preallocate blocks, so we need to add a new one to the directory
+        {
+            uint32_t addBlockToDirectoryResult = addBlockToDirectory(diskInfo, superBlock, parentInode, dummy);
+            if(addBlockToDirectoryResult == ADD_BLOCK_TO_DIRECTORY_FAILED)
+            {
+                delete[] blockBuffer, delete directoryEntry;
+                return ADD_DIRECTORY_ENTRY_TO_PARENT_FAILED;
+            }
+            //here if we add a new block to the directory, the inode (so parentInode) will be changed in the addBlockToDirectory method, so we also need to reread it here
+            uint32_t getInodeByIndexResult = getInodeByInodeGlobalIndex(diskInfo, superBlock, parentInode->i_global_index, parentInode,
+                                                                        parentInodeBlockGlobalIndex, parentInodeOffsetInsideBlock);
+
+            if(getInodeByIndexResult == GET_INODE_BY_INODE_GLOBAL_INDEX_FAILED)
+            {
+                delete[] blockBuffer, delete directoryEntry;
+                return ADD_DIRECTORY_ENTRY_TO_PARENT_FAILED;
+            }
+        }
+        //else it is the next block after parentInode->i_size / superBlock->s_log_block_size which is already + 1 because the size are equal
+    }
+
+    uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, parentInode,
+                                                                             blockToAddDirectoryEntryLocalIndex, newDirectoryEntryBlockGlobalIndex);
+    if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
+    {
+        delete[] blockBuffer, delete directoryEntry;
+        return ADD_DIRECTORY_ENTRY_TO_PARENT_FAILED;
+    }
+
+    uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                          getFirstSectorForGivenBlock(diskInfo, superBlock, newDirectoryEntryBlockGlobalIndex), blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer, delete directoryEntry;
+        return ADD_DIRECTORY_ENTRY_TO_PARENT_FAILED;
+    }
+
+    uint32_t offsetInBlockToAddDirectoryEntry = parentInode->i_size % superBlock->s_log_block_size;
+    memcpy(blockBuffer + offsetInBlockToAddDirectoryEntry, directoryEntry, sizeof(ext2_dir_entry));
+
+    uint32_t writeResult = writeDiskSectors(diskInfo , getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                            getFirstSectorForGivenBlock(diskInfo, superBlock, newDirectoryEntryBlockGlobalIndex), blockBuffer, numOfSectorsWritten);
+
+    if(writeResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer, delete directoryEntry;
+        return ADD_DIRECTORY_ENTRY_TO_PARENT_FAILED;
+    }
+
+    ext2_inode* updatedParentInode = new ext2_inode();
+    memcpy(updatedParentInode, parentInode, sizeof(ext2_inode));
+    updatedParentInode->i_size += sizeof(ext2_inode);
+    uint32_t updateParentInodeResult = updateInode(diskInfo, superBlock, parentInode, updatedParentInode);
+
+    return (updateParentInodeResult == UPDATE_INODE_SUCCESS) ? ADD_DIRECTORY_ENTRY_TO_PARENT_SUCCESS : ADD_DIRECTORY_ENTRY_TO_PARENT_FAILED;
 }

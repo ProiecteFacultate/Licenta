@@ -17,11 +17,11 @@
 
 #define BIG_VALUE 99999999
 
-uint32_t addInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock)
+uint32_t addRootInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock)
 {
     //create the new inode (without preallocate blocks yet)
     ext2_inode* newInode = new ext2_inode();
-    createNewInode(superBlock, newInode);
+    createRootInode(superBlock, newInode);
 
     //mark the inode as occupied in the inode bitmap
     uint32_t updateValueInInodeBitmapResult = updateValueInInodeBitmap(diskInfo, superBlock, newInode->i_global_index, 1);
@@ -54,7 +54,8 @@ uint32_t addInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock)
         newInode->i_block[i] = preallocateBlocks[i];
 
     //now add the inode to the inode table
-    uint32_t addInodeToInodeTableResult = addInodeToInodeTable(diskInfo, superBlock, newInode);
+    uint32_t addInodeToInodeTableResult = addInodeToInodeTable(diskInfo, superBlock,
+                                                               newInode);
 
     if(addInodeToInodeTableResult == ADD_INODE_TO_INODE_TABLE_FAILED)
         return DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
@@ -68,7 +69,7 @@ uint32_t addInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock)
                                                                                                         : DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
 }
 
-void createNewInode(ext2_super_block* superBlock, ext2_inode* newInode)
+void createRootInode(ext2_super_block* superBlock, ext2_inode* newInode)
 {
     SYSTEMTIME time;
     GetSystemTime(&time);

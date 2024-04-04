@@ -16,9 +16,9 @@ uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char*
 {
     ext2_inode* actualInode = nullptr;
     bool isParentRoot;
-    uint32_t searchInodeResult = searchInodeByFullPath(diskInfo, superBlock, parentDirectoryPath, &actualInode, isParentRoot);
+    uint32_t searchParentInodeResult = searchInodeByFullPath(diskInfo, superBlock, parentDirectoryPath, &actualInode, isParentRoot);
 
-    if(searchInodeResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
+    if(searchParentInodeResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
         return DIRECTORY_CREATION_PARENT_DO_NOT_EXIST;
 
     uint32_t parentAlreadyContainsDirectoryWithGivenName = searchInodeByDirectoryNameInParent(diskInfo, superBlock, actualInode,
@@ -87,6 +87,10 @@ uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char*
     uint32_t inodeGroupDescriptorUpdate = updateGroupDescriptor(diskInfo, superBlock, newInode->i_group, -1, 0);
     uint32_t preallocateBlocksDescriptorUpdate = updateGroupDescriptor(diskInfo, superBlock, preallocateBlocksGroup, 0, -preallocateBlocks.size());
 
-    return (inodeGroupDescriptorUpdate == UPDATE_GROUP_DESCRIPTOR_SUCCESS && preallocateBlocksDescriptorUpdate == UPDATE_GROUP_DESCRIPTOR_SUCCESS) ? DIRECTORY_CREATION_SUCCESS
-                                                                                         : DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
+    if(inodeGroupDescriptorUpdate == UPDATE_GROUP_DESCRIPTOR_FAILED || preallocateBlocksDescriptorUpdate == UPDATE_GROUP_DESCRIPTOR_FAILED)
+        return DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
+
+    uint32_t addDirectoryEntryToParentResult = addDirectoryEntryToParent(diskInfo, superBlock, actualInode, newInode, newDirectoryName);
+
+    return (addDirectoryEntryToParentResult == ADD_DIRECTORY_ENTRY_TO_PARENT_SUCCESS) ? DIRECTORY_CREATION_SUCCESS : DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
 }

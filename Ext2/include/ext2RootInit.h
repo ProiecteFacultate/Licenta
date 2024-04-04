@@ -3,8 +3,8 @@
 
 //JUST FOR INITIALIZING THE ROOT. IF IT WORKS IT WORKS! DON'T CHANGE!
 
-uint32_t addInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock);
+uint32_t addRootInodeToGroup(DiskInfo* diskInfo, ext2_super_block* superBlock);
 
-void createNewInode(ext2_super_block* superBlock, ext2_inode* newInode);
+void createRootInode(ext2_super_block* superBlock, ext2_inode* newInode);
 
 #endif
