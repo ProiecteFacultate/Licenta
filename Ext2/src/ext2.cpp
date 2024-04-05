@@ -10,7 +10,7 @@
 #include "../include/ext2Heuristics.h"
 #include "../include/codes/ext2Attributes.h"
 #include "../include/codes/ext2Codes.h"
-#include "../include/ext2Utils.h"
+#include "../include/utils.h"
 #include "../include/ext2.h"
 
 #define BIG_VALUE 99999999
@@ -19,7 +19,7 @@ uint32_t createInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inod
 {
     uint32_t searchInodeResult, inodeGlobalIndex;
 
-    if(fileType == FILE_TYPE_DIRECTORY)
+    if(fileType == FILE_TYPE_FOLDER)
         searchInodeResult = (isParentRoot ? searchFreeInodeForDirectoryHavingParentRoot(diskInfo, superBlock, inodeGlobalIndex)
                                           : searchFreeInodeForNestedDirectory(diskInfo, superBlock, parentInode, inodeGlobalIndex));
     else if(fileType == FILE_TYPE_REGULAR_FILE)

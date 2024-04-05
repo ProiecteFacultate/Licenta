@@ -24,7 +24,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char*
     uint32_t parentAlreadyContainsDirectoryWithGivenName = searchInodeByDirectoryNameInParent(diskInfo, superBlock, actualInode,
                                                                                               newDirectoryName, new ext2_inode(), isParentRoot);
 
-    if(actualInode->i_mode != FILE_TYPE_DIRECTORY)
+    if(actualInode->i_mode != FILE_TYPE_FOLDER)
         return DIRECTORY_CREATION_PARENT_NOT_A_FOLDER;
 
     if(parentAlreadyContainsDirectoryWithGivenName == SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_SUCCESS)
@@ -47,7 +47,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char*
 
     //now we look for blocks to preallocate
     uint32_t preallocateNumberOfBlocks;
-    if(newDirectoryType == FILE_TYPE_DIRECTORY)
+    if(newDirectoryType == FILE_TYPE_FOLDER)
         preallocateNumberOfBlocks = superBlock->s_prealloc_dir_blocks;
     else if(newDirectoryType == FILE_TYPE_REGULAR_FILE)
         preallocateNumberOfBlocks = superBlock->s_prealloc_blocks;
@@ -93,4 +93,66 @@ uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char*
     uint32_t addDirectoryEntryToParentResult = addDirectoryEntryToParent(diskInfo, superBlock, actualInode, newInode, newDirectoryName);
 
     return (addDirectoryEntryToParentResult == ADD_DIRECTORY_ENTRY_TO_PARENT_SUCCESS) ? DIRECTORY_CREATION_SUCCESS : DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
+}
+
+uint32_t getSubDirectories(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, std::vector<std::pair<ext2_inode*, ext2_dir_entry*>>& subDirectories)
+{
+    ext2_inode* givenDirectoryInode = nullptr;
+    bool isParentRoot;
+    uint32_t searchParentInodeResult = searchInodeByFullPath(diskInfo, superBlock, directoryPath, &givenDirectoryInode, isParentRoot);
+
+    if(searchParentInodeResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
+        return GET_SUBDIRECTORIES_GIVEN_DIRECTORY_DO_NOT_EXIST;
+
+    if(givenDirectoryInode->i_mode != FILE_TYPE_FOLDER)
+        return GET_SUBDIRECTORIES_GIVEN_DIRECTORY_NOT_A_FOLDER;
+
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t blockGlobalIndex, numberOfSectorsRead, inodeBlockGlobalIndex, inodeOffsetInsideBlock;
+    uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
+
+    for(uint32_t blockLocalIndex = 0; blockLocalIndex < givenDirectoryInode->i_blocks; blockLocalIndex++)
+    {
+        uint32_t occupiedBytesInBlock = givenDirectoryInode->i_size >= superBlock->s_log_block_size * (blockLocalIndex + 1) ? superBlock->s_log_block_size :
+                                        givenDirectoryInode->i_size % superBlock->s_log_block_size;
+
+        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, givenDirectoryInode, blockLocalIndex, blockGlobalIndex);
+        if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
+        {
+            delete[] blockBuffer;
+            return GET_SUBDIRECTORIES_FAILED_FOR_OTHER_REASON;
+        }
+
+        uint32_t readResult = readDiskSectors(diskInfo, numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, blockGlobalIndex),
+                                              blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return GET_SUBDIRECTORIES_FAILED_FOR_OTHER_REASON;
+        }
+
+        for(uint32_t offset = 0; offset < occupiedBytesInBlock; offset += sizeof(ext2_dir_entry))
+        {
+            ext2_inode* inode = new ext2_inode();
+            ext2_dir_entry* directoryEntry = new ext2_dir_entry();
+            memcpy(directoryEntry, blockBuffer + offset, sizeof(ext2_dir_entry));
+            uint32_t getInodeByIndexResult = getInodeByInodeGlobalIndex(diskInfo, superBlock, directoryEntry->inode, inode, inodeBlockGlobalIndex,
+                                                                        inodeOffsetInsideBlock);
+
+            if(getInodeByIndexResult == GET_INODE_BY_INODE_GLOBAL_INDEX_FAILED)
+            {
+                delete[] blockBuffer;
+                return GET_SUBDIRECTORIES_FAILED_FOR_OTHER_REASON;
+            }
+
+            subDirectories.push_back(std::make_pair(inode, directoryEntry));
+        }
+
+        if(occupiedBytesInBlock < superBlock->s_log_block_size) //this was the last block with dir entries (or maybe the prev one was the last if now occupiedBytesInBlock is 0)
+            break;
+    }
+
+    delete[] blockBuffer;
+    return GET_SUBDIRECTORIES_SUCCESS;
 }

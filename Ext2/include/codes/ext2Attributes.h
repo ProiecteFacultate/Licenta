@@ -3,7 +3,7 @@
 
 #define FILE_TYPE_UNKNOWN_1                          0                       //from book; we add _1 because FILE_TYPE_UNKNOWN already exists
 #define FILE_TYPE_REGULAR_FILE                       1
-#define FILE_TYPE_DIRECTORY                          2
+#define FILE_TYPE_FOLDER                             2                       //in book is FILE_TYPE_FOLDER
 #define FILE_TYPE_CHARACTER_DEVICE                   3
 #define FILE_TYPE_BLOCK_DEVICE                       4
 #define FILE_TYPE_NAMED_PIPE                         5

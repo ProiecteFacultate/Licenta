@@ -10,7 +10,7 @@
 #include "../include/ext2FunctionUtils.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/codes/ext2Attributes.h"
-#include "../include/ext2Utils.h"
+#include "../include/utils.h"
 #include "../include/ext2Heuristics.h"
 
 #define BIG_VALUE 99999999
@@ -278,6 +278,6 @@ static uint32_t calculateGroupDebt(DiskInfo* diskInfo, ext2_super_block* superBl
         }
 
         actualInode = (ext2_inode*)&blockBuffer_2[(inodeIndex * sizeof(ext2_inode)) % superBlock->s_log_block_size];
-        (actualInode->i_mode == FILE_TYPE_DIRECTORY) ? debt++ : debt--;
+        (actualInode->i_mode == FILE_TYPE_FOLDER) ? debt++ : debt--;
     }
 }

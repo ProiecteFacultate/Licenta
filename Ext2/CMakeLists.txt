@@ -9,10 +9,12 @@ add_executable(Ext2 src/main.cpp include/structures.h include/ext2Init.h src/ext
         include/codes/ext2ApiResponseCodes.h
         include/ext2Heuristics.h
         src/ext2Heuristics.cpp
-        include/ext2Utils.h
-        src/ext2Utils.cpp
+        include/utils.h
+        src/utils.cpp
         include/ext2RootInit.h
-        src/ext2RootInit.cpp)
+        src/ext2RootInit.cpp
+        include/interface.h
+        src/interface.cpp)
 
 include(FindPkgConfig)
 find_package(DiskEmulation REQUIRED)

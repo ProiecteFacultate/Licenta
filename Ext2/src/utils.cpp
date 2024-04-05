@@ -8,7 +8,7 @@
 #include "../include/diskCodes.h"
 #include "../include/structures.h"
 #include "../include/codes/ext2Codes.h"
-#include "../include/ext2Utils.h"
+#include "../include/utils.h"
 
 uint32_t getBitFromByte(uint8_t byte, uint32_t bitIndexInByte)
 {
@@ -52,4 +52,27 @@ uint32_t changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitVa
         default: //7
             return (byte & 0xFE) | newBitValue;
     }
+}
+
+////////////////////Utils that are not directly related with Ext2
+
+std::vector<std::string> splitString(const std::string& str, char delimiter)
+{
+    std::vector<std::string> tokens;
+    std::string token;
+    size_t start = 0;
+    size_t end = str.find(delimiter);
+
+    while (end != std::string::npos) {
+        token = str.substr(start, end - start);
+        tokens.push_back(token);
+        start = end + 1;
+        end = str.find(delimiter, start);
+    }
+
+    // Push the last token after the last delimiter
+    token = str.substr(start);
+    tokens.push_back(token);
+
+    return tokens;
 }
