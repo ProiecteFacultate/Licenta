@@ -152,7 +152,13 @@ static void initializeFirstSuperBlockInFirstGroup(DiskInfo* diskInfo)
     ext2SuperBlock->s_log_frag_size = blocksSize; //we don't have fragmentation
     ext2SuperBlock->s_blocks_per_group = blocksPerGroup;
     ext2SuperBlock->s_frags_per_group = 999;
-    ext2SuperBlock->s_inodes_per_group = ext2SuperBlock->s_inodes_count / numOfGroups;
+    //we do this in order to completely fill the last block in the inode tables for each group, excepting the last group
+    uint32_t inodesPerBlock = blocksSize / sizeof(ext2_inode);
+    uint32_t inodesPerGroup = ext2SuperBlock->s_inodes_count / numOfGroups;
+    inodesPerGroup += inodesPerBlock - inodesPerGroup % inodesPerBlock;
+    if(inodesPerGroup % inodesPerBlock == 0)
+        inodesPerGroup--;
+    ext2SuperBlock->s_inodes_per_group = inodesPerGroup;
     ext2SuperBlock->s_mtime = 999;
     ext2SuperBlock->s_wtime = 999; //TODO
     ext2SuperBlock->s_mnt_count = 999;

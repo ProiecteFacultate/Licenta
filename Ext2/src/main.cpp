@@ -35,7 +35,7 @@ int main() {
     ext2_inode rootInode = *(ext2_inode*)&readBuffer_5[0];
 
     char* parentName = new char[50];
-    memcpy(parentName, "Root\0", 8);
+    memcpy(parentName, "Root\0", 5);
     char* newDirectoryName = new char[50];
     uint32_t createDirectoryResult;
 
@@ -46,6 +46,10 @@ int main() {
         int charsWritten = sprintf(newDirectoryName + 4, "%d", i);
         createDirectoryResult = createDirectory(diskInfo, superBlock, parentName, newDirectoryName, FILE_TYPE_DIRECTORY);
     }
+
+    memcpy(parentName, "Root/Dir_1/File_1\0", 30);
+    memcpy(newDirectoryName, "File_1\0", 8);
+    createDirectoryResult = createDirectory(diskInfo, superBlock, parentName, newDirectoryName, FILE_TYPE_REGULAR_FILE);
 
     char* readBuffer_6 = new char[2048];
     readDiskSectors(diskInfo, 4, 266, readBuffer_6, numOfSectorsRead);

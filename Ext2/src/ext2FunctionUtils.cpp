@@ -41,6 +41,12 @@ uint32_t getNumberOfDataBlocksInFullGroup(ext2_super_block* superBlock)
     return superBlock->s_blocks_per_group - getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) - getNumberOfInodesBlocksInFullGroup(superBlock) - 3;
 }
 
+uint32_t getNumberOfInodesInFullGroup(ext2_super_block* superBlock)
+{
+    uint32_t inodesPerInodeTableBlock = superBlock->s_log_block_size / sizeof(ext2_inode);
+    return getNumberOfInodesBlocksInFullGroup(superBlock) * inodesPerInodeTableBlock;
+}
+
 //////////////////////////
 
 uint32_t getNumberOfBlocksForGivenGroup(ext2_super_block* superBlock, uint32_t group)
@@ -156,9 +162,9 @@ uint32_t getFirstInodeTableBlockForGivenGroup(ext2_super_block* superBlock, uint
 uint32_t getNumberOfInodesForGivenGroup(ext2_super_block* superBlock, uint32_t group)
 {
     if(group < getNumberOfGroups(superBlock) - 1)
-        return superBlock->s_inodes_per_group;
+        return getNumberOfInodesInFullGroup(superBlock);
 
-    return getNumberOfDataBlocksForGivenGroup(superBlock, group) * superBlock->s_log_block_size / 8192; //we have one inode for every 8192 bytes FOR THE LAST GROUP (semi random formula)
+    return superBlock->s_inodes_count - (getNumberOfGroups(superBlock) - 1) * getNumberOfInodesInFullGroup(superBlock);
 }
 
 ///////////////////
@@ -344,7 +350,7 @@ uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superB
         return GET_INODE_BY_INODE_GLOBAL_INDEX_FAILED;
     }
 
-    inodeOffsetInsideBlock = inodeGlobalIndex % (superBlock->s_log_block_size / sizeof(ext2_inode));
+    inodeOffsetInsideBlock = (inodeGlobalIndex % inodesPerBlock) * sizeof(ext2_inode);
     memcpy(searchedInode, blockBuffer + inodeOffsetInsideBlock, sizeof(ext2_inode));
 
     delete[] blockBuffer;

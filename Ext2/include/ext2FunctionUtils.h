@@ -8,6 +8,7 @@ uint32_t getNumberOfGroups(ext2_super_block* superBlock);
 uint32_t getNumberOfGroupDescriptorsBlocksInFullGroup(ext2_super_block* superBlock);
 uint32_t getNumberOfInodesBlocksInFullGroup(ext2_super_block* superBlock);
 uint32_t getNumberOfDataBlocksInFullGroup(ext2_super_block* superBlock);
+uint32_t getNumberOfInodesInFullGroup(ext2_super_block* superBlock);
 
 uint32_t getNumberOfBlocksForGivenGroup(ext2_super_block* superBlock, uint32_t group);
 uint32_t getFirstBlockForGivenGroup(ext2_super_block* superBlock, uint32_t group);
