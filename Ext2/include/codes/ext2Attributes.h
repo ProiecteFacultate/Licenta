@@ -15,4 +15,7 @@
 #define DOUBLY_INDIRECT_BLOCK_POINTER                2
 #define TRIPLY_INDIRECT_BLOCK_POINTER                3
 
+#define WRITE_WITH_TRUNCATE                          1
+#define WRITE_WITH_APPEND                            2
+
 #endif

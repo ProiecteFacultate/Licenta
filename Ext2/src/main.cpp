@@ -37,6 +37,10 @@ int main() {
             commandCreateDirectory(diskInfo, superBlock, tokens);
         else if(tokens[0] == "ls")
             commandListSubdirectories(diskInfo, superBlock, tokens);
+        else if(tokens[0] == "write")
+            commandWriteFile(diskInfo, superBlock, tokens);
+        else if(tokens[0] == "read")
+            commandReadFile(diskInfo, superBlock, tokens);
         else
             std::cout << "Unknown command \n";
     }

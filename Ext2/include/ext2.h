@@ -39,6 +39,12 @@ uint32_t searchDirectoryWithGivenNameInGivenBlockData(char* searchedName, char* 
 
 
 //TODO completely remake this, respecting the multi level of blocks and others
-uint32_t addBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t& newBlockGlobalIndex);
+uint32_t addBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t& newBlockGlobalIndex, ext2_inode* updatedInode);
+
+uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, char* dataBuffer, uint32_t maxBytesToWrite,
+                                      uint32_t& numberOfBytesWritten, uint32_t& reasonForIncompleteWrite);
+
+uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, char* dataBuffer, uint32_t maxBytesToWrite,
+                                    uint32_t& numberOfBytesWritten, uint32_t& reasonForIncompleteWrite);
 
 #endif

@@ -10,6 +10,7 @@
 #include "../include/ext2Heuristics.h"
 #include "../include/codes/ext2Attributes.h"
 #include "../include/codes/ext2Codes.h"
+#include "../include/codes/ext2ApiResponseCodes.h"
 #include "../include/utils.h"
 #include "../include/ext2.h"
 
@@ -308,7 +309,7 @@ uint32_t searchDirectoryWithGivenNameInGivenBlockData(char* searchedName, char* 
 }
 
 //TODO completely remake this, respecting the multi level of blocks and others
-uint32_t addBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t& newBlockGlobalIndex)
+uint32_t addBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t& newBlockGlobalIndex, ext2_inode* updatedInode)
 {
     uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
     uint32_t numberOfInodesPerBlock = superBlock->s_log_block_size / sizeof(ext2_inode);
@@ -341,4 +342,149 @@ uint32_t addBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, e
     }
 
     return ADD_BLOCK_TO_DIRECTORY_FAILED;
+}
+
+uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, char* dataBuffer, uint32_t maxBytesToWrite,
+                                    uint32_t& numberOfBytesWritten, uint32_t& reasonForIncompleteWrite)
+{
+    numberOfBytesWritten = 0;
+    uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
+    uint32_t blockGlobalIndex, newBlockGlobalIndex, numberOfSectorsRead, numOfSectorsWritten, numberOfBlocksAddedToTheDirectory = 0;
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+
+    //in case the number of free space is not enough, add new blocks
+    uint32_t numberOfBlocksToAddToAddToDirectory = 0;
+    if(maxBytesToWrite > inode->i_size)
+        numberOfBlocksToAddToAddToDirectory = maxBytesToWrite / inode->i_size + 1;
+    if(maxBytesToWrite % inode->i_size == 0)
+        numberOfBlocksToAddToAddToDirectory--;
+
+    //CAUTION we don't return if the add block fails, so even if it fails, the method will continue, and will add bytes only to the free space available + the blocks added successfully
+    for(uint32_t i = 1; i <= numberOfBlocksToAddToAddToDirectory; i++)
+    {
+        uint32_t addBlockToDirectoryResult = addBlockToDirectory(diskInfo, superBlock, inode, newBlockGlobalIndex, inode); //we also update the inode if blocks added
+        if(addBlockToDirectoryResult == ADD_BLOCK_TO_DIRECTORY_FAILED)
+        {
+            reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_UNABLE_TO_ADD_NEW_BLOCKS_TO_DIRECTORY;
+            break;
+        }
+    }
+
+    for(uint32_t blockLocalIndex = 0; blockLocalIndex < inode->i_blocks; blockLocalIndex++)
+    {
+        uint32_t numOfBytesToWriteToActualBlock = std::min(superBlock->s_log_block_size, maxBytesToWrite - numberOfBytesWritten);
+
+        if(numOfBytesToWriteToActualBlock == 0)
+        {
+            delete[] blockBuffer;
+            return WRITE_BYTES_TO_FILE_SUCCESS;
+        }
+
+        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, inode, blockLocalIndex, blockGlobalIndex);
+        if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
+        {
+            reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER;
+            delete[] blockBuffer;
+            return (numberOfBytesWritten == 0) ? WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON : WRITE_BYTES_TO_FILE_SUCCESS;
+        }
+
+        memcpy(blockBuffer, dataBuffer + numberOfBytesWritten, numOfBytesToWriteToActualBlock);
+
+        uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, blockGlobalIndex),
+                                                blockBuffer, numOfSectorsWritten);
+
+        if(writeResult != EC_NO_ERROR)
+        {
+            reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER;
+            delete[] blockBuffer;
+            return (numberOfBytesWritten == 0) ? WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON : WRITE_BYTES_TO_FILE_SUCCESS;
+        }
+
+        numberOfBytesWritten += superBlock->s_log_block_size;
+    }
+
+    delete[] blockBuffer;
+    return WRITE_BYTES_TO_FILE_SUCCESS;
+}
+
+uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, char* dataBuffer, uint32_t maxBytesToWrite,
+                                      uint32_t& numberOfBytesWritten, uint32_t& reasonForIncompleteWrite)
+{
+    numberOfBytesWritten = 0;
+    uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
+    uint32_t blockGlobalIndex, newBlockGlobalIndex, numberOfSectorsRead, numOfSectorsWritten, numberOfBlocksAddedToTheDirectory = 0;
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+
+    //in case the number of free space is not enough, add new blocks
+    uint32_t totalSpaceInDirectory = superBlock->s_log_block_size * inode->i_blocks; //total space in blocks of the directory
+    uint32_t freeSpaceInDirectory = totalSpaceInDirectory - inode->i_size;
+    uint32_t numberOfBlocksToAddToAddToDirectory = 0;
+    if(maxBytesToWrite > freeSpaceInDirectory)
+        numberOfBlocksToAddToAddToDirectory = (maxBytesToWrite - freeSpaceInDirectory) / inode->i_size + 1;
+    if((maxBytesToWrite - freeSpaceInDirectory) % inode->i_size == 0)
+        numberOfBlocksToAddToAddToDirectory--;
+
+    //CAUTION we don't return if the add block fails, so even if it fails, the method will continue, and will add bytes only to the free space available + the blocks added successfully
+    for(uint32_t i = 1; i <= numberOfBlocksToAddToAddToDirectory; i++)
+    {
+        uint32_t addBlockToDirectoryResult = addBlockToDirectory(diskInfo, superBlock, inode, newBlockGlobalIndex, inode); //we also update the inode if blocks added
+        if(addBlockToDirectoryResult == ADD_BLOCK_TO_DIRECTORY_FAILED)
+        {
+            reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_UNABLE_TO_ADD_NEW_BLOCKS_TO_DIRECTORY;
+            break;
+        }
+    }
+
+    //now we write the bytes to blocks CAUTION first block to write in might already contain bytes, so we won't add bytes from index 0
+    uint32_t firstBlockInDirectoryWithFreeSpaceLocalIndex = inode->i_size / superBlock->s_log_block_size;
+    if(inode->i_size % superBlock->s_log_block_size)
+        firstBlockInDirectoryWithFreeSpaceLocalIndex++;
+
+    for(uint32_t blockLocalIndex = firstBlockInDirectoryWithFreeSpaceLocalIndex; blockLocalIndex < inode->i_blocks; blockLocalIndex++)
+    {
+        uint32_t occupiedBytesInBlock = inode->i_size >= superBlock->s_log_block_size * (blockLocalIndex + 1) ? superBlock->s_log_block_size :
+                                        inode->i_size % superBlock->s_log_block_size;
+        uint32_t numOfBytesToWriteToActualBlock = std::min(superBlock->s_log_block_size - occupiedBytesInBlock, maxBytesToWrite - numberOfBytesWritten);
+
+        if(numOfBytesToWriteToActualBlock == 0)
+        {
+            delete[] blockBuffer;
+            return WRITE_BYTES_TO_FILE_SUCCESS;
+        }
+
+        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, inode, blockLocalIndex, blockGlobalIndex);
+        if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
+        {
+            reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER;
+            delete[] blockBuffer;
+            return (numberOfBytesWritten == 0) ? WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON : WRITE_BYTES_TO_FILE_SUCCESS;
+        }
+
+        uint32_t readResult = readDiskSectors(diskInfo, numOfSectorsPerBlock,getFirstSectorForGivenBlock(diskInfo, superBlock, blockGlobalIndex),
+                                              blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+                reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER;
+                delete[] blockBuffer;
+                return (numberOfBytesWritten == 0) ? WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON : WRITE_BYTES_TO_FILE_SUCCESS;
+        }
+
+        memcpy(blockBuffer + occupiedBytesInBlock, dataBuffer + numberOfBytesWritten, numOfBytesToWriteToActualBlock);
+
+        uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, blockGlobalIndex),
+                                                blockBuffer, numOfSectorsWritten);
+
+        if(writeResult != EC_NO_ERROR)
+        {
+            reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER;
+            delete[] blockBuffer;
+            return (numberOfBytesWritten == 0) ? WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON : WRITE_BYTES_TO_FILE_SUCCESS;
+        }
+
+        numberOfBytesWritten += numOfBytesToWriteToActualBlock;
+    }
+
+    delete[] blockBuffer;
+    return WRITE_BYTES_TO_FILE_SUCCESS;
 }

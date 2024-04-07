@@ -557,17 +557,8 @@ uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, ext2_super_block* superBl
     {
         if(parentInode->i_blocks == blockToAddDirectoryEntryLocalIndex) //it means there aren't anymore preallocate blocks, so we need to add a new one to the directory
         {
-            uint32_t addBlockToDirectoryResult = addBlockToDirectory(diskInfo, superBlock, parentInode, dummy);
+            uint32_t addBlockToDirectoryResult = addBlockToDirectory(diskInfo, superBlock, parentInode, dummy, parentInode); //we update the parentInode
             if(addBlockToDirectoryResult == ADD_BLOCK_TO_DIRECTORY_FAILED)
-            {
-                delete[] blockBuffer, delete directoryEntry;
-                return ADD_DIRECTORY_ENTRY_TO_PARENT_FAILED;
-            }
-            //here if we add a new block to the directory, the inode (so parentInode) will be changed in the addBlockToDirectory method, so we also need to reread it here
-            uint32_t getInodeByIndexResult = getInodeByInodeGlobalIndex(diskInfo, superBlock, parentInode->i_global_index, parentInode,
-                                                                        parentInodeBlockGlobalIndex, parentInodeOffsetInsideBlock);
-
-            if(getInodeByIndexResult == GET_INODE_BY_INODE_GLOBAL_INDEX_FAILED)
             {
                 delete[] blockBuffer, delete directoryEntry;
                 return ADD_DIRECTORY_ENTRY_TO_PARENT_FAILED;

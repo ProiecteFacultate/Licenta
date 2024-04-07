@@ -251,7 +251,8 @@ static int readSector(DiskInfo *diskInfo, uint32_t sector, char *buffer)
     overlapped.hEvent = nullptr;
 
     DWORD dwBytesRead = 0;
-    bool readFileResult = ReadFile(fileHandle, buffer, diskInfo->diskParameters.sectorSizeBytes, &dwBytesRead, &overlapped);
+    bool readFileResult = ReadFile(fileHandle, buffer, diskInfo->diskParameters.sectorSizeBytes,
+                                   &dwBytesRead, &overlapped);
 
     if(!readFileResult || dwBytesRead < diskInfo->diskParameters.sectorSizeBytes)
     {
