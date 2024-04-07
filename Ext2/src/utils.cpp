@@ -14,19 +14,19 @@ uint32_t getBitFromByte(uint8_t byte, uint32_t bitIndexInByte)
 {
     switch (bitIndexInByte) {
         case 0:
-            return byte & 0x80;
+            return (byte & 0x80) >> 7;
         case 1:
-            return byte & 0x40;
+            return (byte & 0x40) >> 6;
         case 2:
-            return byte & 0x20;
+            return (byte & 0x20) >> 5;
         case 3:
-            return byte & 0x10;
+            return (byte & 0x10) >> 4;
         case 4:
-            return byte & 0x08;
+            return (byte & 0x08) >> 3;
         case 5:
-            return byte & 0x04;
+            return (byte & 0x04) >> 2;
         case 6:
-            return byte & 0x02;
+            return (byte & 0x02) >> 1;
         default: //7
             return byte & 0x01;
     }

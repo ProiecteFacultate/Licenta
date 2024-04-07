@@ -168,9 +168,9 @@ uint32_t write(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directory
     uint32_t findDirectoryEntryResult = searchInodeByFullPath(diskInfo, superBlock, directoryPath,
                                                                      &actualInode, isParentRoot);
     if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
-        return WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON;
+        return WRITE_BYTES_TO_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
 
-    if(actualInode->i_mode != FILE_TYPE_FOLDER)
+    if(actualInode->i_mode != FILE_TYPE_REGULAR_FILE)
     {
         delete actualInode;
         return WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE;
@@ -192,13 +192,10 @@ uint32_t write(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directory
         else
             actualInode->i_size = actualInode->i_size + numberOfBytesWritten;
 
-        ext2_inode* updatedInode = new ext2_inode();
-        memcpy(updatedInode, actualInode, sizeof(ext2_inode));
-        updatedInode->i_size += numberOfBytesWritten;
         //CAUTION we don't query the result of inode update, so it might fail, but the bytes were written, so it's still considered a success
-        updateInode(diskInfo, superBlock, actualInode, updatedInode);
+        updateInode(diskInfo, superBlock, actualInode, actualInode);
 
-        delete actualInode, delete updatedInode;
+        delete actualInode;
         return WRITE_BYTES_TO_FILE_SUCCESS;
     }
 
@@ -210,7 +207,7 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
               uint32_t& reasonForIncompleteRead)
 {
     numberOfBytesRead = 0;
-    uint32_t blockGlobalIndex, numOfBytesReadFromThisBlock, blockLocalIndex, readResult, numberOfSectorsRead;
+    uint32_t blockGlobalIndex, numOfBytesReadFromThisBlock, readResult, numberOfSectorsRead;
     uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
 
     if(strcmp(directoryPath, "Root\0") == 0) //you can't read directly to root
@@ -222,9 +219,9 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
                                                                      &actualInode, isParentRoot);
 
     if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
-        return READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST;
+        return READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
 
-    if(actualInode->i_mode != FILE_TYPE_FOLDER)
+    if(actualInode->i_mode != FILE_TYPE_REGULAR_FILE)
     {
         delete actualInode;
         return READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE;
@@ -236,15 +233,15 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
         return READ_BYTES_FROM_FILE_GIVEN_START_EXCEEDS_FILE_SIZE;
     }
 
-    blockLocalIndex = startingPosition / actualInode->i_size;
-    uint32_t startingPositionOffsetInBlock = startingPosition % actualInode->i_size;
+    uint32_t blockLocalIndex = startingPosition / superBlock->s_log_block_size;
+    uint32_t startingPositionOffsetInBlock = startingPosition % superBlock->s_log_block_size;
     char* blockBuffer = new char[superBlock->s_log_block_size]; //CAUTION we use a second buffer instead of reading directly in readBuffer because if we would do this, it could...
     //CAUTION overflow the read buffer (since we are reading whole blocks and last read block could overflow readBuffer) and this could overwrite other data in heap
 
     uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, actualInode, blockLocalIndex, blockGlobalIndex);
     if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
     {
-        delete[] blockBuffer;
+        delete[] blockBuffer, delete actualInode;
         return READ_BYTES_FROM_FILE_FAILED_FOR_OTHER_REASON;
     }
 
@@ -253,7 +250,7 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
 
     if(readResult != EC_NO_ERROR)
     {
-        delete[] blockBuffer;
+        delete[] blockBuffer, delete actualInode;
         return READ_BYTES_FROM_FILE_FAILED_FOR_OTHER_REASON;
     }
 
@@ -266,7 +263,7 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
         if(blockLocalIndex >= actualInode->i_blocks)
         {
             reasonForIncompleteRead = INCOMPLETE_BYTES_READ_DUE_TO_NO_FILE_NOT_LONG_ENOUGH;
-            delete[] blockBuffer;
+            delete[] blockBuffer, delete actualInode;
             return READ_BYTES_FROM_FILE_SUCCESS;
         }
 
@@ -275,7 +272,7 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
         if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
         {
             reasonForIncompleteRead = INCOMPLETE_BYTES_READ_DUE_TO_OTHER;
-            delete[] blockBuffer;
+            delete[] blockBuffer, delete actualInode;
             return READ_BYTES_FROM_FILE_FAILED_FOR_OTHER_REASON;
         }
 
@@ -285,7 +282,7 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
         if(readResult != EC_NO_ERROR)
         {
             reasonForIncompleteRead = INCOMPLETE_BYTES_READ_DUE_TO_OTHER;
-            delete[] blockBuffer;
+            delete[] blockBuffer, delete actualInode;
             return READ_BYTES_FROM_FILE_FAILED_FOR_OTHER_REASON;
         }
 
@@ -294,6 +291,6 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
         numberOfBytesRead += numOfBytesReadFromThisBlock;
     }
 
-    delete[] blockBuffer;
+    delete[] blockBuffer, delete actualInode;
     return READ_BYTES_FROM_FILE_SUCCESS;
 }

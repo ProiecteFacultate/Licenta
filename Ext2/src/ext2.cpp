@@ -91,11 +91,18 @@ uint32_t searchAndOccupyMultipleBlocksInGivenGroup(DiskInfo* diskInfo, ext2_supe
     uint32_t bitIndex; //we declare it here to be able to jump to bitIndex for the next startingBitIndex (for efficiency to not increase by 1)
     for(uint32_t startingBitIndex = 0; startingBitIndex + numOfBlocks < getNumberOfDataBlocksForGivenGroup(superBlock, group); startingBitIndex = bitIndex + 1)
     {
+        bool allBitsZero = true;
         for(bitIndex = startingBitIndex; bitIndex < startingBitIndex + numOfBlocks; bitIndex++)
             if(getBitFromByte(blockBuffer[bitIndex / 8], bitIndex % 8) == 1)
-                continue;
+            {
+                allBitsZero = false;
+                break;
+            }
 
-        //if not continue, it means we found enough consecutive free blocks
+        if(allBitsZero == false)
+            continue;
+
+        //if there are some 1 bits, it means we found enough consecutive free blocks
         for(bitIndex = startingBitIndex; bitIndex < startingBitIndex + numOfBlocks; bitIndex++)
             newBlocks.push_back(firstDataBlockForGivenGroup + bitIndex);
 
@@ -349,14 +356,15 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* supe
 {
     numberOfBytesWritten = 0;
     uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
-    uint32_t blockGlobalIndex, newBlockGlobalIndex, numberOfSectorsRead, numOfSectorsWritten, numberOfBlocksAddedToTheDirectory = 0;
+    uint32_t blockGlobalIndex, newBlockGlobalIndex, numOfSectorsWritten, numberOfBlocksAddedToTheDirectory = 0;
     char* blockBuffer = new char[superBlock->s_log_block_size];
 
     //in case the number of free space is not enough, add new blocks
+    uint32_t totalSpaceInDirectory = superBlock->s_log_block_size * inode->i_blocks;
     uint32_t numberOfBlocksToAddToAddToDirectory = 0;
-    if(maxBytesToWrite > inode->i_size)
-        numberOfBlocksToAddToAddToDirectory = maxBytesToWrite / inode->i_size + 1;
-    if(maxBytesToWrite % inode->i_size == 0)
+    if(maxBytesToWrite > totalSpaceInDirectory)
+        numberOfBlocksToAddToAddToDirectory = maxBytesToWrite / superBlock->s_log_block_size + 1;
+    if(maxBytesToWrite % totalSpaceInDirectory == 0)
         numberOfBlocksToAddToAddToDirectory--;
 
     //CAUTION we don't return if the add block fails, so even if it fails, the method will continue, and will add bytes only to the free space available + the blocks added successfully
@@ -400,11 +408,13 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* supe
             return (numberOfBytesWritten == 0) ? WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON : WRITE_BYTES_TO_FILE_SUCCESS;
         }
 
-        numberOfBytesWritten += superBlock->s_log_block_size;
+        numberOfBytesWritten += numOfBytesToWriteToActualBlock;
+        if(numberOfBytesWritten == maxBytesToWrite)
+        {
+            delete[] blockBuffer;
+            return WRITE_BYTES_TO_FILE_SUCCESS;
+        }
     }
-
-    delete[] blockBuffer;
-    return WRITE_BYTES_TO_FILE_SUCCESS;
 }
 
 uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, char* dataBuffer, uint32_t maxBytesToWrite,
@@ -420,8 +430,8 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superB
     uint32_t freeSpaceInDirectory = totalSpaceInDirectory - inode->i_size;
     uint32_t numberOfBlocksToAddToAddToDirectory = 0;
     if(maxBytesToWrite > freeSpaceInDirectory)
-        numberOfBlocksToAddToAddToDirectory = (maxBytesToWrite - freeSpaceInDirectory) / inode->i_size + 1;
-    if((maxBytesToWrite - freeSpaceInDirectory) % inode->i_size == 0)
+        numberOfBlocksToAddToAddToDirectory = (maxBytesToWrite - freeSpaceInDirectory) / superBlock->s_log_block_size + 1;
+    if((maxBytesToWrite - freeSpaceInDirectory) % superBlock->s_log_block_size == 0)
         numberOfBlocksToAddToAddToDirectory--;
 
     //CAUTION we don't return if the add block fails, so even if it fails, the method will continue, and will add bytes only to the free space available + the blocks added successfully
@@ -437,7 +447,7 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superB
 
     //now we write the bytes to blocks CAUTION first block to write in might already contain bytes, so we won't add bytes from index 0
     uint32_t firstBlockInDirectoryWithFreeSpaceLocalIndex = inode->i_size / superBlock->s_log_block_size;
-    if(inode->i_size % superBlock->s_log_block_size)
+    if(inode->i_size % superBlock->s_log_block_size == 0)
         firstBlockInDirectoryWithFreeSpaceLocalIndex++;
 
     for(uint32_t blockLocalIndex = firstBlockInDirectoryWithFreeSpaceLocalIndex; blockLocalIndex < inode->i_blocks; blockLocalIndex++)
@@ -483,8 +493,10 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superB
         }
 
         numberOfBytesWritten += numOfBytesToWriteToActualBlock;
+        if(numberOfBytesWritten == maxBytesToWrite)
+        {
+            delete[] blockBuffer;
+            return WRITE_BYTES_TO_FILE_SUCCESS;
+        }
     }
-
-    delete[] blockBuffer;
-    return WRITE_BYTES_TO_FILE_SUCCESS;
 }

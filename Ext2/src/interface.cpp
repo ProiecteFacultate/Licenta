@@ -139,7 +139,10 @@ void commandWriteFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vec
     switch (writeFileResult)
     {
         case WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE:
-            std::cout << "Can not write to given file!\n"; //it may be root, or a FILE_TYPE_FOLDER instead of a FILE_TYPE_REGULAR_FILE as needed
+            std::cout << "Can not write to given file type!\n"; //it may be root, or a FILE_TYPE_FOLDER instead of a FILE_TYPE_REGULAR_FILE as needed
+            break;
+        case WRITE_BYTES_TO_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL:
+            std::cout << "Given file do not exist or search fail!\n";
             break;
         case WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON:
             std::cout << "Could not write any bytes to file!\n";
@@ -201,14 +204,14 @@ void commandReadFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vect
         case READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE:
             std::cout << "Can not read to given file!\n"; //it may be root, or an FILE_TYPE_FOLDER instead of a FILE_TYPE_REGULAR_FILE as needed
             break;
-        case READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST:
+        case READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL:
             std::cout << "File " << originalFilePath << " do not exist!\n";
             break;
         case READ_BYTES_FROM_FILE_GIVEN_START_EXCEEDS_FILE_SIZE:
             std::cout << "Read starting position exceeds file size!\n";
             break;
         case READ_BYTES_FROM_FILE_FAILED_FOR_OTHER_REASON:
-            std::cout << "Could not read any bytes to file!\n";
+            std::cout << "Could not read any bytes from file!\n";
             break;
         case READ_BYTES_FROM_FILE_SUCCESS:
             std::cout << "Read " << numberOfBytesRead << " from file!\n";

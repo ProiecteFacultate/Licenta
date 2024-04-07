@@ -55,6 +55,7 @@ uint32_t addInodeToInodeTable(DiskInfo* diskInfo, ext2_super_block* superBlock, 
 //Being given a global index for an inode, and a new value (0 or 1) updates the value in the corresponding inode bitmap
 uint32_t updateValueInInodeBitmap(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, uint8_t newValue);
 //Being given a global index for a data block, and a new value (0 or 1) updates the value in the corresponding data block bitmap
+//CAUTION dataBlockGlobalIndex means the global index of the block, not the global index of the block in the global list of data blocks
 uint32_t updateValueInDataBlockBitmap(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t dataBlockGlobalIndex, uint8_t newValue);
 //Being given the actual inode (to extract its global index from) and the updated version, updates it into its corresponding inode table
 uint32_t updateInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, ext2_inode* newInode);

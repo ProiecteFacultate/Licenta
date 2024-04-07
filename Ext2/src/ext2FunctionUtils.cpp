@@ -495,7 +495,8 @@ uint32_t updateValueInDataBlockBitmap(DiskInfo* diskInfo, ext2_super_block* supe
         return UPDATE_VALUE_IN_DATA_BLOCK_BITMAP_FAILED;
     }
 
-    uint32_t dataBlockLocalIndex = dataBlockGlobalIndex % getNumberOfDataBlocksInFullGroup(superBlock);
+    uint32_t firstDataBlockForGivenGroup = getFirstDataBlockForGivenGroup(superBlock, groupOfBlock);
+    uint32_t dataBlockLocalIndex = dataBlockGlobalIndex % getNumberOfBlocksForGivenGroup(superBlock, 0) - firstDataBlockForGivenGroup; //local index in list of data blocks: 0,1,2..
     uint8_t newByteValue = changeBitValue(blockBuffer[dataBlockLocalIndex / 8], dataBlockLocalIndex % 8, newValue);
     memset(blockBuffer + dataBlockLocalIndex / 8, newByteValue, 1);
 
