@@ -14,7 +14,10 @@ add_executable(Ext2 src/main.cpp include/structures.h include/ext2Init.h src/ext
         include/ext2RootInit.h
         src/ext2RootInit.cpp
         include/interface.h
-        src/interface.cpp)
+        src/interface.cpp
+        include/ext2BlocksAllocation.h
+        src/ext2BlocksAllocation.cpp
+        include/codes/ext2BlocksAllocationCodes.h)
 
 include(FindPkgConfig)
 find_package(DiskEmulation REQUIRED)

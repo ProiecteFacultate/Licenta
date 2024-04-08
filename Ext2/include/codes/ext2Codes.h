@@ -70,9 +70,6 @@
 #define ADD_INODE_TO_INODE_TABLE_FAILED                                                                0
 #define ADD_INODE_TO_INODE_TABLE_SUCCESS                                                               9999
 
-#define ADD_BLOCK_TO_DIRECTORY_FAILED                                                                  0
-#define ADD_BLOCK_TO_DIRECTORY_SUCCESS                                                                 9999
-
 #define ADD_DIRECTORY_ENTRY_TO_PARENT_FAILED                                                           0
 #define ADD_DIRECTORY_ENTRY_TO_PARENT_SUCCESS                                                          9999
 

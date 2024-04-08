@@ -7,6 +7,8 @@
 #include "../include/ext2.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/utils.h"
+#include "../include/ext2BlocksAllocation.h"
+#include "../include/codes/ext2BlocksAllocationCodes.h"
 #include "../include/ext2FunctionUtils.h"
 
 uint32_t getNumberOfGroups(ext2_super_block* superBlock)
@@ -231,7 +233,7 @@ uint32_t getGroupDescriptorOfGivenGroup(DiskInfo* diskInfo, ext2_super_block* su
 
 //////////////////////////////////////////////
 
-uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t searchedBlockLocalIndexInInode, uint32_t& searchedBlockGlobalIndex)
+uint32_t getDataBlockGlobalIndexByLocalIndexInsideInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t searchedBlockLocalIndexInInode, uint32_t& searchedBlockGlobalIndex)
 {
     if(searchedBlockLocalIndexInInode < 12) //searched block is in a direct block
     {
@@ -241,10 +243,9 @@ uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_bloc
 
     char* blockBuffer = new char[superBlock->s_log_block_size];
     uint32_t blockSize = superBlock->s_log_block_size;
-    uint32_t numberOfSectorsRead;
-    uint32_t readResult;
+    uint32_t numberOfSectorsRead, readResult;
 
-    if(searchedBlockLocalIndexInInode < blockSize / 4 + 11) //searched block is in a second order block
+    if(searchedBlockLocalIndexInInode <= blockSize / 4 + 11) //searched block is in a second order block
     {
         readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
                                               getFirstSectorForGivenBlock(diskInfo, superBlock, inode->i_block[12]),blockBuffer, numberOfSectorsRead);
@@ -255,14 +256,14 @@ uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_bloc
             return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
         }
 
-        uint32_t indexInSecondOrderArray = searchedBlockLocalIndexInInode - 12;
+        uint32_t indexInSecondOrderArray = (searchedBlockLocalIndexInInode - 12) * sizeof(uint32_t);
         searchedBlockGlobalIndex = *(uint32_t*)&blockBuffer[indexInSecondOrderArray];
 
         delete[] blockBuffer;
         return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
     }
 
-    if(searchedBlockLocalIndexInInode < blockSize * blockSize / 16 + blockSize / 4 + 11)
+    if(searchedBlockLocalIndexInInode <= blockSize * blockSize / 16 + blockSize / 4 + 11)
     {
         readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
                                      getFirstSectorForGivenBlock(diskInfo, superBlock, inode->i_block[13]),blockBuffer, numberOfSectorsRead);
@@ -273,7 +274,7 @@ uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_bloc
             return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
         }
 
-        uint32_t indexInSecondOrderArray = (searchedBlockLocalIndexInInode - blockSize / 4 - 12) / (blockSize / 4);
+        uint32_t indexInSecondOrderArray = ((searchedBlockLocalIndexInInode - blockSize / 4 - 12) / (blockSize / 4)) * sizeof(uint32_t);
         uint32_t thirdOrderArrayBlock = *(uint32_t*)&blockBuffer[indexInSecondOrderArray];
 
         readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
@@ -285,7 +286,7 @@ uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_bloc
             return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
         }
 
-        uint32_t indexInThirdOrderArray = (searchedBlockLocalIndexInInode - blockSize / 4 - 12) % (blockSize / 4);
+        uint32_t indexInThirdOrderArray = ((searchedBlockLocalIndexInInode - blockSize / 4 - 12) % (blockSize / 4)) * sizeof(uint32_t);
         searchedBlockGlobalIndex = *(uint32_t*)&blockBuffer[indexInThirdOrderArray];
         delete[] blockBuffer;
         return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
@@ -302,7 +303,7 @@ uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_bloc
         return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
     }
 
-    uint32_t indexInSecondOrderArray = (searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) / (blockSize * blockSize / 16);
+    uint32_t indexInSecondOrderArray = ((searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) / (blockSize * blockSize / 16)) * sizeof(uint32_t);
     uint32_t thirdOrderArrayBlock = *(uint32_t*)&blockBuffer[indexInSecondOrderArray];
 
     readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
@@ -314,7 +315,7 @@ uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_bloc
         return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
     }
 
-    uint32_t indexInThirdOrderArray = (searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) % (blockSize * blockSize / 16);
+    uint32_t indexInThirdOrderArray = ((searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) % (blockSize * blockSize / 16)) / (blockSize / 4) * sizeof(uint32_t);
     uint32_t forthOrderArrayBlock = *(uint32_t*)&blockBuffer[indexInThirdOrderArray];
 
     readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
@@ -326,10 +327,16 @@ uint32_t getDataBlockGlobalIndexByLocalIndex(DiskInfo* diskInfo, ext2_super_bloc
         return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
     }
 
-    uint32_t indexInForthOrderArray = (searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) % (blockSize / 4);
+    uint32_t indexInForthOrderArray = ((searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) % (blockSize * blockSize / 16)) % (blockSize / 4) * sizeof(uint32_t);
     searchedBlockGlobalIndex =  *(uint32_t*)&blockBuffer[indexInForthOrderArray];
     delete[] blockBuffer;
     return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
+}
+
+uint32_t getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(ext2_super_block* superBlock, uint32_t searchedBlockGlobalIndexInInode)
+{
+    uint32_t blockIndexInGroup = searchedBlockGlobalIndexInInode % superBlock->s_blocks_per_group;
+    return blockIndexInGroup - getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) - getNumberOfInodesBlocksInFullGroup(superBlock) - 3;
 }
 
 uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, ext2_inode* searchedInode, uint32_t& inodeBlock,
@@ -558,8 +565,8 @@ uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, ext2_super_block* superBl
     {
         if(parentInode->i_blocks == blockToAddDirectoryEntryLocalIndex) //it means there aren't anymore preallocate blocks, so we need to add a new one to the directory
         {
-            uint32_t addBlockToDirectoryResult = addBlockToDirectory(diskInfo, superBlock, parentInode, dummy, parentInode); //we update the parentInode
-            if(addBlockToDirectoryResult == ADD_BLOCK_TO_DIRECTORY_FAILED)
+            uint32_t addBlockToDirectoryResult = allocateBlockToDirectory(diskInfo, superBlock, parentInode, dummy, parentInode); //we update the parentInode
+            if(addBlockToDirectoryResult != ADD_BLOCK_TO_DIRECTORY_SUCCESS)
             {
                 delete[] blockBuffer, delete directoryEntry;
                 return ADD_DIRECTORY_ENTRY_TO_PARENT_FAILED;
@@ -568,8 +575,10 @@ uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, ext2_super_block* superBl
         //else it is the next block after parentInode->i_size / superBlock->s_log_block_size which is already + 1 because the size are equal
     }
 
-    uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, parentInode,
-                                                                             blockToAddDirectoryEntryLocalIndex, newDirectoryEntryBlockGlobalIndex);
+    uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock,
+                                                                                        parentInode,
+                                                                                        blockToAddDirectoryEntryLocalIndex,
+                                                                                        newDirectoryEntryBlockGlobalIndex);
     if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
     {
         delete[] blockBuffer, delete directoryEntry;

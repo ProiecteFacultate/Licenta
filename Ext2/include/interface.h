@@ -26,4 +26,7 @@ void commandReadFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vect
 
 static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
 
+
+void commandWriteFileTEST(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
+
 #endif

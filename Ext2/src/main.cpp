@@ -23,6 +23,7 @@ int main() {
     while(true)
     {
         std::cout << '\n';
+        std::cout.flush();
         std::getline(std::cin, command);
 
         if(command == "exit")

@@ -11,6 +11,8 @@
 #include "../include/codes/ext2Codes.h"
 #include "../include/codes/ext2Attributes.h"
 #include "../include/utils.h"
+#include "../include/ext2.h"
+#include "../include/codes/ext2BlocksAllocationCodes.h"
 #include "../include/ext2Heuristics.h"
 
 #define BIG_VALUE 99999999
@@ -178,6 +180,9 @@ uint32_t searchFreeInodeForRegularFile(DiskInfo* diskInfo, ext2_super_block* sup
     return SEARCH_FREE_INODE_NO_FREE_INODES;
 }
 
+//////////////////////////
+//////////////////////////
+//////////////////////////
 //////////////////////////
 
 static uint32_t getGroupsFreeInodesAndFreeBlocks(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::pair<uint16_t, uint16_t>>& groupFreeInodesAndFreeBlocksList)

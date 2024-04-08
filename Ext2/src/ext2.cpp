@@ -12,6 +12,8 @@
 #include "../include/codes/ext2Codes.h"
 #include "../include/codes/ext2ApiResponseCodes.h"
 #include "../include/utils.h"
+#include "../include/ext2BlocksAllocation.h"
+#include "../include/codes/ext2BlocksAllocationCodes.h"
 #include "../include/ext2.h"
 
 #define BIG_VALUE 99999999
@@ -115,79 +117,6 @@ uint32_t searchAndOccupyMultipleBlocksInGivenGroup(DiskInfo* diskInfo, ext2_supe
     return SEARCH_MULTIPLE_DATA_BLOCKS_IN_GROUP_NO_ENOUGH_CONSECUTIVE_FREE_BLOCKS;
 }
 
-uint32_t searchAndOccupyFreeDataBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t preferredGroup, uint32_t previousBlockGlobalIndex, uint32_t& newDataBlock)
-{
-    uint32_t previousBlockGroup = previousBlockGlobalIndex / superBlock->s_blocks_per_group;
-    uint32_t previousBlockLocalIndex = previousBlockGlobalIndex % superBlock->s_blocks_per_group;
-
-    uint32_t searchFreeBlockResult = searchAndOccupyFreeDataBlockInGivenGroup(diskInfo, superBlock, previousBlockGroup, previousBlockLocalIndex, newDataBlock);
-
-    if(searchFreeBlockResult == SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_SUCCESS)
-        return SEARCH_EMPTY_DATA_BLOCK_SUCCESS;
-    else if(searchFreeBlockResult == SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_FAILED_FOR_OTHER_REASON)
-        return SEARCH_EMPTY_DATA_BLOCK_FAILED_FOR_OTHER_REASON;
-
-    for(uint32_t group = 0; group < getNumberOfGroups(superBlock); group++)
-    {
-        searchFreeBlockResult = searchAndOccupyFreeDataBlockInGivenGroup(diskInfo, superBlock, group, BIG_VALUE, newDataBlock);
-        if(searchFreeBlockResult == SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_SUCCESS)
-            return SEARCH_EMPTY_DATA_BLOCK_SUCCESS;
-        else if(searchFreeBlockResult == SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_FAILED_FOR_OTHER_REASON)
-            return SEARCH_EMPTY_DATA_BLOCK_FAILED_FOR_OTHER_REASON;
-    }
-
-    return SEARCH_EMPTY_DATA_BLOCK_NO_FREE_BLOCKS;
-}
-
-uint32_t searchAndOccupyFreeDataBlockInGivenGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group, uint32_t previousBlockLocalIndex, uint32_t& newDataBlock)
-{
-    uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
-    uint32_t dataBitmapBlock = getDataBitmapBlockForGivenGroup(superBlock, group);
-
-    char* blockBuffer = new char[superBlock->s_log_block_size];
-    uint32_t numberOfSectorsRead = 0;
-    uint32_t readResult = readDiskSectors(diskInfo, numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, dataBitmapBlock),
-                                          blockBuffer, numberOfSectorsRead);
-
-    if(readResult != EC_NO_ERROR)
-    {
-        delete[] blockBuffer;
-        return SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_FAILED_FOR_OTHER_REASON;
-    }
-
-    //checks the block after the given previousBlock
-    uint32_t firstFreeDataBlockInGroupAfterGivenPrevious;
-    previousBlockLocalIndex++;
-    if(previousBlockLocalIndex != BIG_VALUE && getBitFromByte(blockBuffer[previousBlockLocalIndex / 8], previousBlockLocalIndex % 8) == 0)
-    {
-        firstFreeDataBlockInGroupAfterGivenPrevious = previousBlockLocalIndex;
-        newDataBlock = getFirstDataBlockForGivenGroup(superBlock, group) + firstFreeDataBlockInGroupAfterGivenPrevious;
-        delete[] blockBuffer;
-
-        return SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_SUCCESS;
-    }
-
-
-    for(uint32_t bitIndex = 0; bitIndex < getNumberOfDataBlocksForGivenGroup(superBlock, group); bitIndex++)
-        if(getBitFromByte(blockBuffer[bitIndex / 8], bitIndex % 8) == 0)
-        {
-            firstFreeDataBlockInGroupAfterGivenPrevious = bitIndex;
-            uint8_t newByteValue = changeBitValue(blockBuffer[bitIndex / 8], bitIndex % 8, 1);
-            memset(blockBuffer + bitIndex / 8, newByteValue, 1);
-
-            uint32_t numOfSectorsWritten;
-            uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, dataBitmapBlock),
-                                                    blockBuffer, numOfSectorsWritten);
-
-            newDataBlock = getFirstDataBlockForGivenGroup(superBlock, group) + firstFreeDataBlockInGroupAfterGivenPrevious;
-            delete[] blockBuffer;
-
-            return (writeResult != EC_NO_ERROR) ? SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_FAILED_FOR_OTHER_REASON : SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_SUCCESS;
-        }
-
-    return SEARCH_EMPTY_DATA_BLOCK_IN_GROUP_NO_FREE_BLOCKS;
-}
-
 uint32_t searchInodeByFullPath(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, ext2_inode** inode, bool& isSearchedInodeRoot)
 {
     char* actualDirectoryName = strtok(directoryPath, "/");
@@ -248,7 +177,7 @@ uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block
     for(uint32_t blockLocalIndex = 0; blockLocalIndex < parentInode->i_blocks; blockLocalIndex++)
     {
         uint32_t occupiedBytesInBlock = parentInode->i_size >= superBlock->s_log_block_size * (blockLocalIndex + 1) ? superBlock->s_log_block_size :
-                parentInode->i_size % superBlock->s_log_block_size;
+                ((parentInode->i_size >= superBlock->s_log_block_size * blockLocalIndex) ? parentInode->i_size % superBlock->s_log_block_size : 0);
 
         if(occupiedBytesInBlock == 0) //it means that we haven't found the inode, and there isn't any other place to find it
         {
@@ -256,7 +185,10 @@ uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block
             return SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_INODE_DO_NOT_EXIST;
         }
 
-        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, parentInode, blockLocalIndex, blockGlobalIndex);
+        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock,
+                                                                                            parentInode,
+                                                                                            blockLocalIndex,
+                                                                                            blockGlobalIndex);
         if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
         {
             delete[] blockBuffer;
@@ -315,67 +247,34 @@ uint32_t searchDirectoryWithGivenNameInGivenBlockData(char* searchedName, char* 
     }
 }
 
-//TODO completely remake this, respecting the multi level of blocks and others
-uint32_t addBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t& newBlockGlobalIndex, ext2_inode* updatedInode)
-{
-    uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
-    uint32_t numberOfInodesPerBlock = superBlock->s_log_block_size / sizeof(ext2_inode);
-    char* blockBuffer = new char[superBlock->s_log_block_size];
-    uint32_t numberOfSectorsRead;
-
-    for(uint32_t group; group < getNumberOfGroups(superBlock); group++)
-    {
-        uint32_t inodeBitmapBlock = getInodeBitmapBlockForGivenGroup(superBlock, group);
-        uint32_t readResult = readDiskSectors(diskInfo, numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, inodeBitmapBlock),
-                                              blockBuffer, numberOfSectorsRead);
-
-        if(readResult != EC_NO_ERROR)
-        {
-            delete[] blockBuffer;
-            return ADD_BLOCK_TO_DIRECTORY_FAILED;
-        }
-
-        for(uint32_t inodeIndex = 0; inodeIndex < getNumberOfDataBlocksForGivenGroup(superBlock, group) ; inodeIndex++)
-            if(getBitFromByte(blockBuffer[inodeIndex / 8], inodeIndex % 8) == 0)
-            {
-                getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, inode, inodeIndex, newBlockGlobalIndex);
-                inode->i_block[inode->i_blocks] = newBlockGlobalIndex;
-                inode->i_blocks++;
-                //TODO update inode
-                uint32_t updateValueInInodeBitmapResult = updateValueInInodeBitmap(diskInfo, superBlock, inode->i_global_index, 1);
-                delete[] blockBuffer;
-                return (updateValueInInodeBitmapResult == UPDATE_VALUE_IN_INODE_BITMAP_SUCCESS) ? ADD_BLOCK_TO_DIRECTORY_SUCCESS : ADD_BLOCK_TO_DIRECTORY_FAILED;
-            }
-    }
-
-    return ADD_BLOCK_TO_DIRECTORY_FAILED;
-}
-
 uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, char* dataBuffer, uint32_t maxBytesToWrite,
                                     uint32_t& numberOfBytesWritten, uint32_t& reasonForIncompleteWrite)
 {
     numberOfBytesWritten = 0;
     uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
-    uint32_t blockGlobalIndex, newBlockGlobalIndex, numOfSectorsWritten, numberOfBlocksAddedToTheDirectory = 0;
+    uint32_t blockGlobalIndex, newBlockGlobalIndex, numOfSectorsWritten;
     char* blockBuffer = new char[superBlock->s_log_block_size];
 
     //in case the number of free space is not enough, add new blocks
     uint32_t totalSpaceInDirectory = superBlock->s_log_block_size * inode->i_blocks;
     uint32_t numberOfBlocksToAddToAddToDirectory = 0;
     if(maxBytesToWrite > totalSpaceInDirectory)
-        numberOfBlocksToAddToAddToDirectory = maxBytesToWrite / superBlock->s_log_block_size + 1;
-    if(maxBytesToWrite % totalSpaceInDirectory == 0)
+        numberOfBlocksToAddToAddToDirectory = (maxBytesToWrite - totalSpaceInDirectory) / superBlock->s_log_block_size + 1;
+    if((maxBytesToWrite - totalSpaceInDirectory) % superBlock->s_log_block_size == 0)
         numberOfBlocksToAddToAddToDirectory--;
 
     //CAUTION we don't return if the add block fails, so even if it fails, the method will continue, and will add bytes only to the free space available + the blocks added successfully
     for(uint32_t i = 1; i <= numberOfBlocksToAddToAddToDirectory; i++)
     {
-        uint32_t addBlockToDirectoryResult = addBlockToDirectory(diskInfo, superBlock, inode, newBlockGlobalIndex, inode); //we also update the inode if blocks added
-        if(addBlockToDirectoryResult == ADD_BLOCK_TO_DIRECTORY_FAILED)
+        ext2_inode* updatedInode = new ext2_inode();
+        memcpy(updatedInode, inode, sizeof(ext2_inode));
+        uint32_t addBlockToDirectoryResult = allocateBlockToDirectory(diskInfo, superBlock, inode, newBlockGlobalIndex, updatedInode); //we also update the inode if blocks added
+        if(addBlockToDirectoryResult != ADD_BLOCK_TO_DIRECTORY_SUCCESS)
         {
             reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_UNABLE_TO_ADD_NEW_BLOCKS_TO_DIRECTORY;
             break;
         }
+        memcpy(inode, updatedInode, sizeof(ext2_inode));
     }
 
     for(uint32_t blockLocalIndex = 0; blockLocalIndex < inode->i_blocks; blockLocalIndex++)
@@ -388,7 +287,9 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* supe
             return WRITE_BYTES_TO_FILE_SUCCESS;
         }
 
-        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, inode, blockLocalIndex, blockGlobalIndex);
+        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock, inode,
+                                                                                            blockLocalIndex,
+                                                                                            blockGlobalIndex);
         if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
         {
             reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER;
@@ -422,7 +323,7 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superB
 {
     numberOfBytesWritten = 0;
     uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
-    uint32_t blockGlobalIndex, newBlockGlobalIndex, numberOfSectorsRead, numOfSectorsWritten, numberOfBlocksAddedToTheDirectory = 0;
+    uint32_t blockGlobalIndex, newBlockGlobalIndex, numberOfSectorsRead, numOfSectorsWritten;
     char* blockBuffer = new char[superBlock->s_log_block_size];
 
     //in case the number of free space is not enough, add new blocks
@@ -437,23 +338,25 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superB
     //CAUTION we don't return if the add block fails, so even if it fails, the method will continue, and will add bytes only to the free space available + the blocks added successfully
     for(uint32_t i = 1; i <= numberOfBlocksToAddToAddToDirectory; i++)
     {
-        uint32_t addBlockToDirectoryResult = addBlockToDirectory(diskInfo, superBlock, inode, newBlockGlobalIndex, inode); //we also update the inode if blocks added
-        if(addBlockToDirectoryResult == ADD_BLOCK_TO_DIRECTORY_FAILED)
+        ext2_inode* updatedInode = new ext2_inode();
+        memcpy(updatedInode, inode, sizeof(ext2_inode));
+        uint32_t addBlockToDirectoryResult = allocateBlockToDirectory(diskInfo, superBlock, inode, newBlockGlobalIndex, updatedInode); //we also update the inode if blocks added
+        if(addBlockToDirectoryResult != ADD_BLOCK_TO_DIRECTORY_SUCCESS)
         {
             reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_UNABLE_TO_ADD_NEW_BLOCKS_TO_DIRECTORY;
             break;
         }
+        memcpy(inode, updatedInode, sizeof(ext2_inode));
     }
 
     //now we write the bytes to blocks CAUTION first block to write in might already contain bytes, so we won't add bytes from index 0
     uint32_t firstBlockInDirectoryWithFreeSpaceLocalIndex = inode->i_size / superBlock->s_log_block_size;
-    if(inode->i_size % superBlock->s_log_block_size == 0)
-        firstBlockInDirectoryWithFreeSpaceLocalIndex++;
 
     for(uint32_t blockLocalIndex = firstBlockInDirectoryWithFreeSpaceLocalIndex; blockLocalIndex < inode->i_blocks; blockLocalIndex++)
     {
         uint32_t occupiedBytesInBlock = inode->i_size >= superBlock->s_log_block_size * (blockLocalIndex + 1) ? superBlock->s_log_block_size :
-                                        inode->i_size % superBlock->s_log_block_size;
+                ((inode->i_size >= superBlock->s_log_block_size * blockLocalIndex) ? inode->i_size % superBlock->s_log_block_size : 0);
+
         uint32_t numOfBytesToWriteToActualBlock = std::min(superBlock->s_log_block_size - occupiedBytesInBlock, maxBytesToWrite - numberOfBytesWritten);
 
         if(numOfBytesToWriteToActualBlock == 0)
@@ -462,7 +365,9 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superB
             return WRITE_BYTES_TO_FILE_SUCCESS;
         }
 
-        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, inode, blockLocalIndex, blockGlobalIndex);
+        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock, inode,
+                                                                                            blockLocalIndex,
+                                                                                            blockGlobalIndex);
         if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
         {
             reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER;

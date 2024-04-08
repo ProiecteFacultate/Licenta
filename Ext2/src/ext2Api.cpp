@@ -114,9 +114,12 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, ext2_super_block* superBlock, cha
     for(uint32_t blockLocalIndex = 0; blockLocalIndex < givenDirectoryInode->i_blocks; blockLocalIndex++)
     {
         uint32_t occupiedBytesInBlock = givenDirectoryInode->i_size >= superBlock->s_log_block_size * (blockLocalIndex + 1) ? superBlock->s_log_block_size :
-                                        givenDirectoryInode->i_size % superBlock->s_log_block_size;
+                                        ((givenDirectoryInode->i_size >= superBlock->s_log_block_size * blockLocalIndex) ? givenDirectoryInode->i_size % superBlock->s_log_block_size : 0);
 
-        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, givenDirectoryInode, blockLocalIndex, blockGlobalIndex);
+        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock,
+                                                                                            givenDirectoryInode,
+                                                                                            blockLocalIndex,
+                                                                                            blockGlobalIndex);
         if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
         {
             delete[] blockBuffer;
@@ -238,7 +241,9 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
     char* blockBuffer = new char[superBlock->s_log_block_size]; //CAUTION we use a second buffer instead of reading directly in readBuffer because if we would do this, it could...
     //CAUTION overflow the read buffer (since we are reading whole blocks and last read block could overflow readBuffer) and this could overwrite other data in heap
 
-    uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, actualInode, blockLocalIndex, blockGlobalIndex);
+    uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock,
+                                                                                        actualInode, blockLocalIndex,
+                                                                                        blockGlobalIndex);
     if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
     {
         delete[] blockBuffer, delete actualInode;
@@ -267,7 +272,8 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
             return READ_BYTES_FROM_FILE_SUCCESS;
         }
 
-        getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndex(diskInfo, superBlock, actualInode, blockLocalIndex, blockGlobalIndex);
+        getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock, actualInode,
+                                                                                   blockLocalIndex, blockGlobalIndex);
 
         if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
         {
