@@ -54,6 +54,12 @@ uint32_t changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitVa
     }
 }
 
+uint64_t getMaximumFileSize(ext2_super_block* superBlock)
+{
+    uint64_t entriesInOrderBlock = superBlock->s_log_block_size / sizeof(uint32_t);
+    return (entriesInOrderBlock * entriesInOrderBlock * entriesInOrderBlock + entriesInOrderBlock * entriesInOrderBlock + entriesInOrderBlock + 12) * (uint64_t) superBlock->s_log_block_size;
+}
+
 ////////////////////Utils that are not directly related with Ext2
 
 std::vector<std::string> splitString(const std::string& str, char delimiter)

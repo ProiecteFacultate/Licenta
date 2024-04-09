@@ -1,5 +1,7 @@
 #include "string.h"
 #include "vector"
+#include "math.h"
+#include "cstdint"
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
@@ -13,12 +15,14 @@
 #include "../include/codes/ext2BlocksAllocationCodes.h"
 #include "../include/ext2BlocksAllocation.h"
 
+#define VALUE_ENTRY sizeof(uint32_t) //we define this as a macro to be easier to replace in testing
+
 #define BIG_VALUE 99999999
 
 uint32_t allocateBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t& newBlockGlobalIndex, ext2_inode* updatedInode)
 {
     uint32_t addHigherOrderDataBlockResult = ADD_BLOCK_TO_DIRECTORY_SUCCESS, secondOrderTableGlobalIndex; //secondOrderTableGlobalIndex keeps its value if already exist (for indexes 12, 13, 14) or a new one if not
-    uint32_t blockSize = superBlock->s_log_block_size;
+    uint32_t entriesInOrderBlock = superBlock->s_log_block_size / VALUE_ENTRY;
 
     if(inode->i_blocks < 12) //we add a direct block
     {
@@ -30,12 +34,12 @@ uint32_t allocateBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlo
 
         updatedInode->i_block[inode->i_blocks] = newBlockGlobalIndex;
     }
-    else if(inode->i_blocks <= blockSize / 4 + 11) //second order
+    else if(inode->i_blocks <= entriesInOrderBlock + 11) //second order
     {
         addHigherOrderDataBlockResult = addSecondOrderDataBlock(diskInfo, superBlock, inode, newBlockGlobalIndex, secondOrderTableGlobalIndex);
         updatedInode->i_block[12] = secondOrderTableGlobalIndex;
     }
-    else if(inode->i_blocks <= (blockSize / 4) * (blockSize / 4) + blockSize / 4 + 11) //THIRD order
+    else if(inode->i_blocks <= entriesInOrderBlock * entriesInOrderBlock + entriesInOrderBlock + 11) //THIRD order
     {
         addHigherOrderDataBlockResult = addThirdOrderDataBlock(diskInfo, superBlock, inode, newBlockGlobalIndex, secondOrderTableGlobalIndex);
         updatedInode->i_block[13] = secondOrderTableGlobalIndex;
@@ -92,7 +96,7 @@ static uint32_t addSecondOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* su
 
     //now add the new data block to the second order table
     uint32_t addBlockIndexToAnotherResult = addBlockIndexToAnotherBlock(diskInfo, superBlock, secondOrderTableGlobalIndex,
-                                                                        (inode->i_blocks - 12) * 4, newBlockGlobalIndex);
+                                                                        (inode->i_blocks - 12) * VALUE_ENTRY, newBlockGlobalIndex);
 
     return (addBlockIndexToAnotherResult == ADD_BLOCK_INDEX_TO_LOWER_ORDER_BLOCK_SUCCESS) ? ADD_HIGHER_ORDER_DATA_SUCCESS : ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
 }
@@ -101,7 +105,7 @@ static uint32_t addThirdOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
 {
     uint32_t thirdOrderTableGlobalIndex, numberOfSectorsRead, lastBlockInDirectoryGlobalIndex;
     secondOrderTableGlobalIndex = inode->i_block[13];
-    uint32_t entriesInOrderBlock = superBlock->s_log_block_size / 4;
+    uint32_t entriesInOrderBlock = superBlock->s_log_block_size / VALUE_ENTRY;
     uint32_t occupiedDataBlocksInThirdLevel = inode->i_blocks - 12 - entriesInOrderBlock; //only the data blocks not the order tables
     int32_t lastBlockInDirectoryThirdOrderTableLocalIndex = occupiedDataBlocksInThirdLevel / entriesInOrderBlock; //in which third order table is the last entry
     if(occupiedDataBlocksInThirdLevel % entriesInOrderBlock == 0)
@@ -130,7 +134,8 @@ static uint32_t addThirdOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
 
         //add the third order table to the second order table
         uint32_t addThirdOrderToSecondOrderResult = addBlockIndexToAnotherBlock(diskInfo, superBlock, secondOrderTableGlobalIndex,
-                                                                                (lastBlockInDirectoryThirdOrderTableLocalIndex + 1) * 4, thirdOrderTableGlobalIndex);
+                                                                                (lastBlockInDirectoryThirdOrderTableLocalIndex + 1) * VALUE_ENTRY,
+                                                                                thirdOrderTableGlobalIndex);
 
         if(addThirdOrderToSecondOrderResult == ADD_BLOCK_INDEX_TO_LOWER_ORDER_BLOCK_FAILED)
             return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
@@ -147,7 +152,7 @@ static uint32_t addThirdOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
             return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
         }
 
-        thirdOrderTableGlobalIndex = *(uint32_t*)&blockBuffer[lastBlockInDirectoryThirdOrderTableLocalIndex * 4];
+        thirdOrderTableGlobalIndex = *(uint32_t*)&blockBuffer[lastBlockInDirectoryThirdOrderTableLocalIndex * VALUE_ENTRY];
         delete[] blockBuffer;
     }
 
@@ -167,7 +172,7 @@ static uint32_t addThirdOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
     //now add the new data block to the third order table
     uint32_t offset = occupiedDataBlocksInThirdLevel % entriesInOrderBlock;
     uint32_t addBlockIndexToAnotherResult = addBlockIndexToAnotherBlock(diskInfo, superBlock, thirdOrderTableGlobalIndex,
-                                                                        offset * 4, newBlockGlobalIndex);
+                                                                        offset * VALUE_ENTRY, newBlockGlobalIndex);
 
     return (addBlockIndexToAnotherResult == ADD_BLOCK_INDEX_TO_LOWER_ORDER_BLOCK_SUCCESS) ? ADD_HIGHER_ORDER_DATA_SUCCESS : ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
 }
@@ -176,20 +181,21 @@ static uint32_t addForthOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
 {
     uint32_t thirdOrderTableGlobalIndex, forthOrderTableGlobalIndex, numberOfSectorsRead, lastBlockInDirectoryGlobalIndex;
     secondOrderTableGlobalIndex = inode->i_block[14];
-    uint32_t entriesInOrderBlock = superBlock->s_log_block_size / 4;
-    uint32_t occupiedDataBlocksInThirdLevel = inode->i_blocks - 12 - entriesInOrderBlock; //only the data blocks not the order tables
-    uint32_t occupiedDataBlocksInForthLevel = inode->i_blocks - 12 - entriesInOrderBlock - occupiedDataBlocksInThirdLevel;
+    uint32_t entriesInOrderBlock = superBlock->s_log_block_size / VALUE_ENTRY;
+    uint32_t occupiedDataBlocksInForthLevel = inode->i_blocks - 12 - entriesInOrderBlock - entriesInOrderBlock * entriesInOrderBlock;
+    uint32_t offsetInForthLevelBlock = occupiedDataBlocksInForthLevel % entriesInOrderBlock;
     //in which third order table is the CAUTION INDEX FOR THE FORTH ORDER TABLE IN WHICH IS THE LAST DIRECTORY IN DIRECTORY
-    uint32_t lastBlockInDirectoryThirdOrderTableLocalIndex = occupiedDataBlocksInThirdLevel / (entriesInOrderBlock * entriesInOrderBlock);
-    if(occupiedDataBlocksInThirdLevel % (entriesInOrderBlock * entriesInOrderBlock) == 0)
+    int32_t lastBlockInDirectoryThirdOrderTableLocalIndex = occupiedDataBlocksInForthLevel / (entriesInOrderBlock * entriesInOrderBlock); //aka index in second order table
+    if(occupiedDataBlocksInForthLevel % (entriesInOrderBlock * entriesInOrderBlock) == 0)
         lastBlockInDirectoryThirdOrderTableLocalIndex--;
 
-    uint32_t lastBlockInDirectoryForthOrderTableLocalIndex = occupiedDataBlocksInForthLevel / entriesInOrderBlock; //in which forth order table is the last entry
+    //in which forth order table is the last entry AKA index in third order table
+    int32_t lastBlockInDirectoryForthOrderTableLocalIndex = occupiedDataBlocksInForthLevel % (entriesInOrderBlock * entriesInOrderBlock) / entriesInOrderBlock;
     if(occupiedDataBlocksInForthLevel % entriesInOrderBlock == 0)
         lastBlockInDirectoryForthOrderTableLocalIndex--;
 
     //check if there is a 2nd order block for level 4 (so no block for i_block[13]
-    if(inode->i_blocks <= entriesInOrderBlock + 12) //it means there is no 2nd order block for level 4 (so no block for i_block[14]
+    if(inode->i_blocks <= entriesInOrderBlock * entriesInOrderBlock + entriesInOrderBlock + 12) //it means there is no 2nd order block for level 4 (so no block for i_block[14]
     {
         uint32_t addSecondOrderTableResult = searchAndOccupyFreeDataBlock(diskInfo, superBlock, BIG_VALUE, secondOrderTableGlobalIndex);
 
@@ -211,7 +217,8 @@ static uint32_t addForthOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
 
         //add the third order table to the second order table
         uint32_t addThirdOrderToSecondOrderResult = addBlockIndexToAnotherBlock(diskInfo, superBlock, secondOrderTableGlobalIndex,
-                                                                                lastBlockInDirectoryThirdOrderTableLocalIndex + 1, thirdOrderTableGlobalIndex);
+                                                                                (lastBlockInDirectoryThirdOrderTableLocalIndex + 1) * VALUE_ENTRY,
+                                                                                thirdOrderTableGlobalIndex);
 
         if(addThirdOrderToSecondOrderResult == ADD_BLOCK_INDEX_TO_LOWER_ORDER_BLOCK_FAILED)
             return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
@@ -228,12 +235,12 @@ static uint32_t addForthOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
             return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
         }
 
-        thirdOrderTableGlobalIndex = *(uint32_t*)&blockBuffer[lastBlockInDirectoryThirdOrderTableLocalIndex];
+        thirdOrderTableGlobalIndex = *(uint32_t*)&blockBuffer[lastBlockInDirectoryThirdOrderTableLocalIndex * VALUE_ENTRY];
         delete[] blockBuffer;
     }
 
     //check if there is a 4th order block with free space
-    if(occupiedDataBlocksInForthLevel % entriesInOrderBlock == 0) //we need to add a new 4rd order table
+    if(occupiedDataBlocksInForthLevel % entriesInOrderBlock == 0) //we need to add a new 4rd order table (calculation is correct % entriesInOrderBlock is good)
     {
         uint32_t addForthOrderTableResult = searchAndOccupyFreeDataBlock(diskInfo, superBlock, BIG_VALUE, forthOrderTableGlobalIndex);
 
@@ -243,8 +250,9 @@ static uint32_t addForthOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
             return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
 
         //add the forth order table to the third order table
-        uint32_t addForthOrderToThirdOrderResult = addBlockIndexToAnotherBlock(diskInfo, superBlock, forthOrderTableGlobalIndex,
-                                                                                lastBlockInDirectoryForthOrderTableLocalIndex + 1, forthOrderTableGlobalIndex);
+        uint32_t addForthOrderToThirdOrderResult = addBlockIndexToAnotherBlock(diskInfo, superBlock, thirdOrderTableGlobalIndex,
+                                                                               (lastBlockInDirectoryForthOrderTableLocalIndex + 1) * VALUE_ENTRY,
+                                                                               forthOrderTableGlobalIndex);
 
         if(addForthOrderToThirdOrderResult == ADD_BLOCK_INDEX_TO_LOWER_ORDER_BLOCK_FAILED)
             return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
@@ -261,7 +269,7 @@ static uint32_t addForthOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
             return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
         }
 
-        forthOrderTableGlobalIndex = *(uint32_t*)&blockBuffer[lastBlockInDirectoryForthOrderTableLocalIndex];
+        forthOrderTableGlobalIndex = *(uint32_t*)&blockBuffer[lastBlockInDirectoryForthOrderTableLocalIndex * VALUE_ENTRY];
         delete[] blockBuffer;
     }
 
@@ -279,9 +287,8 @@ static uint32_t addForthOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
         return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
 
     //now add the new data block to the forth order table
-    uint32_t offset = (occupiedDataBlocksInForthLevel + 1) % entriesInOrderBlock;
     uint32_t addBlockIndexToAnotherResult = addBlockIndexToAnotherBlock(diskInfo, superBlock, forthOrderTableGlobalIndex,
-                                                                        offset, newBlockGlobalIndex);
+                                                                        offsetInForthLevelBlock * VALUE_ENTRY, newBlockGlobalIndex);
 
     return (addBlockIndexToAnotherResult == ADD_BLOCK_INDEX_TO_LOWER_ORDER_BLOCK_SUCCESS) ? ADD_HIGHER_ORDER_DATA_SUCCESS : ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
 }

@@ -238,29 +238,27 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
 
     uint32_t blockLocalIndex = startingPosition / superBlock->s_log_block_size;
     uint32_t startingPositionOffsetInBlock = startingPosition % superBlock->s_log_block_size;
-    char* blockBuffer = new char[superBlock->s_log_block_size]; //CAUTION we use a second buffer instead of reading directly in readBuffer because if we would do this, it could...
-    //CAUTION overflow the read buffer (since we are reading whole blocks and last read block could overflow readBuffer) and this could overwrite other data in heap
 
     uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock,
                                                                                         actualInode, blockLocalIndex,
                                                                                         blockGlobalIndex);
     if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
     {
-        delete[] blockBuffer, delete actualInode;
+        delete actualInode;
         return READ_BYTES_FROM_FILE_FAILED_FOR_OTHER_REASON;
     }
 
     readResult = readDiskSectors(diskInfo, numOfSectorsPerBlock,getFirstSectorForGivenBlock(diskInfo, superBlock, blockGlobalIndex),
-                                 blockBuffer, numberOfSectorsRead);
+                                 readBuffer, numberOfSectorsRead);
 
     if(readResult != EC_NO_ERROR)
     {
-        delete[] blockBuffer, delete actualInode;
+        delete actualInode;
         return READ_BYTES_FROM_FILE_FAILED_FOR_OTHER_REASON;
     }
 
     numberOfBytesRead = std::min(actualInode->i_size - startingPosition, std::min(superBlock->s_log_block_size - startingPositionOffsetInBlock, maxBytesToRead));
-    memcpy(readBuffer, blockBuffer + startingPositionOffsetInBlock, numberOfBytesRead);
+    memcpy(readBuffer, readBuffer + startingPositionOffsetInBlock, numberOfBytesRead);
 
     while(numberOfBytesRead < maxBytesToRead)
     {
@@ -268,7 +266,7 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
         if(blockLocalIndex >= actualInode->i_blocks)
         {
             reasonForIncompleteRead = INCOMPLETE_BYTES_READ_DUE_TO_NO_FILE_NOT_LONG_ENOUGH;
-            delete[] blockBuffer, delete actualInode;
+            delete actualInode;
             return READ_BYTES_FROM_FILE_SUCCESS;
         }
 
@@ -278,25 +276,24 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
         if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
         {
             reasonForIncompleteRead = INCOMPLETE_BYTES_READ_DUE_TO_OTHER;
-            delete[] blockBuffer, delete actualInode;
+            delete actualInode;
             return READ_BYTES_FROM_FILE_FAILED_FOR_OTHER_REASON;
         }
 
         readResult = readDiskSectors(diskInfo, numOfSectorsPerBlock,getFirstSectorForGivenBlock(diskInfo, superBlock, blockGlobalIndex),
-                                              blockBuffer, numberOfSectorsRead);
+                                     readBuffer + numberOfBytesRead, numberOfSectorsRead);
 
         if(readResult != EC_NO_ERROR)
         {
             reasonForIncompleteRead = INCOMPLETE_BYTES_READ_DUE_TO_OTHER;
-            delete[] blockBuffer, delete actualInode;
+            delete actualInode;
             return READ_BYTES_FROM_FILE_FAILED_FOR_OTHER_REASON;
         }
 
         numOfBytesReadFromThisBlock = std::min(actualInode->i_size - startingPosition - numberOfBytesRead, std::min(superBlock->s_log_block_size, maxBytesToRead - numberOfBytesRead));
-        memcpy(readBuffer + numberOfBytesRead, blockBuffer, numOfBytesReadFromThisBlock);
         numberOfBytesRead += numOfBytesReadFromThisBlock;
     }
 
-    delete[] blockBuffer, delete actualInode;
+    delete actualInode;
     return READ_BYTES_FROM_FILE_SUCCESS;
 }

@@ -253,7 +253,15 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* supe
     numberOfBytesWritten = 0;
     uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
     uint32_t blockGlobalIndex, newBlockGlobalIndex, numOfSectorsWritten;
-    char* blockBuffer = new char[superBlock->s_log_block_size];
+
+    if(inode->i_size + maxBytesToWrite > getMaximumFileSize(superBlock))
+    {
+        reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_UNABLE_TO_MAXIMUM_FILE_SIZE_EXCEEDED;
+        maxBytesToWrite = getMaximumFileSize(superBlock) - inode->i_size;
+    }
+
+    if(maxBytesToWrite == 0) //it might be given 0, or it might become 0 in the IF above
+        return WRITE_BYTES_TO_FILE_SUCCESS;
 
     //in case the number of free space is not enough, add new blocks
     uint32_t totalSpaceInDirectory = superBlock->s_log_block_size * inode->i_blocks;
@@ -282,10 +290,7 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* supe
         uint32_t numOfBytesToWriteToActualBlock = std::min(superBlock->s_log_block_size, maxBytesToWrite - numberOfBytesWritten);
 
         if(numOfBytesToWriteToActualBlock == 0)
-        {
-            delete[] blockBuffer;
             return WRITE_BYTES_TO_FILE_SUCCESS;
-        }
 
         uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock, inode,
                                                                                             blockLocalIndex,
@@ -293,28 +298,21 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* supe
         if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
         {
             reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER;
-            delete[] blockBuffer;
             return (numberOfBytesWritten == 0) ? WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON : WRITE_BYTES_TO_FILE_SUCCESS;
         }
 
-        memcpy(blockBuffer, dataBuffer + numberOfBytesWritten, numOfBytesToWriteToActualBlock);
-
         uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, blockGlobalIndex),
-                                                blockBuffer, numOfSectorsWritten);
+                                                dataBuffer + numberOfBytesWritten, numOfSectorsWritten);
 
         if(writeResult != EC_NO_ERROR)
         {
             reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER;
-            delete[] blockBuffer;
             return (numberOfBytesWritten == 0) ? WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON : WRITE_BYTES_TO_FILE_SUCCESS;
         }
 
         numberOfBytesWritten += numOfBytesToWriteToActualBlock;
         if(numberOfBytesWritten == maxBytesToWrite)
-        {
-            delete[] blockBuffer;
             return WRITE_BYTES_TO_FILE_SUCCESS;
-        }
     }
 }
 
@@ -324,7 +322,15 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superB
     numberOfBytesWritten = 0;
     uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
     uint32_t blockGlobalIndex, newBlockGlobalIndex, numberOfSectorsRead, numOfSectorsWritten;
-    char* blockBuffer = new char[superBlock->s_log_block_size];
+
+    if(inode->i_size + maxBytesToWrite > getMaximumFileSize(superBlock))
+    {
+        reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_UNABLE_TO_MAXIMUM_FILE_SIZE_EXCEEDED;
+        maxBytesToWrite = getMaximumFileSize(superBlock) - inode->i_size;
+    }
+
+    if(maxBytesToWrite == 0) //it might be given 0, or it might become 0 in the IF above
+        return WRITE_BYTES_TO_FILE_SUCCESS;
 
     //in case the number of free space is not enough, add new blocks
     uint32_t totalSpaceInDirectory = superBlock->s_log_block_size * inode->i_blocks; //total space in blocks of the directory
@@ -335,6 +341,7 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superB
     if((maxBytesToWrite - freeSpaceInDirectory) % superBlock->s_log_block_size == 0)
         numberOfBlocksToAddToAddToDirectory--;
 
+    char* blockBuffer = new char[superBlock->s_log_block_size];
     //CAUTION we don't return if the add block fails, so even if it fails, the method will continue, and will add bytes only to the free space available + the blocks added successfully
     for(uint32_t i = 1; i <= numberOfBlocksToAddToAddToDirectory; i++)
     {

@@ -1,5 +1,6 @@
 #include "windows.h"
 #include "string.h"
+#include "cstdint"
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
@@ -10,6 +11,8 @@
 #include "../include/ext2BlocksAllocation.h"
 #include "../include/codes/ext2BlocksAllocationCodes.h"
 #include "../include/ext2FunctionUtils.h"
+
+#define VALUE_ENTRY sizeof(uint32_t) //we define this as a macro to be easier to replace in testing
 
 uint32_t getNumberOfGroups(ext2_super_block* superBlock)
 {
@@ -245,7 +248,7 @@ uint32_t getDataBlockGlobalIndexByLocalIndexInsideInode(DiskInfo* diskInfo, ext2
     uint32_t blockSize = superBlock->s_log_block_size;
     uint32_t numberOfSectorsRead, readResult;
 
-    if(searchedBlockLocalIndexInInode <= blockSize / 4 + 11) //searched block is in a second order block
+    if(searchedBlockLocalIndexInInode <= blockSize / VALUE_ENTRY + 11) //searched block is in a second order block
     {
         readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
                                               getFirstSectorForGivenBlock(diskInfo, superBlock, inode->i_block[12]),blockBuffer, numberOfSectorsRead);
@@ -256,14 +259,14 @@ uint32_t getDataBlockGlobalIndexByLocalIndexInsideInode(DiskInfo* diskInfo, ext2
             return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
         }
 
-        uint32_t indexInSecondOrderArray = (searchedBlockLocalIndexInInode - 12) * sizeof(uint32_t);
+        uint32_t indexInSecondOrderArray = (searchedBlockLocalIndexInInode - 12) * VALUE_ENTRY;
         searchedBlockGlobalIndex = *(uint32_t*)&blockBuffer[indexInSecondOrderArray];
 
         delete[] blockBuffer;
         return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
     }
 
-    if(searchedBlockLocalIndexInInode <= blockSize * blockSize / 16 + blockSize / 4 + 11)
+    if(searchedBlockLocalIndexInInode <= blockSize * blockSize / (VALUE_ENTRY * VALUE_ENTRY) + blockSize / VALUE_ENTRY + 11)
     {
         readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
                                      getFirstSectorForGivenBlock(diskInfo, superBlock, inode->i_block[13]),blockBuffer, numberOfSectorsRead);
@@ -274,7 +277,7 @@ uint32_t getDataBlockGlobalIndexByLocalIndexInsideInode(DiskInfo* diskInfo, ext2
             return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
         }
 
-        uint32_t indexInSecondOrderArray = ((searchedBlockLocalIndexInInode - blockSize / 4 - 12) / (blockSize / 4)) * sizeof(uint32_t);
+        uint32_t indexInSecondOrderArray = ((searchedBlockLocalIndexInInode - blockSize / VALUE_ENTRY - 12) / (blockSize / VALUE_ENTRY)) * VALUE_ENTRY;
         uint32_t thirdOrderArrayBlock = *(uint32_t*)&blockBuffer[indexInSecondOrderArray];
 
         readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
@@ -286,7 +289,7 @@ uint32_t getDataBlockGlobalIndexByLocalIndexInsideInode(DiskInfo* diskInfo, ext2
             return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
         }
 
-        uint32_t indexInThirdOrderArray = ((searchedBlockLocalIndexInInode - blockSize / 4 - 12) % (blockSize / 4)) * sizeof(uint32_t);
+        uint32_t indexInThirdOrderArray = ((searchedBlockLocalIndexInInode - blockSize / VALUE_ENTRY - 12) % (blockSize / VALUE_ENTRY)) * VALUE_ENTRY;
         searchedBlockGlobalIndex = *(uint32_t*)&blockBuffer[indexInThirdOrderArray];
         delete[] blockBuffer;
         return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
@@ -303,7 +306,7 @@ uint32_t getDataBlockGlobalIndexByLocalIndexInsideInode(DiskInfo* diskInfo, ext2
         return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
     }
 
-    uint32_t indexInSecondOrderArray = ((searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) / (blockSize * blockSize / 16)) * sizeof(uint32_t);
+    uint32_t indexInSecondOrderArray = ((searchedBlockLocalIndexInInode - blockSize * blockSize / (VALUE_ENTRY * VALUE_ENTRY) - blockSize / VALUE_ENTRY - 12) / (blockSize * blockSize / (VALUE_ENTRY * VALUE_ENTRY))) * VALUE_ENTRY;
     uint32_t thirdOrderArrayBlock = *(uint32_t*)&blockBuffer[indexInSecondOrderArray];
 
     readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
@@ -315,7 +318,7 @@ uint32_t getDataBlockGlobalIndexByLocalIndexInsideInode(DiskInfo* diskInfo, ext2
         return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
     }
 
-    uint32_t indexInThirdOrderArray = ((searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) % (blockSize * blockSize / 16)) / (blockSize / 4) * sizeof(uint32_t);
+    uint32_t indexInThirdOrderArray = ((searchedBlockLocalIndexInInode - blockSize * blockSize / (VALUE_ENTRY * VALUE_ENTRY) - blockSize / VALUE_ENTRY - 12) % (blockSize * blockSize / (VALUE_ENTRY * VALUE_ENTRY))) / (blockSize / VALUE_ENTRY) * VALUE_ENTRY;
     uint32_t forthOrderArrayBlock = *(uint32_t*)&blockBuffer[indexInThirdOrderArray];
 
     readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
@@ -327,7 +330,7 @@ uint32_t getDataBlockGlobalIndexByLocalIndexInsideInode(DiskInfo* diskInfo, ext2
         return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
     }
 
-    uint32_t indexInForthOrderArray = ((searchedBlockLocalIndexInInode - blockSize * blockSize / 16 - blockSize / 4 - 12) % (blockSize * blockSize / 16)) % (blockSize / 4) * sizeof(uint32_t);
+    uint32_t indexInForthOrderArray = ((searchedBlockLocalIndexInInode - blockSize * blockSize / (VALUE_ENTRY * VALUE_ENTRY) - blockSize / VALUE_ENTRY - 12) % (blockSize * blockSize / (VALUE_ENTRY * VALUE_ENTRY))) % (blockSize / VALUE_ENTRY) * VALUE_ENTRY;
     searchedBlockGlobalIndex =  *(uint32_t*)&blockBuffer[indexInForthOrderArray];
     delete[] blockBuffer;
     return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;

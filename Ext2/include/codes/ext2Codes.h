@@ -76,10 +76,11 @@
 #define UPDATE_INODE_FAILED                                                                            0
 #define UPDATE_INODE_SUCCESS                                                                           9999
 
-#define INCOMPLETE_BYTES_WRITE_DUE_TO_UNABLE_TO_ADD_NEW_BLOCKS_TO_DIRECTORY                           0
-#define INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER                                                           1
+#define INCOMPLETE_BYTES_WRITE_DUE_TO_UNABLE_TO_ADD_NEW_BLOCKS_TO_DIRECTORY                            0
+#define INCOMPLETE_BYTES_WRITE_DUE_TO_UNABLE_TO_MAXIMUM_FILE_SIZE_EXCEEDED                             1
+#define INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER                                                            2
 
-#define INCOMPLETE_BYTES_READ_DUE_TO_NO_FILE_NOT_LONG_ENOUGH                                          0
-#define INCOMPLETE_BYTES_READ_DUE_TO_OTHER                                                            1
+#define INCOMPLETE_BYTES_READ_DUE_TO_NO_FILE_NOT_LONG_ENOUGH                                           0
+#define INCOMPLETE_BYTES_READ_DUE_TO_OTHER                                                             1
 
 #endif

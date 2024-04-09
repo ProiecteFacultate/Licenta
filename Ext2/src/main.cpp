@@ -1,5 +1,6 @@
 #include <iostream>
 #include "string.h"
+#include "chrono"
 
 #include "../include/disk.h"
 #include "../include/diskUtils.h"
@@ -34,6 +35,8 @@ int main() {
 
         std::vector<std::string> tokens = splitString(command, ' ');
 
+        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
         if(tokens[0] == "mkdir")
             commandCreateDirectory(diskInfo, superBlock, tokens);
         else if(tokens[0] == "ls")
@@ -44,6 +47,10 @@ int main() {
             commandReadFile(diskInfo, superBlock, tokens);
         else
             std::cout << "Unknown command \n";
+
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        std::cout << "Operation time = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << " : "
+                   << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() % 1000  << '\n';
     }
 
     uint32_t numOfSectorsRead;

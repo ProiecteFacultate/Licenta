@@ -2,6 +2,7 @@
 #include "string"
 #include "string.h"
 #include "iostream"
+#include "math.h"
 
 #include "../include/ext2Api.h"
 #include "../include/structures.h"
@@ -117,7 +118,8 @@ void commandWriteFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vec
         return;
     }
 
-    char* text = new char[maxBytesToWrite];
+    uint32_t bufferSize = ((maxBytesToWrite / superBlock->s_log_block_size) + 1) * superBlock->s_log_block_size; //in order to avoid overflows
+    char* text = new char[bufferSize];
     memset(text, 0, maxBytesToWrite);
     uint32_t numberOfBytesAlreadyRead = 0;
     std::string lineData;
@@ -153,6 +155,8 @@ void commandWriteFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vec
             {
                 if(reasonForIncompleteWrite == INCOMPLETE_BYTES_WRITE_DUE_TO_UNABLE_TO_ADD_NEW_BLOCKS_TO_DIRECTORY)
                     std::cout << "The write was incomplete due to insufficient space on disk\n";
+                else if(reasonForIncompleteWrite == INCOMPLETE_BYTES_WRITE_DUE_TO_UNABLE_TO_MAXIMUM_FILE_SIZE_EXCEEDED)
+                    std::cout << "The write was incomplete due to maximum file size exceeded\n";
                 else
                     std::cout << "The write was incomplete due to unspecified reasons\n";
             }
@@ -195,10 +199,12 @@ void commandReadFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vect
     uint32_t startingPosition = atoi(commandTokens[2].c_str());
     uint32_t maxBytesToRead = atoi(commandTokens[3].c_str());
 
-    char* readBuffer = new char[maxBytesToRead];
+    uint32_t bufferSize = ((maxBytesToRead / superBlock->s_log_block_size) + 1) * superBlock->s_log_block_size; //in order to avoid overflows
+    char* readBuffer = new char[bufferSize];
     uint32_t numberOfBytesRead = 0;
     uint32_t reasonForIncompleteRead;
     uint32_t readFileResult = read(diskInfo, superBlock, filePath, readBuffer, startingPosition, maxBytesToRead, numberOfBytesRead, reasonForIncompleteRead);
+
 
     switch (readFileResult)
     {
@@ -227,9 +233,8 @@ void commandReadFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vect
             std::cout << originalFilePath << " content:\n\n";
             if(numberOfBytesRead != 0)
             {
-                std::cout.flush();
-                std::cout.write(readBuffer, numberOfBytesRead);
-                std::cout << '\n';
+                std::cout.write(readBuffer, maxBytesToRead);
+                std::cout << "\n\n";
             }
     }
 }
