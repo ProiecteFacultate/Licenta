@@ -589,7 +589,7 @@ uint32_t deleteDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, Direct
 {
     std::vector<DirectoryEntry*> subDirectories;
 
-    if(directoryEntry->Attributes == ATTR_DIRECTORY)
+    if(directoryEntry->Attributes == ATTR_FOLDER)
     {
         uint32_t getSubdirectoriesResult = getSubDirectoriesByParentDirectoryEntry(diskInfo, bootSector, directoryEntry, subDirectories);
         if(getSubdirectoriesResult != GET_SUB_DIRECTORIES_SUCCESS)
@@ -728,7 +728,7 @@ uint32_t getDirectoryFullByDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSe
 {
     std::vector<DirectoryEntry*> subDirectories;
 
-    if(directoryEntry->Attributes == ATTR_DIRECTORY)
+    if(directoryEntry->Attributes == ATTR_FOLDER)
     {
         uint32_t getSubdirectoriesResult = getSubDirectoriesByParentDirectoryEntry(diskInfo, bootSector, directoryEntry, subDirectories);
         if(getSubdirectoriesResult != GET_SUB_DIRECTORIES_SUCCESS)

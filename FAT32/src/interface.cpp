@@ -34,8 +34,8 @@ void commandCreateDirectory(DiskInfo* diskInfo, BootSector* bootSector, std::vec
     memcpy(newDirectoryName, commandTokens[2].c_str(), commandTokens[2].length());
 
     uint32_t directoryAttribute;
-    if(commandTokens[3] == "ATTR_DIRECTORY")
-        directoryAttribute = ATTR_DIRECTORY;
+    if(commandTokens[3] == "ATTR_FOLDER")
+        directoryAttribute = ATTR_FOLDER;
     else if(commandTokens[3] == "ATTR_FILE")
         directoryAttribute = ATTR_FILE;
     else
@@ -140,7 +140,7 @@ void commandWriteFile(DiskInfo* diskInfo, BootSector* bootSector, std::vector<st
     switch (writeFileResult)
     {
         case WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE:
-            std::cout << "Can not write to given file!\n"; //it may be root, or an ATTR_DIRECTORY instead of an ATTR_FILE as needed
+            std::cout << "Can not write to given file!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
             break;
         case WRITE_BYTES_TO_FILE_FAILED:
             std::cout << "Could not write any bytes to file!\n";
@@ -200,7 +200,7 @@ void commandReadFile(DiskInfo* diskInfo, BootSector* bootSector, std::vector<std
     switch (readFileResult)
     {
         case READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE:
-            std::cout << "Can not read to given file!\n"; //it may be root, or an ATTR_DIRECTORY instead of an ATTR_FILE as needed
+            std::cout << "Can not read to given file!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
             break;
         case READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST:
             std::cout << "File " << originalFilePath << " do not exist!\n";
@@ -259,7 +259,7 @@ void commandTruncateFile(DiskInfo* diskInfo, BootSector* bootSector, std::vector
 
     switch (truncateResult) {
         case TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE:
-            std::cout << "Can not read to given file!\n"; //it may be root, or an ATTR_DIRECTORY instead of an ATTR_FILE as needed
+            std::cout << "Can not read to given file!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
             break;
         case TRUNCATE_FILE_NEW_SIZE_GREATER_THAN_ACTUAL_SIZE:
             std::cout << "New truncate size can't be greater than actual file size!\n";

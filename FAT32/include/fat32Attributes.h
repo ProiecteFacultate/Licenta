@@ -5,7 +5,7 @@
 #define ATTR_HIDDEN                        2
 #define ATTR_SYSTEM                        4
 #define ATTR_VOLUME_ID                     8
-#define ATTR_DIRECTORY                     16
+#define ATTR_FOLDER                        16
 #define ATTR_ARCHIVE                       32
 #define ATTR_FILE                          100                                                           //This is not on official documentation, but was added by me
 

@@ -1,0 +1,52 @@
+\chapter{Introducere}
+
+\section{Motivatie}
+
+
+Dezvoltarea și implementarea sistemelor de fișiere a fost mereu o provocare în domeniul informaticii, iar pentru mine a reprezentat întotdeauna un subiect de interes. Am ales să mă concentrez pe această temă pentru că vreau să înțeleg mai bine cum funcționează stocarea, și în special, interpretarea, datelor de către sistemele de calcul.
+
+Motivația din spatele acestei alegeri constă în dorința de a înțelege mai bine modul în care aceste sisteme funcționează, implementarea acestora, precum și impactul lor asupra gestionării, eficienței și prelucrării datelor în cadrul calculatoarelor. Prin implementarea și, mai apoi, analiza acestor sisteme, doresc să obțin o perspectivă mai clară asupra avantajelor și limitărilor fiecăruia, și să înțeleg situațiile în care un sistem de fișiere poate fi mai potrivit decât altul, și de ce.
+
+
+\section{Domenii abordate}
+
+Această lucrare va include următoarele 3 domenii principale:
+
+\begin{itemize}
+  \item \textbf{ Sisteme de Operare și Arhitectură Hardware}, unde ne focusăm pe explorează integrarea sistemelor de fișiere în cadrul sistemului de operare și interacțiunea lor cu arhitectura hardware, influențând funcționarea și performanța acestora.
+  
+  \item \textbf{ Gestiunea Datelor și Redundanța}, ne focusăm pe organizarea datelor, implementând diverse algoritmi cu scopul reducerii redundanței, dar și a fragmentării, atât interne cât și externe.
+  
+  \item \textbf{  Eficiența și Performanța Sistemelor de Fișiere}, aici ne concentrăm pe optimizarea operațiunilor de stocare, manipulare și ștergere a datelor, astfel încât să obținem timpi cât mai buni de răspuns.
+\end{itemize}
+
+
+
+
+
+
+\section{Structura lucrării}
+
+Lucrarea de licență este impărțită în 2 capitole principale:
+
+\begin{itemize}
+  \item \textbf{ Implementarea Sistemelor de Fișiere}: Presupune implementarea a 3 sisteme de
+  fișiere locale, și anume FAT32, ext2 și Veritas, dar și a unui sistem de fișiere distribuit.
+  \item \textbf{ Compararea eficienței}: Compararea eficienței celor 3 sisteme de fișiere locale pentru diverse cazuri de utilizare.
+\end{itemize}
+
+
+
+\subsection{Implementarea Sistemelor de Fișiere}
+
+Pentru a realiza implementarea celor 3 sisteme de fișiere locale, vom crea o bibliotecă care să simuleze operațiile de bază ale unui hard disk, cum ar fi scrierea și citirea sectoarelor. Acest hard disk simulat va fi reprezentat de un folder pe sistemul de operare local. Implementarea sistemelor de fișiere va utiliza această bibliotecă ca interfață între sistemul de fișiere și hard disk-ul simulat.
+
+Pentru implementarea sistemului de fișiere distribuit, ne vom concentra pe crearea unui API pentru comunicarea între un server dedicat pentru stocarea fișierelor și clienții care doresc să acceseze aceste fișiere. Acest lucru va permite distribuirea datelor între mai multe calculatoare.
+
+\subsection{Compararea eficienței}
+
+Pentru a compara eficiența între sistemele de fișiere FAT32, ext2 și Veritas, vom evalua mai multe aspecte, inclusiv viteza operațiunilor de scriere, modificare, accesare și ștergere pentru fișiere de diferite dimensiuni. De asemenea, ne vom concentra pe gestionarea fragmentării spațiului de stocare a datelor, analizând modul în care fiecare sistem de fișiere abordează acest aspect.
+
+Vom efectua teste pentru a măsura timpul necesar executării operațiilor menționate mai sus, utilizând seturi de date variate, atât pentru fișiere de dimensiuni reduse, cât și pentru cele mai ample. Aceste teste vor fi realizate în condiții similare pentru fiecare sistem de fișiere, asigurând o comparație corectă.
+
+De asemenea, va fi analizată și fragmentarea, atât internă, cât și externă, și modul în care aceasta este gestionată de către fiecare dintre cele 3 sisteme de fișiere.

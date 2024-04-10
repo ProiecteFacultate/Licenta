@@ -17,7 +17,9 @@
 #include "../include/fat32FunctionUtils.h"
 #include "../include/fat32Api.h"
 
-uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParentPath, char* newDirectoryName, uint32_t newDirectoryAttribute)
+uint32_t
+
+createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParentPath, char* newDirectoryName, uint32_t newDirectoryAttribute)
 {
     if(!checkDirectoryNameValidity(newDirectoryName))
         return DIR_CREATION_INVALID_DIRNAME;
@@ -34,7 +36,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
                                                                                              newDirectoryName,
                                                                                              new DirectoryEntry());
 
-    if(actualDirectoryEntry->Attributes != ATTR_DIRECTORY)
+    if(actualDirectoryEntry->Attributes != ATTR_FOLDER)
     {
         delete actualDirectoryEntry;
         return DIR_CREATION_PARENT_NOT_A_FOLDER;
@@ -89,7 +91,7 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
     if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
         return GET_SUB_DIRECTORIES_FAILED;
 
-    if(actualDirectoryEntry->Attributes != ATTR_DIRECTORY)
+    if(actualDirectoryEntry->Attributes != ATTR_FOLDER)
     {
         delete actualDirectoryEntry;
         return GET_SUB_DIRECTORIES_GIVEN_DIRECTORY_CAN_NOT_CONTAIN_SUBDIRECTORIES;
