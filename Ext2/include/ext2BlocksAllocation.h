@@ -6,6 +6,10 @@
 
 uint32_t allocateBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t& newBlockGlobalIndex, ext2_inode* updatedInode);
 
+uint32_t deallocateLastBlockInDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode);
+
+uint32_t updateBlockAllocation(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t blockGlobalIndex, uint32_t newAllocationValue);
+
 //////////////////////////////////
 
 static uint32_t addSecondOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t& newBlockGlobalIndex, uint32_t& secondOrderTableGlobalIndex);
@@ -15,6 +19,14 @@ static uint32_t addThirdOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
 static uint32_t addForthOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t& newBlockGlobalIndex, uint32_t& secondOrderTableGlobalIndex);
 
 //////////////////////////////////
+
+static uint32_t checkAndEventuallyDeallocateSecondOrderTableBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode);
+
+static uint32_t checkAndEventuallyDeallocateThirdOrderTableBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode);
+
+static uint32_t checkAndEventuallyDeallocateForthOrderTableBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode);
+
+/////////////////////////////////
 
 static uint32_t addBlockIndexToAnotherBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t blockToAddTheValueTo, uint32_t offsetInBlockToAddTheValueTo, uint32_t valueToAdd);
 

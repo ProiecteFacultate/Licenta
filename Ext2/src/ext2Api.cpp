@@ -6,6 +6,7 @@
 #include "../include/diskCodes.h"
 #include "../include/structures.h"
 #include "../include/ext2FunctionUtils.h"
+#include "../include/ext2BlocksAllocation.h"
 #include "../include/codes/ext2Attributes.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/codes/ext2ApiResponseCodes.h"
@@ -296,4 +297,50 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
 
     delete actualInode;
     return READ_BYTES_FROM_FILE_SUCCESS;
+}
+
+uint32_t truncateFile(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, uint32_t newSize)
+{
+    ext2_inode *actualInode = nullptr;
+    bool isParentRoot;
+    uint32_t findDirectoryEntryResult = searchInodeByFullPath(diskInfo, superBlock, directoryPath, &actualInode, isParentRoot);
+
+    if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
+        return TRUNCATE_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
+
+    if(actualInode->i_mode != FILE_TYPE_REGULAR_FILE)
+    {
+        delete actualInode;
+        return TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE;
+    }
+
+    if(newSize >= actualInode->i_size)
+        return TRUNCATE_FILE_NEW_SIZE_GREATER_THAN_ACTUAL_SIZE;
+
+    uint32_t numberOfBlocksOccupied = actualInode->i_size / superBlock->s_log_block_size + 1;
+    if(actualInode->i_size % superBlock->s_log_block_size == 0)
+        numberOfBlocksOccupied--;
+
+    uint32_t numberOfBlocksToRemainOccupied = newSize / superBlock->s_log_block_size + 1;
+    if(newSize % superBlock->s_log_block_size == 0)
+        numberOfBlocksToRemainOccupied--;
+
+    ext2_inode* updatedParentInode = new ext2_inode();
+    memcpy(updatedParentInode, actualInode, sizeof(ext2_inode));
+    updatedParentInode->i_size = newSize;
+    updatedParentInode->i_blocks = numberOfBlocksToRemainOccupied;
+    uint32_t updateParentInodeResult = updateInode(diskInfo, superBlock, actualInode, updatedParentInode);
+
+    if(updateParentInodeResult == UPDATE_INODE_FAILED)
+        return TRUNCATE_FILE_FAILED_FOR_OTHER_REASON;
+
+    ext2_inode* inodeCopy = new ext2_inode();
+    memcpy(inodeCopy, actualInode, sizeof(ext2_inode));
+    for(int i = 1; i <= numberOfBlocksOccupied - numberOfBlocksToRemainOccupied; i++)
+    {
+        deallocateLastBlockInDirectory(diskInfo, superBlock, inodeCopy); //we don't query the deallocation result, so it might fail to deallocate, so we will have trash blocks
+        inodeCopy->i_blocks--;
+    }
+
+    return TRUNCATE_FILE_SUCCESS;
 }

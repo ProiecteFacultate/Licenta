@@ -22,6 +22,9 @@ void commandWriteFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vec
 //Model: 'read Root/Level_1 100 10000' - reads starting from byte, up to max bytes from a file and prints them to the console
 void commandReadFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
 
+//Model: 'truncate Root/Level_1 50' - sets file size to 50
+void commandTruncateFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
+
 //////////////////////////////////
 
 static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);

@@ -23,10 +23,12 @@
 #define READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST                           3
 #define READ_BYTES_FROM_FILE_GIVEN_START_EXCEEDS_FILE_SIZE                     4
 
-#define TRUNCATE_FILE_FAILED                                                   0
-#define TRUNCATE_FILE_SUCCESS                                                  1
-#define TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE                              2
-#define TRUNCATE_FILE_NEW_SIZE_GREATER_THAN_ACTUAL_SIZE                        4
+#define TRUNCATE_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL                   0
+#define TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE                         1
+#define TRUNCATE_FILE_NEW_SIZE_GREATER_THAN_ACTUAL_SIZE                        2
+#define TRUNCATE_FILE_FAILED_FOR_OTHER_REASON                                  3
+#define TRUNCATE_FILE_SUCCESS                                                  9999
+
 
 #define DELETE_DIRECTORY_FAILED                                                0
 #define DELETE_DIRECTORY_SUCCESS                                               1

@@ -20,4 +20,6 @@ uint32_t write(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directory
 uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, char* readBuffer, uint32_t startingPosition, uint32_t maxBytesToRead, uint32_t& numberOfBytesRead,
               uint32_t& reasonForIncompleteRead);
 
+uint32_t truncateFile(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, uint32_t newSize);
+
 #endif

@@ -45,6 +45,8 @@ int main() {
             commandWriteFile(diskInfo, superBlock, tokens);
         else if(tokens[0] == "read")
             commandReadFile(diskInfo, superBlock, tokens);
+        else if(tokens[0] == "truncate")
+            commandTruncateFile(diskInfo, superBlock, tokens);
         else
             std::cout << "Unknown command \n";
 

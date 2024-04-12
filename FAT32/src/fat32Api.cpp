@@ -305,18 +305,18 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
 uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, uint32_t newSize)
 {
     if(strcmp(directoryPath, "Root\0") == 0) //you can't truncate the root
-        return TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE;
+        return TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE;
 
     DirectoryEntry* actualDirectoryEntry = nullptr;
     uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
                                                                      &actualDirectoryEntry);
     if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
-        return TRUNCATE_FILE_FAILED;
+        return TRUNCATE_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
 
     if(actualDirectoryEntry->Attributes != ATTR_FILE)
     {
         delete actualDirectoryEntry;
-        return TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE;
+        return TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE;
     }
 
     newSize += 64; //the given value refers only to the size of the file content, so it is not taking in account 64 for dot & dotdot
@@ -332,7 +332,7 @@ uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* director
     uint32_t directoryEntryUpdateResult = updateDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, newDirectoryEntry);
 
     if(directoryEntryUpdateResult == DIRECTORY_ENTRY_UPDATE_FAILED)
-        return TRUNCATE_FILE_FAILED;
+        return TRUNCATE_FILE_FAILED_FOR_OTHER_REASON;
 
     uint32_t remainedOccupiedClusters = newDirectoryEntry->FileSize / getClusterSize(bootSector) + 1;
     if(newDirectoryEntry->FileSize % getClusterSize(bootSector) == 0)

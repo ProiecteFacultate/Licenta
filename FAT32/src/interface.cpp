@@ -258,17 +258,20 @@ void commandTruncateFile(DiskInfo* diskInfo, BootSector* bootSector, std::vector
     uint32_t truncateResult = truncateFile(diskInfo, bootSector, filePath, newSize);
 
     switch (truncateResult) {
-        case TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE:
+        case TRUNCATE_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL:
+            std::cout << "Given file do not exist or search fail!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
+            break;
+        case TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE:
             std::cout << "Can not read to given file!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
             break;
         case TRUNCATE_FILE_NEW_SIZE_GREATER_THAN_ACTUAL_SIZE:
             std::cout << "New truncate size can't be greater than actual file size!\n";
             break;
+        case TRUNCATE_FILE_FAILED_FOR_OTHER_REASON:
+            std::cout << "Failed to truncate file for unspecified reason!\n";
         case TRUNCATE_FILE_SUCCESS:
             std::cout << "Successfully truncated file!\n";
             break;
-        case TRUNCATE_FILE_FAILED:
-            std::cout << "Failed to truncate file for unspecified reason!\n";
     }
 }
 

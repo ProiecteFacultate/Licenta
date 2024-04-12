@@ -62,6 +62,64 @@ uint32_t allocateBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlo
     return (updateInodeResult == UPDATE_INODE_SUCCESS) ? ADD_BLOCK_TO_DIRECTORY_SUCCESS : ADD_BLOCK_TO_DIRECTORY_FAILED_FOR_OTHER_REASON;
 }
 
+uint32_t deallocateLastBlockInDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode)
+{
+    uint32_t lastBlockInDirectoryGlobalIndex, checkAndDeallocateHigherOrderTableBlockResult;
+    uint32_t entriesInOrderBlock = superBlock->s_log_block_size / VALUE_ENTRY;
+
+    uint32_t getLastBlockInDirectoryGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock, inode,inode->i_blocks - 1,
+                                                                                                       lastBlockInDirectoryGlobalIndex);
+    if(getLastBlockInDirectoryGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
+        return DEALLOCATE_LAST_BLOCK_IN_DIRECTORY_FAILED;
+
+    uint32_t updateBlockAllocationResult = updateBlockAllocation(diskInfo, superBlock, lastBlockInDirectoryGlobalIndex, 0);
+
+    if(updateBlockAllocationResult == UPDATE_BLOCK_ALLOCATION_FAILED)
+        return DEALLOCATE_LAST_BLOCK_IN_DIRECTORY_FAILED;
+
+    if(inode->i_blocks <= 12) //we deallocate a direct block
+        return DEALLOCATE_LAST_BLOCK_IN_DIRECTORY_SUCCESS;
+    else if(inode->i_blocks <= entriesInOrderBlock + 12) //second order
+        checkAndDeallocateHigherOrderTableBlockResult = checkAndEventuallyDeallocateSecondOrderTableBlock(diskInfo, superBlock, inode);
+    else if(inode->i_blocks <= entriesInOrderBlock * entriesInOrderBlock + entriesInOrderBlock + 12) //third order
+        checkAndDeallocateHigherOrderTableBlockResult = checkAndEventuallyDeallocateThirdOrderTableBlock(diskInfo, superBlock, inode);
+    else
+        checkAndDeallocateHigherOrderTableBlockResult = checkAndEventuallyDeallocateForthOrderTableBlock(diskInfo, superBlock, inode);
+
+    return (checkAndDeallocateHigherOrderTableBlockResult == CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_SUCCESS) ? DEALLOCATE_LAST_BLOCK_IN_DIRECTORY_SUCCESS : DEALLOCATE_LAST_BLOCK_IN_DIRECTORY_FAILED;
+}
+
+
+uint32_t updateBlockAllocation(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t blockGlobalIndex, uint32_t newAllocationValue)
+{
+    uint32_t numberOfSectorsRead, numOfSectorsWritten;
+    uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
+
+    uint32_t groupForBlockToUpdateAllocation = getGroupNumberForGivenBlockGlobalIndex(superBlock, blockGlobalIndex);
+    uint32_t dataBitmapBlock = getDataBitmapBlockForGivenGroup(superBlock, groupForBlockToUpdateAllocation);
+
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    uint32_t readResult = readDiskSectors(diskInfo, numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, dataBitmapBlock),
+                                          blockBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+    {
+        delete[] blockBuffer;
+        return UPDATE_BLOCK_ALLOCATION_FAILED;
+    }
+
+    uint32_t blockLocalIndexInDataBlockList = getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(superBlock, blockGlobalIndex);
+    uint8_t newByteValue = changeBitValue(blockBuffer[blockLocalIndexInDataBlockList / 8], blockLocalIndexInDataBlockList % 8, newAllocationValue);
+    memset(blockBuffer + blockLocalIndexInDataBlockList / 8, newByteValue, 1);
+
+    uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, dataBitmapBlock),
+                                            blockBuffer, numOfSectorsWritten);
+
+    delete[] blockBuffer;
+
+    return (writeResult == EC_NO_ERROR) ? UPDATE_BLOCK_ALLOCATION_SUCCESS : UPDATE_BLOCK_ALLOCATION_FAILED;
+}
+
 /////////////////////////////////////////////
 /////////////////////////////////////////////
 /////////////////////////////////////////////
@@ -293,6 +351,160 @@ static uint32_t addForthOrderDataBlock(DiskInfo* diskInfo, ext2_super_block* sup
     return (addBlockIndexToAnotherResult == ADD_BLOCK_INDEX_TO_LOWER_ORDER_BLOCK_SUCCESS) ? ADD_HIGHER_ORDER_DATA_SUCCESS : ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
 }
 
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+
+static uint32_t checkAndEventuallyDeallocateSecondOrderTableBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode)
+{
+    uint32_t newNumberOfBlocksInInode = inode->i_blocks - 1; //we already deallocate the date block
+
+    if(newNumberOfBlocksInInode == 12) //it means we no longer need second order blocks, so we deallocate the second order table
+    {
+        uint32_t updateBlockAllocationResult = updateBlockAllocation(diskInfo, superBlock, inode->i_block[12], 0);
+
+        if(updateBlockAllocationResult == UPDATE_BLOCK_ALLOCATION_FAILED)
+            return CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_FAILED;
+    }
+
+    return CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_SUCCESS;
+}
+
+static uint32_t checkAndEventuallyDeallocateThirdOrderTableBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode)
+{
+    uint32_t numberOfSectorsRead;
+    uint32_t entriesInOrderBlock = superBlock->s_log_block_size / VALUE_ENTRY;
+    uint32_t occupiedDataBlocksInThirdLevel = inode->i_blocks - entriesInOrderBlock - 12; //the occupied before dealloc of one block
+    uint32_t newNumberOfBlocksInInode = inode->i_blocks - 1; //we already deallocate the date block
+
+    if((occupiedDataBlocksInThirdLevel - 1) % entriesInOrderBlock == 0) //we need to deallocate a third order table
+    {
+        char* blockBuffer = new char[superBlock->s_log_block_size];
+
+        uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                              getFirstSectorForGivenBlock(diskInfo, superBlock, inode->i_block[13]),blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
+        }
+
+        uint32_t thirdOrderTableLocalIndex = occupiedDataBlocksInThirdLevel / entriesInOrderBlock; //aka index in second order table
+        uint32_t thirdOrderTableGlobalIndex = *(uint32_t*)&blockBuffer[thirdOrderTableLocalIndex * VALUE_ENTRY];
+
+        uint32_t updateBlockAllocationResult = updateBlockAllocation(diskInfo, superBlock, thirdOrderTableGlobalIndex, 0);
+
+        if(updateBlockAllocationResult == UPDATE_BLOCK_ALLOCATION_FAILED)
+            return CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_FAILED;
+    }
+
+    if(newNumberOfBlocksInInode == entriesInOrderBlock + 12) //we need to deallocate the second order table for third level
+    {
+        uint32_t updateBlockAllocationResult = updateBlockAllocation(diskInfo, superBlock, inode->i_block[12], 0);
+
+        if(updateBlockAllocationResult == UPDATE_BLOCK_ALLOCATION_FAILED)
+            return CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_FAILED;
+    }
+
+    return CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_SUCCESS;
+}
+
+static uint32_t checkAndEventuallyDeallocateForthOrderTableBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode)
+{
+    uint32_t numberOfSectorsRead;
+    uint32_t entriesInOrderBlock = superBlock->s_log_block_size / VALUE_ENTRY;
+    uint32_t newNumberOfBlocksInInode = inode->i_blocks - 1; //we already deallocate the date block
+    uint32_t occupiedDataBlocksInForthLevel = inode->i_blocks - entriesInOrderBlock * entriesInOrderBlock - entriesInOrderBlock - 12; //the occupied before dealloc of one block
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+
+    if((occupiedDataBlocksInForthLevel - 1) % entriesInOrderBlock == 0) //we need to deallocate a forth order table
+    {
+        uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                              getFirstSectorForGivenBlock(diskInfo, superBlock, inode->i_block[14]),blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
+        }
+
+        uint32_t thirdOrderTableLocalIndex = occupiedDataBlocksInForthLevel / (entriesInOrderBlock * entriesInOrderBlock); //aka index in second order table
+        uint32_t thirdOrderTableGlobalIndex = *(uint32_t*)&blockBuffer[thirdOrderTableLocalIndex * VALUE_ENTRY];
+
+        readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                     getFirstSectorForGivenBlock(diskInfo, superBlock, thirdOrderTableGlobalIndex),blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
+        }
+
+        uint32_t forthOrderTableLocalIndex = occupiedDataBlocksInForthLevel % (entriesInOrderBlock * entriesInOrderBlock) / entriesInOrderBlock; //aka index in third order table
+        if(forthOrderTableLocalIndex % entriesInOrderBlock == 0)
+            forthOrderTableLocalIndex--;
+
+        uint32_t forthOrderTableGlobalIndex = *(uint32_t*)&blockBuffer[forthOrderTableLocalIndex * VALUE_ENTRY];
+        uint32_t updateBlockAllocationResult = updateBlockAllocation(diskInfo, superBlock, forthOrderTableGlobalIndex, 0);
+
+        if(updateBlockAllocationResult == UPDATE_BLOCK_ALLOCATION_FAILED)
+        {
+            delete[] blockBuffer;
+            return CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_FAILED;
+        }
+    }
+
+    if((occupiedDataBlocksInForthLevel - 1) % (entriesInOrderBlock * entriesInOrderBlock) == 0) //we need to deallocate a third order table in level 4
+    {
+        uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                              getFirstSectorForGivenBlock(diskInfo, superBlock, inode->i_block[14]),blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
+        }
+
+        uint32_t thirdOrderTableLocalIndex = occupiedDataBlocksInForthLevel / (entriesInOrderBlock * entriesInOrderBlock); //aka index in second order table
+        uint32_t thirdOrderTableGlobalIndex = *(uint32_t*)&blockBuffer[thirdOrderTableLocalIndex * VALUE_ENTRY];
+
+        readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                     getFirstSectorForGivenBlock(diskInfo, superBlock, thirdOrderTableGlobalIndex),blockBuffer, numberOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] blockBuffer;
+            return ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON;
+        }
+
+        uint32_t updateBlockAllocationResult = updateBlockAllocation(diskInfo, superBlock, thirdOrderTableGlobalIndex, 0);
+
+        if(updateBlockAllocationResult == UPDATE_BLOCK_ALLOCATION_FAILED)
+        {
+            delete[] blockBuffer;
+            return CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_FAILED;
+        }
+    }
+
+    if(newNumberOfBlocksInInode == entriesInOrderBlock + entriesInOrderBlock * entriesInOrderBlock + 12) //we need to deallocate the second order table for level 4
+    {
+        uint32_t updateBlockAllocationResult = updateBlockAllocation(diskInfo, superBlock, inode->i_block[14], 0);
+
+        if(updateBlockAllocationResult == UPDATE_BLOCK_ALLOCATION_FAILED)
+        {
+            delete[] blockBuffer;
+            return CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_FAILED;
+        }
+    }
+
+    delete[] blockBuffer;
+    return CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_SUCCESS;
+}
+
+///////////////////////////////////////
+///////////////////////////////////////
 ///////////////////////////////////////
 ///////////////////////////////////////
 

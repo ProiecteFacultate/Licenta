@@ -28,6 +28,7 @@ uint32_t getNumberOfSectorsPerBlock(DiskInfo* diskInfo, ext2_super_block* superB
 uint32_t getFirstSectorForGivenBlock(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t block);
 uint32_t getFirstSectorForGivenGroup(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t group);
 
+uint32_t getGroupNumberForGivenBlockGlobalIndex(ext2_super_block* superBlock, uint32_t blockGlobalIndex);
 //Being given the index of an inode inside a group, calculate the index of that inode globally (if we have 1000 inodes in a group and we want to get global index of local index 50 of
 //group 5, then the global index will be 4005)
 uint32_t getGlobalIndexOfInode(ext2_super_block* superBlock, uint32_t group, uint32_t localInodeIndex);
@@ -43,7 +44,7 @@ uint32_t getGroupDescriptorOfGivenGroup(DiskInfo* diskInfo, ext2_super_block* su
 uint32_t getDataBlockGlobalIndexByLocalIndexInsideInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, uint32_t searchedBlockLocalIndexInInode, uint32_t& searchedBlockGlobalIndex);
 //Being given a global index for a data block of a inode it returns its local value IN THE LOCAL LIST OF DATA BLOCKS. So if the first data block in a inode starts at 100 block in the group and we give a global index equivalent
 //to the 105 block in the group, it will return 5
-uint32_t getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(ext2_super_block* superBlock, uint32_t searchedBlockGlobalIndexInInode);
+uint32_t getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(ext2_super_block* superBlock, uint32_t dataBlockGlobalIndex);
 //Being given a global index of an inode, searches and returns the ext2_inode for the inode
 //HIDDEN FEATURE it also returns the block and offset where is located the inode, so you can give the global index for an inode (eventually taken from the inode) and obtain its block
 uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, ext2_inode* searchedInode, uint32_t& inodeBlock,

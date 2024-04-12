@@ -189,6 +189,11 @@ uint32_t getFirstSectorForGivenGroup(DiskInfo* diskInfo, ext2_super_block* super
     return getFirstSectorForGivenBlock(diskInfo, superBlock, getFirstBlockForGivenGroup(superBlock, group));
 }
 
+uint32_t getGroupNumberForGivenBlockGlobalIndex(ext2_super_block* superBlock, uint32_t blockGlobalIndex)
+{
+    return blockGlobalIndex / superBlock->s_blocks_per_group; //blocks are indexed from 0 globally, same for groups
+}
+
 ///////////////////////
 
 uint32_t getGlobalIndexOfInode(ext2_super_block* superBlock, uint32_t group, uint32_t localInodeIndex)
@@ -336,9 +341,9 @@ uint32_t getDataBlockGlobalIndexByLocalIndexInsideInode(DiskInfo* diskInfo, ext2
     return GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS;
 }
 
-uint32_t getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(ext2_super_block* superBlock, uint32_t searchedBlockGlobalIndexInInode)
+uint32_t getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(ext2_super_block* superBlock, uint32_t dataBlockGlobalIndex)
 {
-    uint32_t blockIndexInGroup = searchedBlockGlobalIndexInInode % superBlock->s_blocks_per_group;
+    uint32_t blockIndexInGroup = dataBlockGlobalIndex % superBlock->s_blocks_per_group;
     return blockIndexInGroup - getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) - getNumberOfInodesBlocksInFullGroup(superBlock) - 3;
 }
 
