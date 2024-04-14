@@ -93,6 +93,8 @@ uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char*
         return DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
 
     uint32_t addDirectoryEntryToParentResult = addDirectoryEntryToParent(diskInfo, superBlock, actualInode, newInode, newDirectoryName);
+    updateInodeLastAccessedDataAndTime(diskInfo, superBlock, actualInode);
+    updateInodeLastChangeDataAndTime(diskInfo, superBlock, actualInode);
 
     return (addDirectoryEntryToParentResult == ADD_DIRECTORY_ENTRY_TO_PARENT_SUCCESS) ? DIRECTORY_CREATION_SUCCESS : DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
 }
@@ -149,6 +151,8 @@ uint32_t write(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directory
 
         //CAUTION we don't query the result of inode update, so it might fail, but the bytes were written, so it's still considered a success
         updateInode(diskInfo, superBlock, actualInode, actualInode);
+        updateInodeLastAccessedDataAndTime(diskInfo, superBlock, actualInode);
+        updateInodeLastChangeDataAndTime(diskInfo, superBlock, actualInode);
 
         delete actualInode;
         return WRITE_BYTES_TO_FILE_SUCCESS;
@@ -181,6 +185,8 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
         delete actualInode;
         return READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE;
     }
+
+    updateInodeLastAccessedDataAndTime(diskInfo, superBlock, actualInode);
 
     if(startingPosition > actualInode->i_size)
     {
@@ -293,6 +299,9 @@ uint32_t truncateFile(DiskInfo* diskInfo, ext2_super_block* superBlock, char* di
         inodeCopy->i_blocks--;
     }
 
+    updateInodeLastAccessedDataAndTime(diskInfo, superBlock, actualInode);
+    updateInodeLastChangeDataAndTime(diskInfo, superBlock, actualInode);
+
     return TRUNCATE_FILE_SUCCESS;
 }
 
@@ -331,5 +340,51 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, ext2_super_block* superBlock,
 
     uint32_t freeClustersOfDirectoryAndParentResult = freeBlocksOfDirectoryAndChildren(diskInfo, superBlock, actualInode, warning); //we don't return, but give a warning
 
+    updateInodeLastAccessedDataAndTime(diskInfo, superBlock, parentInode);
+    updateInodeLastChangeDataAndTime(diskInfo, superBlock, parentInode);
+
     return (freeClustersOfDirectoryAndParentResult == FREE_ALL_DIRECTORY_AND_CHILDREN_BLOCKS_SUCCESS) ? DELETE_DIRECTORY_SUCCESS : DELETE_DIRECTORY_FAILED_TO_FREE_BLOCKS;
+}
+
+uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, DirectoryDisplayableAttributes* attributes)
+{
+    char* parentPath = new char[strlen(directoryPath)];
+    extractParentPathFromPath(directoryPath, parentPath);
+
+    bool isParentRoot;
+    ext2_inode *actualInode = nullptr;
+    uint32_t findDirectoryEntryResult = searchInodeByFullPath(diskInfo, superBlock, directoryPath, &actualInode, isParentRoot);
+
+    if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
+        return DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_FAILED_GIVEN_DIRECTORY_DO_NOT_EXIST;
+
+    ext2_inode *parentInode = nullptr;
+    findDirectoryEntryResult = searchInodeByFullPath(diskInfo, superBlock, parentPath, &parentInode, isParentRoot);
+
+    if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
+        return DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_FAILED_FOR_OTHER_REASON;
+
+    uint32_t sizeOnDisk = actualInode->i_blocks * superBlock->s_log_block_size;
+    uint32_t size = actualInode->i_size;
+
+    attributes->FileSizeOnDisk = sizeOnDisk;
+    attributes->FileSize = size;
+
+    attributes->LastAccessedYear = (actualInode->i_atime >> 25) + 1900;
+    attributes->LastAccessedMonth = (actualInode->i_atime >> 21) & 0x0000000F;
+    attributes->LastAccessedDay = (actualInode->i_atime >> 16) & 0x0000001F;
+    attributes->LastAccessedHour = (actualInode->i_atime & 0x0000FFFF) * 2 / 3600;
+    attributes->LastAccessedMinute = (actualInode->i_atime & 0x0000FFFF) * 2 % 3600 / 60;
+    attributes->LastAccessedSecond = (actualInode->i_atime & 0x0000FFFF) * 2 % 3600 % 60;
+
+    attributes->LastChangeYear = (actualInode->i_mtime >> 25) + 1900;
+    attributes->LastChangeMonth = (actualInode->i_mtime >> 21) & 0x0000000F;
+    attributes->LastChangeDay = (actualInode->i_mtime >> 16) & 0x0000001F;
+    attributes->LastChangeHour = (actualInode->i_mtime & 0x0000FFFF) * 2 / 3600;
+    attributes->LastChangeMinute = (actualInode->i_mtime & 0x0000FFFF) * 2 % 3600 / 60;
+    attributes->LastChangeSecond = (actualInode->i_mtime & 0x0000FFFF) * 2 % 3600 % 60;
+
+    updateInodeLastAccessedDataAndTime(diskInfo, superBlock, actualInode);
+
+    return DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_SUCCESS;
 }

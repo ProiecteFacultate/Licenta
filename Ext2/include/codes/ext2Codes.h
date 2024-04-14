@@ -95,4 +95,7 @@
 #define DELETE_ALL_DIRECTORY_AND_CHILDREN_INODES_FAILED                                                0
 #define DELETE_ALL_DIRECTORY_AND_CHILDREN_INODES_SUCCESS                                               9999
 
+#define SEARCH_DIRECTORY_ENTRY_BY_INODE_AND_PARENT_INODE_FAILED                                        0
+#define SEARCH_DIRECTORY_ENTRY_BY_INODE_AND_PARENT_INODE_SUCCESS                                       9999
+
 #endif

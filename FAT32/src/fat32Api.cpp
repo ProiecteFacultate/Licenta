@@ -343,7 +343,7 @@ uint32_t getDirectoryFullSizeByPath(DiskInfo* diskInfo, BootSector* bootSector, 
     sizeOnDisk = numOfClustersOccupiedClusters * getClusterSize(bootSector);
     size = actualDirectoryEntry->FileSize;
 
-    return getDirectoryFullByDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, size, sizeOnDisk);
+    return getDirectoryDetailsByDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, size, sizeOnDisk);
 }
 
 uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, DirectoryDisplayableAttributes* attributes)
@@ -364,7 +364,8 @@ uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, BootSector* bootS
     uint32_t sizeOnDisk = (numOfClustersOccupiedClusters + 1) * getClusterSize(bootSector);
     uint32_t size = actualDirectoryEntry->FileSize;
 
-    uint32_t getDirectorySizeResult = getDirectoryFullByDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, size, sizeOnDisk);
+    uint32_t getDirectorySizeResult = getDirectoryDetailsByDirectoryEntry(diskInfo, bootSector,
+                                                                          actualDirectoryEntry, size, sizeOnDisk);
     if(getDirectorySizeResult == DIR_GET_FULL_SIZE_FAILED)
         return DIR_GET_DISPLAYABLE_ATTRIBUTES_FAILED;
 

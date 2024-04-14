@@ -48,6 +48,8 @@ int main() {
             commandReadFile(diskInfo, superBlock, tokens);
         else if(tokens[0] == "truncate")
             commandTruncateFile(diskInfo, superBlock, tokens);
+        else if(tokens[0] == "la")
+            commandShowDirectoryAttributes(diskInfo, superBlock, tokens);
         else if(tokens[0] == "rmdir")
             commandDeleteDirectory(diskInfo, superBlock, tokens);
         else

@@ -634,3 +634,47 @@ uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, ext2_super_block* su
         }
     }
 }
+
+uint32_t searchDirectoryEntryByInodeAndParentInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, ext2_inode* parentInode, ext2_dir_entry* searchedDirectoryEntry)
+{
+    uint32_t blockGlobalIndex, numberOfSectorsRead;
+    char* blockBuffer = new char[superBlock->s_log_block_size];
+    ext2_dir_entry* directoryEntry = new ext2_dir_entry();
+
+    for(uint32_t blockLocalIndex = 0; blockLocalIndex < parentInode->i_blocks; blockLocalIndex++) {
+        uint32_t occupiedBytesInBlock = parentInode->i_size >= superBlock->s_log_block_size * (blockLocalIndex + 1)
+                                        ? superBlock->s_log_block_size :
+                                        ((parentInode->i_size >= superBlock->s_log_block_size * blockLocalIndex) ?
+                                         parentInode->i_size % superBlock->s_log_block_size : 0);
+
+        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock,
+                                                                                            parentInode,
+                                                                                            blockLocalIndex,
+                                                                                            blockGlobalIndex);
+
+        if (getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS) {
+            delete[] blockBuffer, delete directoryEntry;
+            return SEARCH_DIRECTORY_ENTRY_BY_INODE_AND_PARENT_INODE_FAILED;
+        }
+
+        uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+                                              getFirstSectorForGivenBlock(diskInfo, superBlock, blockGlobalIndex),
+                                              blockBuffer, numberOfSectorsRead);
+
+        if (readResult != EC_NO_ERROR) {
+            delete[] blockBuffer, delete directoryEntry;
+            return SEARCH_DIRECTORY_ENTRY_BY_INODE_AND_PARENT_INODE_FAILED;
+        }
+
+        for (uint32_t offset = 0; offset < occupiedBytesInBlock; offset += sizeof(ext2_dir_entry)) {
+            memcpy(directoryEntry, blockBuffer + offset, sizeof(ext2_dir_entry));
+
+            if (directoryEntry->inode == inode->i_global_index) {
+                memcpy(searchedDirectoryEntry, blockBuffer + offset, sizeof(ext2_dir_entry));
+
+                delete[] blockBuffer, delete directoryEntry;
+                return SEARCH_DIRECTORY_ENTRY_BY_INODE_AND_PARENT_INODE_SUCCESS;
+            }
+        }
+    }
+}

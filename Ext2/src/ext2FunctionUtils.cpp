@@ -624,3 +624,41 @@ uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, ext2_super_block* superBl
 
     return (updateParentInodeResult == UPDATE_INODE_SUCCESS) ? ADD_DIRECTORY_ENTRY_TO_PARENT_SUCCESS : ADD_DIRECTORY_ENTRY_TO_PARENT_FAILED;
 }
+
+void updateInodeLastAccessedDataAndTime(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode)
+{
+    uint32_t inodeBlockGlobalIndex, inodeOffsetInsideBlock;
+    ext2_inode* updatedInode = new ext2_inode();
+
+    uint32_t getInodeByIndexResult = getInodeByInodeGlobalIndex(diskInfo, superBlock, inode->i_global_index, updatedInode, inodeBlockGlobalIndex,
+                                                                inodeOffsetInsideBlock);
+
+    if(getInodeByIndexResult == GET_INODE_BY_INODE_GLOBAL_INDEX_FAILED)
+    {
+        delete updatedInode;
+        return;
+    }
+
+    updatedInode->i_atime = getCurrentTimeDateAndTimeFormatted();
+    updateInode(diskInfo, superBlock, inode, updatedInode);
+    delete updatedInode;
+}
+
+void updateInodeLastChangeDataAndTime(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode)
+{
+    uint32_t inodeBlockGlobalIndex, inodeOffsetInsideBlock;
+    ext2_inode* updatedInode = new ext2_inode();
+
+    uint32_t getInodeByIndexResult = getInodeByInodeGlobalIndex(diskInfo, superBlock, inode->i_global_index, updatedInode, inodeBlockGlobalIndex,
+                                                                inodeOffsetInsideBlock);
+
+    if(getInodeByIndexResult == GET_INODE_BY_INODE_GLOBAL_INDEX_FAILED)
+    {
+        delete updatedInode;
+        return;
+    }
+
+    updatedInode->i_mtime = getCurrentTimeDateAndTimeFormatted();
+    updateInode(diskInfo, superBlock, inode, updatedInode);
+    delete updatedInode;
+}

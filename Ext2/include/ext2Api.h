@@ -24,4 +24,6 @@ uint32_t truncateFile(DiskInfo* diskInfo, ext2_super_block* superBlock, char* di
 
 uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, std::string& warning);
 
+uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, DirectoryDisplayableAttributes* attributes);
+
 #endif

@@ -18,4 +18,6 @@ std::vector<std::string> splitString(const std::string& str, char delimiter);
 
 void extractParentPathFromPath(const char* fullPath, char* parentPath);
 
+uint32_t getCurrentTimeDateAndTimeFormatted();
+
 #endif

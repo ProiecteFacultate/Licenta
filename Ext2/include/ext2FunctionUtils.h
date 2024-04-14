@@ -67,4 +67,8 @@ uint32_t updateInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inod
 //adds the new directory to parent CAUTION it also updates the parentInode size (adds the length of ext2_dir_entry)
 uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, ext2_inode* newInode, char* newDirectoryName);
 
+void updateInodeLastAccessedDataAndTime(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode);
+
+void updateInodeLastChangeDataAndTime(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode);
+
 #endif

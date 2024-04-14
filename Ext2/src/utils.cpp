@@ -2,7 +2,7 @@
 #include "string"
 #include "vector"
 #include "cstdint"
-
+#include "windows.h"
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
@@ -89,4 +89,11 @@ void extractParentPathFromPath(const char* fullPath, char* parentPath)
     size_t pos = fullPathAsString.find_last_of('/');
     strcpy(parentPath, fullPathAsString.substr(0, pos).c_str());
     parentPath[pos] = '\0';
+}
+
+uint32_t getCurrentTimeDateAndTimeFormatted()
+{
+    SYSTEMTIME time;
+    GetSystemTime(&time);
+    return ((time.wYear - 1900) << 25) | (time.wMonth << 21) | (time.wDay << 16) | ((time.wHour * 3600 + time.wMinute * 60 + time.wSecond) / 2);
 }

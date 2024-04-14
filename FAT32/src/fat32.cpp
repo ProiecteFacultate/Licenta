@@ -725,7 +725,7 @@ uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, BootSector* bootSect
     }
 }
 
-uint32_t getDirectoryFullByDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry, uint32_t& size, uint32_t& sizeOnDisk)
+uint32_t getDirectoryDetailsByDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry, uint32_t& size, uint32_t& sizeOnDisk)
 {
     std::vector<DirectoryEntry*> subDirectories;
 
@@ -737,7 +737,9 @@ uint32_t getDirectoryFullByDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSe
 
         for(DirectoryEntry* childDirectoryEntry : subDirectories)
         {
-            uint32_t getChildDirectorySizeResult = getDirectoryFullByDirectoryEntry(diskInfo, bootSector, childDirectoryEntry, size, sizeOnDisk);
+            uint32_t getChildDirectorySizeResult = getDirectoryDetailsByDirectoryEntry(diskInfo, bootSector,
+                                                                                       childDirectoryEntry, size,
+                                                                                       sizeOnDisk);
             if(getChildDirectorySizeResult == DIR_GET_FULL_SIZE_FAILED)
             {
                 for(DirectoryEntry* entry : subDirectories)

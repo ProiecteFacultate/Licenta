@@ -332,6 +332,48 @@ void commandDeleteDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, st
     }
 }
 
+void commandShowDirectoryAttributes(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens)
+{
+    if(commandTokens.size() < 2)
+    {
+        std::cout << "Insufficient arguments for 'la' command!\n";
+        return;
+    }
+    else if(commandTokens.size() > 2)
+    {
+        std::cout << "Too many arguments for 'la' command!\n";
+        return;
+    }
+
+    char* parentPath = new char[100];
+    memset(parentPath, 0, 100);
+    memcpy(parentPath, commandTokens[1].c_str(), commandTokens[1].length());
+    char* originalParentPath = new char[100];
+    memset(originalParentPath, 0, 100);
+    memcpy(originalParentPath, parentPath, commandTokens[1].length());
+
+    DirectoryDisplayableAttributes* attributes = new DirectoryDisplayableAttributes();
+    uint32_t getDirectoryDisplayableAttributesResult = getDirectoryDisplayableAttributes(diskInfo, superBlock, parentPath, attributes);
+
+    switch (getDirectoryDisplayableAttributesResult) {
+        case DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_FAILED_GIVEN_DIRECTORY_DO_NOT_EXIST:
+            std::cout << "Directory " << originalParentPath << " do not exist!\n";
+            break;
+        case DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_FAILED_FOR_OTHER_REASON:
+            std::cout << "Failed to get directory attributes!\n";
+            break;
+        case DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_SUCCESS:
+            std::cout << "Size: " << attributes->FileSize << '\n';
+            std::cout << "Size on disk: " << attributes->FileSizeOnDisk << '\n';
+
+            std::cout << "Last accessed - " << attributes->LastAccessedYear << ":" << attributes->LastAccessedMonth << ":" << attributes->LastAccessedDay
+                      << " - " << attributes->LastAccessedHour << ":" << attributes->LastAccessedMinute << ":" << attributes->LastAccessedSecond << '\n';
+
+            std::cout << "Last change - " << attributes->LastChangeYear << ":" << attributes->LastChangeMonth << ":" << attributes->LastChangeDay
+                      << " - " << attributes->LastChangeHour << ":" << attributes->LastChangeMinute << ":" << attributes->LastChangeSecond << '\n';
+    }
+}
+
 /////////////////////////////////////////////////
 
 static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens)

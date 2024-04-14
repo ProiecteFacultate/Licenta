@@ -39,4 +39,8 @@
 #define DELETE_DIRECTORY_FAILED_TO_FREE_BLOCKS                                                       5
 #define DELETE_DIRECTORY_SUCCESS                                                                     9999
 
+#define DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_FAILED_GIVEN_DIRECTORY_DO_NOT_EXIST                     0
+#define DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_FAILED_FOR_OTHER_REASON                                 1
+#define DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_SUCCESS                                                 9999
+
 #endif

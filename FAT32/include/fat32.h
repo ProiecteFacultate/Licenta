@@ -61,6 +61,6 @@ uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, BootSector* bootSect
 
 //Given a directoryEntry, returns the file size & disk size of it and all of its direct & indirect children
 //CAUTION it returns the sizes, but actually only for descendants, its size is not count
-uint32_t getDirectoryFullByDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry, uint32_t& size, uint32_t& sizeOnDisk);
+uint32_t getDirectoryDetailsByDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry, uint32_t& size, uint32_t& sizeOnDisk);
 
 #endif

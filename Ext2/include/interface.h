@@ -28,6 +28,9 @@ void commandTruncateFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::
 //Model 'rmdir Root/File_1' - removes a given directory, freeing all its space; if the given directory is a folder, it also deletes its direct and indirect subdirectories
 void commandDeleteDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
 
+//Model 'la Root/File_1' - shows directory attributes
+void commandShowDirectoryAttributes(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
+
 //////////////////////////////////
 
 static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);

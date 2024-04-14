@@ -49,4 +49,7 @@ uint32_t deleteInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inod
 //Being given the inode of a directory, and the inode of its parent, deletes the directory entry from the parent. It also updates the parent inode to reduce its size
 uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inodeToBeDeleted, ext2_inode* parentInode);
 
+//May use for smth in the future?
+uint32_t searchDirectoryEntryByInodeAndParentInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, ext2_inode* parentInode, ext2_dir_entry* searchedDirectoryEntry);
+
 #endif

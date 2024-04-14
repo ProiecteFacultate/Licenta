@@ -94,5 +94,23 @@ typedef struct
     char name[120]; //normally the directory entry structure is of dynamic size, and so does the name, but to make it easier, we make it 128 bytes, and the name max 120
 } __attribute__((packed)) ext2_dir_entry;
 
+typedef struct
+{
+    uint32_t FileSize;
+    uint32_t FileSizeOnDisk;
+    uint16_t LastAccessedYear;
+    uint16_t LastAccessedMonth;
+    uint16_t LastAccessedDay;
+    uint16_t LastAccessedHour;
+    uint16_t LastAccessedMinute;
+    uint16_t LastAccessedSecond;
+    //change means a write or truncate
+    uint16_t LastChangeYear;
+    uint16_t LastChangeMonth;
+    uint16_t LastChangeDay;
+    uint16_t LastChangeHour;
+    uint16_t LastChangeMinute;
+    uint16_t LastChangeSecond;
+} __attribute__((packed)) DirectoryDisplayableAttributes;
 
 #endif

@@ -443,7 +443,8 @@ static void commandListSubdirectoriesWithSize(DiskInfo* diskInfo, BootSector* bo
 
                 uint32_t sizeOnDisk = numOfClustersOccupiedClusters * getClusterSize(bootSector);
                 uint32_t size = child->FileSize;
-                uint32_t getDirectorySize = getDirectoryFullByDirectoryEntry(diskInfo, bootSector, child, size, sizeOnDisk);
+                uint32_t getDirectorySize = getDirectoryDetailsByDirectoryEntry(diskInfo, bootSector, child, size,
+                                                                                sizeOnDisk);
 
                 if(getDirectorySize == DIR_GET_FULL_SIZE_SUCCESS)
                     std::cout << fileName << " -- " << size << "\n";
