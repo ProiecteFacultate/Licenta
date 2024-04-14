@@ -82,3 +82,11 @@ std::vector<std::string> splitString(const std::string& str, char delimiter)
 
     return tokens;
 }
+
+void extractParentPathFromPath(const char* fullPath, char* parentPath)
+{
+    std::string fullPathAsString = fullPath;
+    size_t pos = fullPathAsString.find_last_of('/');
+    strcpy(parentPath, fullPathAsString.substr(0, pos).c_str());
+    parentPath[pos] = '\0';
+}

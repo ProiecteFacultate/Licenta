@@ -11,6 +11,7 @@
 #include "../include/codes/ext2Codes.h"
 #include "../include/codes/ext2ApiResponseCodes.h"
 #include "../include/ext2.h"
+#include "../include/utils.h"
 #include "../include/ext2Api.h"
 
 uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char* parentDirectoryPath, char* newDirectoryName, uint32_t newDirectoryType)
@@ -96,7 +97,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char*
     return (addDirectoryEntryToParentResult == ADD_DIRECTORY_ENTRY_TO_PARENT_SUCCESS) ? DIRECTORY_CREATION_SUCCESS : DIRECTORY_CREATION_FAILED_FOR_OTHER_REASON;
 }
 
-uint32_t getSubDirectories(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, std::vector<std::pair<ext2_inode*, ext2_dir_entry*>>& subDirectories)
+uint32_t getSubDirectoriesByParentPath(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, std::vector<std::pair<ext2_inode*, ext2_dir_entry*>>& subDirectories)
 {
     ext2_inode* givenDirectoryInode = nullptr;
     bool isParentRoot;
@@ -108,57 +109,7 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, ext2_super_block* superBlock, cha
     if(givenDirectoryInode->i_mode != FILE_TYPE_FOLDER)
         return GET_SUBDIRECTORIES_GIVEN_DIRECTORY_NOT_A_FOLDER;
 
-    char* blockBuffer = new char[superBlock->s_log_block_size];
-    uint32_t blockGlobalIndex, numberOfSectorsRead, inodeBlockGlobalIndex, inodeOffsetInsideBlock;
-    uint32_t numOfSectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, superBlock);
-
-    for(uint32_t blockLocalIndex = 0; blockLocalIndex < givenDirectoryInode->i_blocks; blockLocalIndex++)
-    {
-        uint32_t occupiedBytesInBlock = givenDirectoryInode->i_size >= superBlock->s_log_block_size * (blockLocalIndex + 1) ? superBlock->s_log_block_size :
-                                        ((givenDirectoryInode->i_size >= superBlock->s_log_block_size * blockLocalIndex) ? givenDirectoryInode->i_size % superBlock->s_log_block_size : 0);
-
-        uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock,
-                                                                                            givenDirectoryInode,
-                                                                                            blockLocalIndex,
-                                                                                            blockGlobalIndex);
-        if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
-        {
-            delete[] blockBuffer;
-            return GET_SUBDIRECTORIES_FAILED_FOR_OTHER_REASON;
-        }
-
-        uint32_t readResult = readDiskSectors(diskInfo, numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, blockGlobalIndex),
-                                              blockBuffer, numberOfSectorsRead);
-
-        if(readResult != EC_NO_ERROR)
-        {
-            delete[] blockBuffer;
-            return GET_SUBDIRECTORIES_FAILED_FOR_OTHER_REASON;
-        }
-
-        for(uint32_t offset = 0; offset < occupiedBytesInBlock; offset += sizeof(ext2_dir_entry))
-        {
-            ext2_inode* inode = new ext2_inode();
-            ext2_dir_entry* directoryEntry = new ext2_dir_entry();
-            memcpy(directoryEntry, blockBuffer + offset, sizeof(ext2_dir_entry));
-            uint32_t getInodeByIndexResult = getInodeByInodeGlobalIndex(diskInfo, superBlock, directoryEntry->inode, inode, inodeBlockGlobalIndex,
-                                                                        inodeOffsetInsideBlock);
-
-            if(getInodeByIndexResult == GET_INODE_BY_INODE_GLOBAL_INDEX_FAILED)
-            {
-                delete[] blockBuffer;
-                return GET_SUBDIRECTORIES_FAILED_FOR_OTHER_REASON;
-            }
-
-            subDirectories.push_back(std::make_pair(inode, directoryEntry));
-        }
-
-        if(occupiedBytesInBlock < superBlock->s_log_block_size) //this was the last block with dir entries (or maybe the prev one was the last if now occupiedBytesInBlock is 0)
-            break;
-    }
-
-    delete[] blockBuffer;
-    return GET_SUBDIRECTORIES_SUCCESS;
+    return getSubDirectoriesByParentInode(diskInfo, superBlock, givenDirectoryInode, subDirectories);
 }
 
 uint32_t write(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, char* dataBuffer, uint32_t maxBytesToWrite, uint32_t& numberOfBytesWritten, uint32_t writeAttribute,
@@ -336,11 +287,49 @@ uint32_t truncateFile(DiskInfo* diskInfo, ext2_super_block* superBlock, char* di
 
     ext2_inode* inodeCopy = new ext2_inode();
     memcpy(inodeCopy, actualInode, sizeof(ext2_inode));
-    for(int i = 1; i <= numberOfBlocksOccupied - numberOfBlocksToRemainOccupied; i++)
+    for(uint32_t blockLocalIndex = 1; blockLocalIndex <= numberOfBlocksOccupied - numberOfBlocksToRemainOccupied; blockLocalIndex++)
     {
         deallocateLastBlockInDirectory(diskInfo, superBlock, inodeCopy); //we don't query the deallocation result, so it might fail to deallocate, so we will have trash blocks
         inodeCopy->i_blocks--;
     }
 
     return TRUNCATE_FILE_SUCCESS;
+}
+
+uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, std::string& warning)
+{
+
+    if(strcmp(directoryPath, "Root\0") == 0) //you can't delete the root
+        return DELETE_DIRECTORY_CAN_NOT_DELETE_ROOT;
+
+    char* parentPath = new char[strlen(directoryPath)];
+    extractParentPathFromPath(directoryPath, parentPath);
+
+    bool isParentRoot;
+    ext2_inode *actualInode = nullptr;
+    uint32_t findDirectoryEntryResult = searchInodeByFullPath(diskInfo, superBlock, directoryPath, &actualInode, isParentRoot);
+
+    if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
+        return DELETE_DIRECTORY_FAILED_TO_FIND_GIVEN_DIRECTORY;
+
+    ext2_inode *parentInode = nullptr;
+    findDirectoryEntryResult = searchInodeByFullPath(diskInfo, superBlock, parentPath, &parentInode, isParentRoot);
+
+    if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
+        return DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON; // if we found the directory, parent also exist, so if we have a fails here is for another reason ,not because parent do not exist
+
+    uint32_t deleteDirectoryEntryFromParentResult = deleteDirectoryEntryFromParent(diskInfo, superBlock, actualInode, parentInode);
+
+    if(deleteDirectoryEntryFromParentResult == DELETE_DIRECTORY_ENTRY_FROM_PARENT_FAILED)
+        return DELETE_DIRECTORY_FAILED_TO_DELETE_DIRECTORY_ENTRY_FROM_PARENT;
+
+    uint32_t deleteInodeResult = deleteInodeOfDirectoryAndChildren(diskInfo, superBlock, actualInode);
+ //   uint32_t deleteInodeResult = deleteInode(diskInfo, superBlock, actualInode);
+
+    if(deleteInodeResult == DELETE_ALL_DIRECTORY_AND_CHILDREN_INODES_FAILED)
+        return DELETE_DIRECTORY_FAILED_TO_DELETE_INODE;
+
+    uint32_t freeClustersOfDirectoryAndParentResult = freeBlocksOfDirectoryAndChildren(diskInfo, superBlock, actualInode, warning); //we don't return, but give a warning
+
+    return (freeClustersOfDirectoryAndParentResult == FREE_ALL_DIRECTORY_AND_CHILDREN_BLOCKS_SUCCESS) ? DELETE_DIRECTORY_SUCCESS : DELETE_DIRECTORY_FAILED_TO_FREE_BLOCKS;
 }

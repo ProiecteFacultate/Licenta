@@ -8,6 +8,7 @@
 #include "../include/codes/ext2Attributes.h"
 #include "../include/ext2Init.h"
 #include "../include/ext2Api.h"
+#include "../include/ext2FunctionUtils.h"
 #include "../include/utils.h"
 #include "../include/interface.h"
 
@@ -47,6 +48,8 @@ int main() {
             commandReadFile(diskInfo, superBlock, tokens);
         else if(tokens[0] == "truncate")
             commandTruncateFile(diskInfo, superBlock, tokens);
+        else if(tokens[0] == "rmdir")
+            commandDeleteDirectory(diskInfo, superBlock, tokens);
         else
             std::cout << "Unknown command \n";
 
@@ -56,6 +59,9 @@ int main() {
     }
 
     uint32_t numOfSectorsRead;
+
+    char* readBuffer_0 = new char[1024];
+    readDiskSectors(diskInfo, 1, 4, readBuffer_0, numOfSectorsRead);
 
     char* readBuffer_1 = new char[1024];
     readDiskSectors(diskInfo, 1, 6, readBuffer_1, numOfSectorsRead);
@@ -70,8 +76,7 @@ int main() {
     readDiskSectors(diskInfo, 1, 266, readBuffer_4, numOfSectorsRead);
 
     char* readBuffer_5 = new char[1024];
-    readDiskSectors(diskInfo, 1, 282, readBuffer_5, numOfSectorsRead);
-    std::cout.write(readBuffer_5, 10);
+    readDiskSectors(diskInfo, 1, 16392, readBuffer_5, numOfSectorsRead); //inode bitmap of second group
 
     return 0;
 }

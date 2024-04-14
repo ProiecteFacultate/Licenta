@@ -296,14 +296,14 @@ void commandDeleteDirectory(DiskInfo* diskInfo, BootSector* bootSector, std::vec
 
     switch (deleteDirectoryResult)
     {
-        case READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE:
-            std::cout << "Can not delete given directory!\n"; //it may be root, which can't be deleted
+        case DELETE_DIRECTORY_CAN_NOT_DELETE_ROOT:
+            std::cout << "Can not delete root!\n";
             break;
-        case READ_BYTES_FROM_FILE_SUCCESS:
+        case DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON:
+            std::cout << "Failed to delete this directory for unknown reason!\n";
+            break;
+        case DELETE_DIRECTORY_SUCCESS:
             std::cout << "Successfully deleted this directory!\n";
-            break;
-        case READ_BYTES_FROM_FILE_FAILED:
-            std::cout << "Failed to delete this directory!\n";
     }
 }
 
@@ -376,7 +376,7 @@ static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, BootSector*
     memcpy(originalParentPath, parentPath, commandTokens[1].length());
 
     std::vector<DirectoryEntry*> subDirectories;
-    uint32_t getSubdirectoriesResult = getSubDirectories(diskInfo, bootSector, parentPath, subDirectories);
+    uint32_t getSubdirectoriesResult = getSubDirectoriesByParentPath(diskInfo, bootSector, parentPath, subDirectories);
 
     switch (getSubdirectoriesResult) {
         case GET_SUB_DIRECTORIES_FAILED:
@@ -419,8 +419,7 @@ static void commandListSubdirectoriesWithSize(DiskInfo* diskInfo, BootSector* bo
     memcpy(originalParentPath, parentPath, commandTokens[2].length());
 
     std::vector<DirectoryEntry*> subDirectories;
-    uint32_t getSubdirectoriesResult = getSubDirectories(diskInfo, bootSector, parentPath, subDirectories);
-
+    uint32_t getSubdirectoriesResult = getSubDirectoriesByParentPath(diskInfo, bootSector, parentPath, subDirectories);
 
     switch (getSubdirectoriesResult) {
         case GET_SUB_DIRECTORIES_FAILED:

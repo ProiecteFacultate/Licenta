@@ -16,4 +16,6 @@ uint64_t getMaximumFileSize(ext2_super_block* superBlock);
 
 std::vector<std::string> splitString(const std::string& str, char delimiter);
 
+void extractParentPathFromPath(const char* fullPath, char* parentPath);
+
 #endif

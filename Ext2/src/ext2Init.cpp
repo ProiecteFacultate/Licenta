@@ -156,8 +156,6 @@ static void initializeFirstSuperBlockInFirstGroup(DiskInfo* diskInfo)
     uint32_t inodesPerBlock = blocksSize / sizeof(ext2_inode);
     uint32_t inodesPerGroup = ext2SuperBlock->s_inodes_count / numOfGroups;
     inodesPerGroup += inodesPerBlock - inodesPerGroup % inodesPerBlock;
-    if(inodesPerGroup % inodesPerBlock == 0)
-        inodesPerGroup--;
     ext2SuperBlock->s_inodes_per_group = inodesPerGroup;
     ext2SuperBlock->s_mtime = 999;
     ext2SuperBlock->s_wtime = 999; //TODO

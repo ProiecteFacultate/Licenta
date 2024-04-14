@@ -83,4 +83,16 @@
 #define INCOMPLETE_BYTES_READ_DUE_TO_NO_FILE_NOT_LONG_ENOUGH                                           0
 #define INCOMPLETE_BYTES_READ_DUE_TO_OTHER                                                             1
 
+#define FREE_ALL_DIRECTORY_AND_CHILDREN_BLOCKS_FAILED                                                  0
+#define FREE_ALL_DIRECTORY_AND_CHILDREN_BLOCKS_SUCCESS                                                 9999
+
+#define DELETE_INODE_FAILED                                                                            0
+#define DELETE_INODE_SUCCESS                                                                           9999
+
+#define DELETE_DIRECTORY_ENTRY_FROM_PARENT_FAILED                                                      0
+#define DELETE_DIRECTORY_ENTRY_FROM_PARENT_SUCCESS                                                     9999
+
+#define DELETE_ALL_DIRECTORY_AND_CHILDREN_INODES_FAILED                                                0
+#define DELETE_ALL_DIRECTORY_AND_CHILDREN_INODES_SUCCESS                                               9999
+
 #endif

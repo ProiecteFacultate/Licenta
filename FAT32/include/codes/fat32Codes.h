@@ -63,4 +63,7 @@
 #define DELETE_DIRECTORY_ENTRY_FAILED                                     0
 #define DELETE_DIRECTORY_ENTRY_SUCCESS                                    1
 
+#define FREE_CLUSTERS_OF_DIRECTORY_AND_CHILDREN_FAILED                    0
+#define FREE_CLUSTERS_OF_DIRECTORY_AND_CHILDREN_SUCCESS                   1
+
 #endif

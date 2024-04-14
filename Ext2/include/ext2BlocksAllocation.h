@@ -8,6 +8,8 @@ uint32_t allocateBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlo
 
 uint32_t deallocateLastBlockInDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode);
 
+//Being given a block global index and a new value allocation updates the bitmap to mark it as free/occupied; It also updates the corresponding group descriptor to increase/decrease
+//the free number of blocks
 uint32_t updateBlockAllocation(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t blockGlobalIndex, uint32_t newAllocationValue);
 
 //////////////////////////////////

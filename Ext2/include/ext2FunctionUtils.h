@@ -33,7 +33,7 @@ uint32_t getGroupNumberForGivenBlockGlobalIndex(ext2_super_block* superBlock, ui
 //group 5, then the global index will be 4005)
 uint32_t getGlobalIndexOfInode(ext2_super_block* superBlock, uint32_t group, uint32_t localInodeIndex);
 //Being given the index of an inode inside a group, get the block where that inode is located (global value of the block)
-uint32_t getInodeBlockForInodeIndexInGroup(ext2_super_block* superBlock, uint32_t group, uint32_t localInodeIndex);
+void getInodeBlockAndOffsetForInodeIndexInGroup(ext2_super_block* superBlock, uint32_t group, uint32_t localInodeIndex, uint32_t& blockGlobalIndex, uint32_t& offsetInsideBlock);
 
 //Being given a group, it returns its group descriptor from the main group descriptors (group 0 group descriptors) and also the block (global index) where it is located, and the offset
 //inside the block

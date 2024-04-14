@@ -284,6 +284,54 @@ void commandTruncateFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::
     }
 }
 
+void commandDeleteDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens)
+{
+    if(commandTokens.size() < 2)
+    {
+        std::cout << "Insufficient arguments for 'rmdir' command!\n";
+        return;
+    }
+    else if(commandTokens.size() > 2)
+    {
+        std::cout << "Too many arguments for 'rmdir' command!\n";
+        return;
+    }
+
+    char* directoryPath = new char[100];
+    memset(directoryPath, 0, 100);
+    memcpy(directoryPath, commandTokens[1].c_str(), commandTokens[1].length());
+
+    std::string warning;
+    uint32_t deleteDirectoryResult = deleteDirectoryByPath(diskInfo, superBlock, directoryPath, warning);
+
+    switch (deleteDirectoryResult)
+    {
+        case DELETE_DIRECTORY_CAN_NOT_DELETE_ROOT:
+            std::cout << "Can not delete root!\n";
+            break;
+        case DELETE_DIRECTORY_FAILED_TO_FIND_GIVEN_DIRECTORY:
+            std::cout << "Given directory do not exit or search fail!\n";
+            break;
+        case DELETE_DIRECTORY_FAILED_TO_DELETE_DIRECTORY_ENTRY_FROM_PARENT:
+            std::cout << "Failed to delete directory because error on delete directory entry from parent!\n";
+            break;
+        case DELETE_DIRECTORY_FAILED_TO_DELETE_INODE:
+            std::cout << "Failed to delete directory because error on delete corresponding inode!\n";
+            break;
+        case DELETE_DIRECTORY_FAILED_TO_FREE_BLOCKS:
+            std::cout << "\"Failed to delete directory because error on free blocks!\n";
+            break;
+        case DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON:
+            std::cout << "Failed to delete this directory for unknown reason!\n";
+            break;
+        case DELETE_DIRECTORY_SUCCESS:
+            std::cout << "Successfully deleted this directory!\n";
+
+            if(warning != "")
+                std::cout << "WARNING: " << warning << "\n";
+    }
+}
+
 /////////////////////////////////////////////////
 
 static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens)
@@ -307,7 +355,7 @@ static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, ext2_super_
     memcpy(originalParentPath, parentPath, commandTokens[1].length());
 
     std::vector<std::pair<ext2_inode*, ext2_dir_entry*>> subDirectories;
-    uint32_t getSubdirectoriesResult = getSubDirectories(diskInfo, superBlock, parentPath, subDirectories);
+    uint32_t getSubdirectoriesResult = getSubDirectoriesByParentPath(diskInfo, superBlock, parentPath, subDirectories);
 
     switch (getSubdirectoriesResult) {
         case GET_SUBDIRECTORIES_GIVEN_DIRECTORY_DO_NOT_EXIST:
@@ -319,7 +367,7 @@ static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, ext2_super_
         case GET_SUBDIRECTORIES_FAILED_FOR_OTHER_REASON:
             std::cout << "Failed to retrieve subdirectories for " << originalParentPath << "\n";
             break;
-        case GET_SUBDIRECTORIES_SUCCESS:
+        case GET_SUB_DIRECTORIES_SUCCESS:
             std::cout << "Subdirectories for " << originalParentPath<< ":\n";
 
             for(std::pair<ext2_inode*, ext2_dir_entry*> child: subDirectories)

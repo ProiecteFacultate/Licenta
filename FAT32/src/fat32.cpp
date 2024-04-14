@@ -585,7 +585,7 @@ uint32_t getSubDirectoriesByParentDirectoryEntry(DiskInfo* diskInfo, BootSector*
     }
 }
 
-uint32_t deleteDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry)
+uint32_t freeClustersOfDirectoryAndChildren(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry)
 {
     std::vector<DirectoryEntry*> subDirectories;
 
@@ -593,12 +593,13 @@ uint32_t deleteDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, Direct
     {
         uint32_t getSubdirectoriesResult = getSubDirectoriesByParentDirectoryEntry(diskInfo, bootSector, directoryEntry, subDirectories);
         if(getSubdirectoriesResult != GET_SUB_DIRECTORIES_SUCCESS)
-            return DELETE_DIRECTORY_ENTRY_FAILED;
+            return FREE_CLUSTERS_OF_DIRECTORY_AND_CHILDREN_FAILED;
 
         for(DirectoryEntry* childDirectoryEntry : subDirectories)
         {
-            uint32_t deleteChildDirectoryEntryResult = deleteDirectoryEntry(diskInfo, bootSector, childDirectoryEntry);
-            if(deleteChildDirectoryEntryResult == DELETE_DIRECTORY_ENTRY_FAILED)
+            uint32_t deleteChildDirectoryEntryResult = freeClustersOfDirectoryAndChildren(diskInfo, bootSector,
+                                                                                          childDirectoryEntry);
+            if(deleteChildDirectoryEntryResult == FREE_CLUSTERS_OF_DIRECTORY_AND_CHILDREN_FAILED)
             {
                 for(DirectoryEntry* entry : subDirectories)
                     delete entry;
@@ -611,7 +612,7 @@ uint32_t deleteDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, Direct
 
     uint32_t firstClusterInDirectory = getFirstClusterForDirectory(bootSector, directoryEntry);
     uint32_t freeClustersInChainResult = freeClustersInChainStartingWithGivenCluster(diskInfo, bootSector, firstClusterInDirectory);
-    return (freeClustersInChainResult == FREE_CLUSTERS_IN_CHAIN_SUCCESS) ? DELETE_DIRECTORY_ENTRY_SUCCESS : DELETE_DIRECTORY_ENTRY_FAILED;
+    return (freeClustersInChainResult == FREE_CLUSTERS_IN_CHAIN_SUCCESS) ? FREE_CLUSTERS_OF_DIRECTORY_AND_CHILDREN_SUCCESS : FREE_CLUSTERS_OF_DIRECTORY_AND_CHILDREN_FAILED;
 }
 
 uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* parentDirectoryEntry)

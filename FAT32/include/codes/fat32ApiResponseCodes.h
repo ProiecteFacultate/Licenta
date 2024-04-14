@@ -30,9 +30,9 @@
 #define TRUNCATE_FILE_SUCCESS                                                  9999
 
 
-#define DELETE_DIRECTORY_FAILED                                                0
+#define DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON                                                0
 #define DELETE_DIRECTORY_SUCCESS                                               1
-#define DELETE_DIRECTORY_CAN_NOT_DELETE_GIVEN_DIRECTORY                        2
+#define DELETE_DIRECTORY_CAN_NOT_DELETE_ROOT                        2
 
 #define DIR_GET_FULL_SIZE_FAILED                                               0
 #define DIR_GET_FULL_SIZE_SUCCESS                                              1

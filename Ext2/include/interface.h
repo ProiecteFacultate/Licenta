@@ -25,6 +25,9 @@ void commandReadFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vect
 //Model: 'truncate Root/Level_1 50' - sets file size to 50
 void commandTruncateFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
 
+//Model 'rmdir Root/File_1' - removes a given directory, freeing all its space; if the given directory is a folder, it also deletes its direct and indirect subdirectories
+void commandDeleteDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
+
 //////////////////////////////////
 
 static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);

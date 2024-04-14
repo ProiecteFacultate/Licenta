@@ -55,11 +55,16 @@ uint32_t allocateBlockToDirectory(DiskInfo* diskInfo, ext2_super_block* superBlo
     else if(addHigherOrderDataBlockResult == ADD_HIGHER_ORDER_DATA_FAILED_FOR_OTHER_REASON)
         return ADD_BLOCK_TO_DIRECTORY_FAILED_FOR_OTHER_REASON;
 
+    //CAUTION group descriptor update is handled by searchAndOccupyFreeDataBlock for the added data block and also for added table blocks, so no need to add it here
+
     //the data blocks bitmaps, higher order bitmaps, groups descriptors for added block/tables where updated in methods; now we update the inode
     updatedInode->i_blocks++;
     uint32_t updateInodeResult = updateInode(diskInfo, superBlock, inode, updatedInode);
 
-    return (updateInodeResult == UPDATE_INODE_SUCCESS) ? ADD_BLOCK_TO_DIRECTORY_SUCCESS : ADD_BLOCK_TO_DIRECTORY_FAILED_FOR_OTHER_REASON;
+    if(updateInodeResult == UPDATE_INODE_FAILED)
+        return ADD_BLOCK_TO_DIRECTORY_FAILED_FOR_OTHER_REASON;
+
+    return ADD_BLOCK_TO_DIRECTORY_SUCCESS;
 }
 
 uint32_t deallocateLastBlockInDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode)
@@ -76,6 +81,8 @@ uint32_t deallocateLastBlockInDirectory(DiskInfo* diskInfo, ext2_super_block* su
 
     if(updateBlockAllocationResult == UPDATE_BLOCK_ALLOCATION_FAILED)
         return DEALLOCATE_LAST_BLOCK_IN_DIRECTORY_FAILED;
+
+    //CAUTION group descriptor update is handled by updateBlockAllocation, so no need to add it here
 
     if(inode->i_blocks <= 12) //we deallocate a direct block
         return DEALLOCATE_LAST_BLOCK_IN_DIRECTORY_SUCCESS;
@@ -114,6 +121,10 @@ uint32_t updateBlockAllocation(DiskInfo* diskInfo, ext2_super_block* superBlock,
 
     uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, dataBitmapBlock),
                                             blockBuffer, numOfSectorsWritten);
+
+    //we don't query the result of this so we might have bad data in case of fail
+    int32_t freeDataBlocksChange = (newAllocationValue == 0) ? 1 : -1;
+    updateGroupDescriptor(diskInfo, superBlock, getGroupNumberForGivenBlockGlobalIndex(superBlock, blockGlobalIndex), 0, freeDataBlocksChange);
 
     delete[] blockBuffer;
 

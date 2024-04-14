@@ -54,7 +54,8 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, BootSector* bootSector, 
 
 uint32_t getSubDirectoriesByParentDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, std::vector<DirectoryEntry*>& subDirectories);
 
-uint32_t deleteDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry);
+//this frees the clusters for direct and indirect children of a directory entry. It does not delete de directory entry from the parent or anything else
+uint32_t freeClustersOfDirectoryAndChildren(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* directoryEntry);
 
 uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* parentDirectoryEntry);
 

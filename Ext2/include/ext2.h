@@ -1,4 +1,5 @@
 #include "vector"
+#include "string"
 
 #include "../include/disk.h"
 #include "../include/structures.h"
@@ -32,5 +33,20 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* supe
 
 uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, char* dataBuffer, uint32_t maxBytesToWrite,
                                     uint32_t& numberOfBytesWritten, uint32_t& reasonForIncompleteWrite);
+
+uint32_t getSubDirectoriesByParentInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* parentInode, std::vector<std::pair<ext2_inode*, ext2_dir_entry*>>& subDirectories);
+
+//Being given a parent inode, deletes all its direct and indirect directories's inodes, and also delete this inode
+uint32_t deleteInodeOfDirectoryAndChildren(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode);
+
+//For this method, it is considered a success if it manages to get all direct and indirect children, and try to deallocate the blocks; if it fails to deallocate blocks, it is not a
+//fail, but it will give a warning. this only frees all blocks for direct and indirect children, it does not delete ext2_inodes or ext2_dir_entrys
+uint32_t freeBlocksOfDirectoryAndChildren(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, std::string& warning);
+
+//Being given an inode, deletes it. In order to do this is necessary only to mark it with 0 in inode bitmap, and decrease with 1 the number of inodes in the corresponding group descriptor
+uint32_t deleteInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode);
+
+//Being given the inode of a directory, and the inode of its parent, deletes the directory entry from the parent. It also updates the parent inode to reduce its size
+uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inodeToBeDeleted, ext2_inode* parentInode);
 
 #endif

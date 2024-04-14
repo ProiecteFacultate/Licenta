@@ -83,7 +83,7 @@ createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParen
     return DIR_CREATION_SUCCESS;
 }
 
-uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry*>& subDirectories) //TODO REFACTOR
+uint32_t getSubDirectoriesByParentPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry*>& subDirectories)
 {
     DirectoryEntry* actualDirectoryEntry = nullptr;
     uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
@@ -97,62 +97,7 @@ uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* dir
         return GET_SUB_DIRECTORIES_GIVEN_DIRECTORY_CAN_NOT_CONTAIN_SUBDIRECTORIES;
     }
 
-    char* clusterData = new char[getClusterSize(bootSector)]; //declare here for time efficiency
-
-    uint32_t actualCluster = getFirstClusterForDirectory(bootSector, actualDirectoryEntry);  //directory first cluster
-    uint32_t offsetInCluster = 64; //we start from 64 because in the first sector of the first cluster we got dot & dotdot
-    uint32_t numberOfClusterInParentDirectory = 0; //the cluster number in chain
-    uint32_t occupiedBytesInCluster = 0; //if the cluster is full, then it is cluster size, otherwise smaller
-
-    while (true)
-    {
-        occupiedBytesInCluster = actualDirectoryEntry->FileSize >= getClusterSize(bootSector) * (numberOfClusterInParentDirectory + 1) ? getClusterSize(bootSector)
-                                                                                                                    : actualDirectoryEntry->FileSize % getClusterSize(bootSector);
-
-        uint32_t numOfSectorsRead = 0;
-        int readResult = readDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster), 
-                                         clusterData, numOfSectorsRead);
-
-        if(readResult == EC_NO_ERROR)
-        {
-            for(; offsetInCluster < occupiedBytesInCluster; offsetInCluster += 32)
-            {
-                DirectoryEntry* directoryEntry = new DirectoryEntry(); //same for time efficiency
-                memcpy(directoryEntry, clusterData + offsetInCluster, 32);
-                subDirectories.push_back(directoryEntry);
-            }
-        }
-        else
-        {
-            if(actualDirectoryEntry != nullptr)
-                delete actualDirectoryEntry;
-            delete[] clusterData;
-            return GET_SUB_DIRECTORIES_SUCCESS;
-        }
-
-        uint32_t nextCluster = 0;
-        uint32_t getNextClusterResult = getNextCluster(diskInfo, bootSector, actualCluster, nextCluster);
-
-        if(getNextClusterResult == FAT_VALUE_RETRIEVE_FAILED)
-        {
-            if(actualDirectoryEntry != nullptr)
-                delete actualDirectoryEntry;
-            delete[] clusterData;
-            return GET_SUB_DIRECTORIES_FAILED;
-        }
-
-        if(getNextClusterResult == FAT_VALUE_EOC)
-        {
-            if(actualDirectoryEntry != nullptr)
-                delete actualDirectoryEntry;
-            delete[] clusterData;
-            return GET_SUB_DIRECTORIES_SUCCESS;
-        }
-
-        actualCluster = nextCluster;
-        numberOfClusterInParentDirectory++;
-        offsetInCluster = 0; //64 is only for the first cluster, for the rest of them is 0
-    }
+    return getSubDirectoriesByParentDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, subDirectories);
 }
 
 uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, char* dataBuffer, uint32_t maxBytesToWrite, uint32_t& numberOfBytesWritten, uint32_t writeAttribute,
@@ -355,7 +300,7 @@ uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* director
 uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath)
 {
     if(strcmp(directoryPath, "Root\0") == 0) //you can't delete the root
-        return DELETE_DIRECTORY_CAN_NOT_DELETE_GIVEN_DIRECTORY;
+        return DELETE_DIRECTORY_CAN_NOT_DELETE_ROOT;
 
     char* parentPath = new char[strlen(directoryPath)];
     extractParentPathFromPath(directoryPath, parentPath);
@@ -364,20 +309,20 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, BootSector* bootSector, char*
     uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
                                                                      &actualDirectoryEntry);
     if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
-        return DELETE_DIRECTORY_FAILED;
+        return DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON;
 
     DirectoryEntry* parentDirectoryEntry = nullptr;
-    findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
+    findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, parentPath,
                                                                      &parentDirectoryEntry);
     if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
-        return DELETE_DIRECTORY_FAILED;
+        return DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON;
 
-    uint32_t deleteDirectoryEntryResult = deleteDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry);
-    if(deleteDirectoryEntryResult != DELETE_DIRECTORY_ENTRY_SUCCESS)
-        return DELETE_DIRECTORY_FAILED;
+    uint32_t freeClustersOfDirectoryAndParentResult = freeClustersOfDirectoryAndChildren(diskInfo, bootSector, actualDirectoryEntry);
+    if(freeClustersOfDirectoryAndParentResult != FREE_CLUSTERS_OF_DIRECTORY_AND_CHILDREN_SUCCESS)
+        return DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON;
 
     uint32_t deleteDirectoryEntryForParentResult = deleteDirectoryEntryFromParent(diskInfo, bootSector, actualDirectoryEntry, parentDirectoryEntry);
-    return (deleteDirectoryEntryForParentResult == DELETE_DIRECTORY_ENTRY_SUCCESS) ? DELETE_DIRECTORY_SUCCESS : DELETE_DIRECTORY_ENTRY_FAILED;
+    return (deleteDirectoryEntryForParentResult == DELETE_DIRECTORY_ENTRY_SUCCESS) ? DELETE_DIRECTORY_SUCCESS : DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON;
 }
 
 uint32_t getDirectoryFullSizeByPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, uint32_t& size, uint32_t& sizeOnDisk)

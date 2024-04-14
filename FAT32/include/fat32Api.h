@@ -17,7 +17,7 @@
 uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParentPath, char* newDirectoryName, uint32_t newDirectoryAttribute);
 
 //Being given a directory path, return all its subdirectories (folders and files)
-uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry*>& subDirectories);
+uint32_t getSubDirectoriesByParentPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry*>& subDirectories);
 
 //Being given a directory path, a buffer with data, and a max number of bytes, writes up to the max number of bytes.
 //CAUTION if it writes less than max bytes, it will still return success. This could occur for example when there is insufficient space on disk

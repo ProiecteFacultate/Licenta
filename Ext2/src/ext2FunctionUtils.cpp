@@ -201,16 +201,18 @@ uint32_t getGlobalIndexOfInode(ext2_super_block* superBlock, uint32_t group, uin
     return group * superBlock->s_inodes_per_group + localInodeIndex;
 }
 
-uint32_t getInodeBlockForInodeIndexInGroup(ext2_super_block* superBlock, uint32_t group, uint32_t localInodeIndex)
+void getInodeBlockAndOffsetForInodeIndexInGroup(ext2_super_block* superBlock, uint32_t group, uint32_t localInodeIndex, uint32_t& blockGlobalIndex, uint32_t& offsetInsideBlock)
 {
     uint32_t localIndexOfInodeBlockForGivenInodeIndex = (localInodeIndex * sizeof(ext2_inode)) / superBlock->s_log_block_size; //indexing is done from 0
     if(localInodeIndex * sizeof(ext2_inode) % superBlock->s_log_block_size == 0)
         localIndexOfInodeBlockForGivenInodeIndex--;
 
     if(getNumberOfInodesBlocksForGivenGroup(superBlock, group) < localIndexOfInodeBlockForGivenInodeIndex + 1)
-        return 0;
+        blockGlobalIndex = 0;
+    else
+        blockGlobalIndex =  getFirstInodeBlockForGivenGroup(superBlock, group) + localIndexOfInodeBlockForGivenInodeIndex;
 
-    return getFirstInodeBlockForGivenGroup(superBlock, group) + localIndexOfInodeBlockForGivenInodeIndex;
+    offsetInsideBlock = (localInodeIndex * sizeof(ext2_inode)) % superBlock->s_log_block_size;
 }
 
 /////////////////////////
@@ -511,7 +513,8 @@ uint32_t updateValueInDataBlockBitmap(DiskInfo* diskInfo, ext2_super_block* supe
     }
 
     uint32_t firstDataBlockForGivenGroup = getFirstDataBlockForGivenGroup(superBlock, groupOfBlock);
-    uint32_t dataBlockLocalIndex = dataBlockGlobalIndex % getNumberOfBlocksForGivenGroup(superBlock, 0) - firstDataBlockForGivenGroup; //local index in list of data blocks: 0,1,2..
+ //   uint32_t dataBlockLocalIndex = dataBlockGlobalIndex % getNumberOfBlocksForGivenGroup(superBlock, 0) - firstDataBlockForGivenGroup; //local index in list of data blocks: 0,1,2..
+    uint32_t dataBlockLocalIndex = dataBlockGlobalIndex - firstDataBlockForGivenGroup;
     uint8_t newByteValue = changeBitValue(blockBuffer[dataBlockLocalIndex / 8], dataBlockLocalIndex % 8, newValue);
     memset(blockBuffer + dataBlockLocalIndex / 8, newByteValue, 1);
 
