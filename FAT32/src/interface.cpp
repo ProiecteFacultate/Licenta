@@ -441,7 +441,7 @@ static void commandListSubdirectoriesWithSize(DiskInfo* diskInfo, BootSector* bo
                 if(child->FileSize % getClusterSize(bootSector) == 0) //in case the size occupies the last sector at maximum
                     numOfClustersOccupiedClusters--;
 
-                uint32_t sizeOnDisk = numOfClustersOccupiedClusters * getClusterSize(bootSector);
+                uint32_t sizeOnDisk;
                 uint32_t size = child->FileSize;
                 uint32_t getDirectorySize = getDirectoryDetailsByDirectoryEntry(diskInfo, bootSector, child, size,
                                                                                 sizeOnDisk);

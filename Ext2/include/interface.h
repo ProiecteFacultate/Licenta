@@ -33,6 +33,8 @@ void commandShowDirectoryAttributes(DiskInfo* diskInfo, ext2_super_block* superB
 
 //////////////////////////////////
 
+static void commandListSubdirectoriesWithSize(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
+
 static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
 
 
