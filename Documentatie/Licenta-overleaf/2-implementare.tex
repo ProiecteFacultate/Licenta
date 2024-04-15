@@ -430,4 +430,228 @@ Comenzile ce pot fi introduse de la terminal sunt:
 
 \section{Ext2}
 
-Va urma..
+\subsection{Privire de ansamblu asupra Ext2}
+
+Ext2 este un sistem de fișiere mai complex decât cel prezentat anterior, acesta împărțind datele într-o serie de grupuri aflate consecutiv în memorie, fiecare astfel de grup, la rândul său, fiind divizat în mai multe regiuni. Aceste grupuri sunt precedate de zona de bootare, care are același rol ca și în cazul FAT32, și anume inițializarea sistemelor calculatorului. O altă componentă esențială a Ext2 o reprezintă inode-urile, fiecare director fiind reprezentat de o astfel de structură.
+
+\begin{itemize}
+  \item \textbf{Super block}, această zonă conține o serie de informații legate de sistemul de fișiere, cum ar fi numărul de blocuri dintr-un grup, dimensiunea unui astfel de bloc, sau semnătura specifică Ext2 (0xEF53), aceasta marcând existența sistemului de fișiere în cauză. Deși fiecare grup conține o astfel de zonă, în realitate doar super block-ul primului grup este folosit, celelalte servind drept backup, în cazul în care o corupere de date are loc.
+
+  \item \textbf{Group Descriptors}, regiune de dimensiune variată, care conține, pentru fiecare grup din cadrul sistemului de fișiere, o structură cu informații legate de acesta, cum ar fi numărul de blocuri libere din cadrul său. La fel ca și în cazul superblock-ului, doar zona primului grup este folosită, cele aflate în cadrul celorlalte grupuri reprezintă niște copii redundante, având rol de backup.
+
+  \item \textbf{Block Bit Map}, fiecare bit din cadrul acestui bloc marchează stadiul de ocupare al blocului de date cu indexul corespunzător (0 dacă blocul este liber, sau 1 în caz contrar).
+
+  \item \textbf{Inode Bit Map}, la fel ca și zona anterioară, marchează stadiul de ocupare al inode-urilor din cadrul grupului.
+
+  \item \textbf{Inode Table}, neavând o dimensiune fixă, această zonă conține, pentru fiecare inode prezent în grup, o structură de date cu informații referitoare la acesta, cum ar fi spațiul ocupat, numărul și lista de blocuri, sau tipul directorului pe care îl reprezintă (în cazul implementării noastre există doar 2 tipuri de directoare: folder și fișier simplu).
+
+  \item \textbf{Data Blocks}, în această regiune sunt stocate informațiile propriu-zise din cadrul directoarelor, fiind cea mai amplă zonă din cadrul fiecărui grup.
+  
+\end{itemize}
+
+\clearpage
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1.0\linewidth]{images/2.6.png}
+    \caption{Structura Ext2}
+    \label{fig:enter-label}
+\end{figure}
+
+\bigskip
+
+
+\subsection{Modul de implementare}
+
+Similar cu implementarea FAT32, și în cazul Ext2 este vorba despre o simulare, fără ca aceasta să aibă vreo interacțiune directă cu kernel-ul, cum ar face-o un sistem de fișiere adevărat, aflat în cadrul unui sistem de operare. Interacțiunea cu sistemul de fișiere se realizează tot prin intermediul terminalului, comenzile fiind identice cu cele din cadrul FAT32, pentru a avea o oarecare consistență între cele 3 implementări din cadrul acestei lucrări.
+
+\subsubsection{Inițializarea Ext2}
+
+O parte dintre pașii inițializării Ext2 sunt identici cu cei din cadrul FAT32, de aceea aceștia vor fi doar menționați, informații suplimentare fiind oferite doar unde apar diferențe.
+
+\begin{enumerate}
+  \item \textbf{Verificarea existenței disk-ului}
+
+  \item \textbf{Inițializarea/Citirea disk-ului}
+
+  \item \textbf{Verificarea inițializării sistemului de fișiere}, ceea ce diferă față de FAT32 este doar semnătura, aceasta fiind 0xEF53.
+
+  \item \textbf{Inițializarea super block-urilor}, etapă ce are loc doar în cazul în care sistemul nu a fost inițializat într-o dată anterioară. Aici, pe baza datelor din cadrul structurii DiskInfo oferite de simularea disk-ului, calculăm valorile anumitor componente din cadrul sistemului, cum ar fi numărul total de inode-uri, numărul total de blocuri sau numărul de blocuri din cadrul unui grup, dar și alte informații precum momentul ultimei scrieri sau numărul de blocuri care trebuie să fie prealocate în momentul creării unui director. De reținut faptul că în cazul ultimului grup aceste valori pot să difere, cel mai probabil având dimensiuni mai reduse decât celelalte grupuri. În final, acest bloc este scris în memorie, pentru fiecare grup în parte.
+
+ \item \textbf{Citirea structurilor de date necesare}, indiferent de rezultatul de la pasul anterior, citim structura de date ext2-super-block, care ne va fi de folos pe parcursul implementării.
+ \item \textbf{Inițializarea grupurilor}, etapă ce are loc doar în momentul creării sistemului de fișiere, aici sunt reținute date referitoare la fiecare grup în parte într-o structură ext2-group-desc. Aceste structuri sunt apoi salvate în cadrul regiunii Group Descriptors din cadrul grupurilor.
+
+\item \textbf{Inițializarea directorului rădăcină}, pas ce vine la pachet cu cel anterior, aici prealocăm blocuri directorului rădăcină, cream inode-ul corespunzător, iar mai apoi salvăm în memorie aceste date (vom vorbi mai târziu în detaliu despre modul în care se creează un director).
+  
+\end{enumerate}
+
+\bigskip
+
+\lstset{style=code-snyppet-style}
+\begin{lstlisting}
+void ext2Startup(char* diskDirectory, DiskInfo** diskInfo, 
+                 uint32_t sectorsNumber, uint32_t sectorSize)
+{
+    if(checkDiskInitialization(diskDirectory) == false)
+        initializeDisk(diskDirectory, diskInfo, sectorsNumber, sectorSize);
+    else
+        *diskInfo = getDisk(diskDirectory);
+
+    bool ext2AlreadyInitialized = true;
+    if(checkExt2FileSystemInitialization(*diskInfo) == false)
+    {
+        initializeFirstSuperBlockInFirstGroup(*diskInfo);
+        ext2AlreadyInitialized = false;
+        std::cout << "First super block initialized\n";
+    }
+
+    ext2_super_block* firstSuperBlock = readFirstSuperBlock(*diskInfo);
+
+    if(ext2AlreadyInitialized == false)
+    {
+        initializeGroups(*diskInfo, firstSuperBlock);
+        initializeRootDirectory(*diskInfo, firstSuperBlock);
+        std::cout << "Groups initialized\n";
+    }
+}
+\end{lstlisting}
+
+\bigskip
+
+\subsubsection{Structura unui director}
+
+Așa cum am menționat și mai devreme, și la fel ca și în cazul FAT32, implementarea noastră are două tipuri de directoare: folder și fișier. Fiecare astfel de director este reprezentat prin intermediul a două structuri de date, ext2-inode, care se află în tabelul de inode-uri din cadrul grupului corespunzător, și ext2-dir-entry, care se află în blocurile de date ale folder-ului părinte. În implementarea originală Ext2, această structură de date are dimensiune dinamică, în funcție de lungimea numelui directorului, însă pentru ușurarea implementării, am decis standardizarea acesteia la 128 bytes, ceea ce presupune un nume de maxim 120 de caractere.
+
+\bigskip
+
+\lstset{style=code-snyppet-style}
+\begin{lstlisting}
+typedef struct
+{
+    uint32_t inode;
+    uint16_t rec_len;
+    uint8_t name_len;
+    uint8_t file_type;
+    char name[120]; 
+} __attribute__((packed)) ext2_dir_entry;
+\end{lstlisting}
+
+\bigskip
+
+\subsubsection{Structura blocurile de date din cadrul unui director}
+
+Modul în care blocurile sunt alocate unui director este destul de complex, fiind folosită o împărțire ierarhică a blocurilor pe mai multe nivele. În cadrul inode-ului corespunzător unui director, se află un vector (ce are de obicei lungimea 15) care este împărțit în 4 părți, corespunzătoare celor 4 nivele.
+
+\begin{enumerate}
+  \item \textbf{Blocuri directe}, reprezentate de primele 12 valori din cadrul vectorului, fiecare reprezentând index-ul unui bloc.
+
+  \item \textbf{Blocuri indirecte din ordin 2}, elementul din vector aflat pe poziția 12 indică index-ul unui bloc indirect. Acest bloc reprezintă un vector care conține indicii următoarelor blocuri din cadrul directorului. Astfel, acest al doilea nivel conține blocurile din intervalul 12 - (b/4 + 11), unde b reprezintă dimensiunea unui bloc în bytes.
+
+  \item \textbf{Blocuri indirecte din ordin 3}, elementul din vector aflat pe poziția 13 indică spre un tabel de ordin 2, elementele acestuia indicând spre o listă de tabele de ordin 3, acestea conținând indicii următoarelor blocuri, aflate în intervalul b/4 + 12 -  (b/4)*(b/4) + b/4 + 11.
+
+  \item \textbf{Blocuri indirecte din ordin 4}, elementul din vector aflat pe poziția 14 indică spre un tabel de ordin 2, care indică spre o listă de tabele de ordin 3, acestea din urmă indicând spre o listă de tabele de ordin 4, ce conțin indicii ultimelor blocuri din cadrul directorului, aflate în intervalul (b/4)*(b/4) + b/4 + 12 - (b/4)*(b/4)*(b/4) + (b/4)*(b/4) + b/4 + 12.
+
+\end{enumerate}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/2.7.png}
+    \caption{Împărțirea blocurilor pe nivele}
+    \label{fig:enter-label}
+\end{figure}
+
+\bigskip
+
+
+\subsubsection{Crearea unui director}
+
+Pentru crearea unui director, sunt folosiți o serie de algoritmi pentru a decide unde să fie alocat inode-ul corespunzător acestuia, și totodată blocurile de date inițiale:
+
+\begin{enumerate}
+  \item \textbf{Directorul este de tip folder}, în acest caz, algoritmul de căutare al inode-ului implementează două euristici:
+  
+  \begin{enumerate}
+      \item Folderele care au ca și director părinte directorul rădăcină trebuie să fie împrăștiate în toate grupurile. Astfel, funcția noastră caută un grup având numărul de inode-uri libere și numărul blocurilor libere peste medie. Dacă niciun astfel de grup nu este găsit, se sare la pasul c.
+
+      \item Folderele care nu au ca și director părinte directorul rădăcină trebuie puse în grupul în care se află părintele acestora, dacă satisface următoarea regulă: se folosește o valoare 'debt' care reprezintă diferența dintre numărul de foldere și numărul de fișiere din cadrul directorului, iar această valoare este mai mică decât media 'debt-ului' celorlalte grupuri.
+
+      \item Regula de 'fallback', utilizată în cazul în care condițiile pentru celelalte 2 nu sunt îndeplinite. Funcția caută un grup în care numărul inode-urilor disponibile este mai mare decât media.
+  \end{enumerate}
+
+  \item \textbf{Directorul este de tip fișier}, in acest caz, sunt implementate 2 euristici:
+
+  \begin{enumerate}
+      \item Se realizează o căutare logaritmică începând cu grupul care conține inode-ul directorului părinte. Algoritmul caută log(n) blocuri, unde n reprezintă numărul total de grupuri. Astfel, sunt verificate grupurile: i mod (n), (i + 1) mod (n), (i + 1 + 2) mod (n), (i + 1 + 2 + 4) mod (n) (unde i reprezintă index-ul blocului părinte), până când este găsit un grup ce conține inode-uri libere.
+      
+      \item Dacă nu este găsit niciun grup care să conțină inode-uri libere folosind euristica de mai sus, se caută un grup disponibil în mod liniar, începând cu primul.
+  \end{enumerate}
+
+\end{enumerate}
+
+\bigskip
+
+\lstset{style=code-snyppet-style}
+\begin{lstlisting}
+if(fileType == FILE_TYPE_FOLDER)
+   searchInodeResult = (isParentRoot ? searchFreeInodeForDirectoryHavingParentRoot(diskInfo, superBlock,                                                   inodeGlobalIndex) :
+   searchFreeInodeForNestedDirectory(diskInfo, superBlock, parentInode,                             
+                                     inodeGlobalIndex));
+else if(fileType == FILE_TYPE_REGULAR_FILE)
+   searchInodeResult = searchFreeInodeForRegularFile(diskInfo, superBlock, parentInode, inodeGlobalIndex);
+\end{lstlisting}
+
+\bigskip
+
+După găsirea și scrierea în memorie a inode-ului, trebuie găsite și prealocate o listă de blocuri pentru noul director. Astfel, fiind dat un număr de blocuri care să fie prealocate (în cazul implementării noastre această valoare este 8), sunt urmați următorii pași:
+
+  \begin{enumerate}
+      \item Se încearcă găsirea a n (inițial n = 8) blocuri libere consecutive. Prima dată aceste blocuri sunt căutate în grupul în care a fost alocat inode-ul, iar dacă acest lucru nu este posibil, se sare la pasul 2.
+      
+      \item Sunt parcurse în mod liniar toate blocurile, începând cu primul, până când sunt găsite 8 blocuri consecutive. Dacă nici asta nu reușește, se trece la pasul următor.
+
+      \item Numărul de blocuri care trebuie prealocate este înjumătățit (pentru n inițial = 8 -> 4 -> 2 -> 1), și se reia pasul 1.
+  \end{enumerate}
+
+După ce au fost realizați acești pași, în final se adaugă un nou ext2-dir-entry folder-ului părinte, se actualizează datele temporale legate de ultima accesare din cadrul inode-ului acestuia, sunt actualizați descriptorii, atât pentru grupul în care a fost creat noul inode, cât și pentru cel în care au fost prealocate blocurile pentru acesta, același lucru întâmplat și în cazu; bit map-urile corespunzătoare.
+
+\subsubsection{Căutarea unui director}
+
+Căutarea unui director se realizează într-o manieră recursivă. Se pornește din directorul rădăcină, fiind parcurse ext2-dir-entry-urile din cadrul tuturor folderelor aflate în path-ul dat, până când este găsit directorul cu denumirea dorită.
+
+\subsubsection{Scrierea fișierelor}
+
+Ca și în cazul FAT32, există două moduri de scriere a unui fișier, și anume APPEND și TRUNCATE. În cadrul acestei operațiuni, sunt utilizate mai întâi blocurile prealocate, urmând ca unele noi să fie atribuite fișierului, în cazul în care numărul de bytes care se dorește a fi scris este mai mare decât capacitatea actuală a directorului.
+
+Un lucru important de menționat aici este faptul că în momentul în care se realizează o scriere în modul TRUNCATE, iar dimensiunea fluxului de date este mai mică decât mărimea actuală a fișierului, blocurile devenite neocupate nu sunt dealocate! Spre exemplu, dacă avem un fișier de dimensiune 10.000 (bytes), acesta conține 10 blocuri; efectuăm o operațiune de scriere a 6000 de bytes în modul TRUNCATE, ceea ce presupune utilizarea a numai 6 blocuri, astfel 4 urmând să devină neocupate, rămânând în continuare alocate fișierului în cauză. Această decizie a fost luată pentru a putea observa mai bine diferențele dintre timpul necesar scrierii unui fișier în care toate blocurile necesare sunt deja prealocate, față de o scriere care presupune și alocarea unor blocuri de date suplimentare.
+
+\subsubsection{Citirea fișierelor}
+
+Citirea datelor dintr-un fișier se realizează prin parcurgerea blocurilor din cadrul acestuia, până când numărul de bytes dorit este acoperit. La fel ca și în cazul sistemului de fișiere precedent, citirea poate fi realizată atât în totalitate, cât și parțial, utilizatorului fiindu-i oferită posibilitatea de a preciza un index de start care să reprezinte poziția de început a citirii.
+
+\subsubsection{Dealocarea blocurilor de date}
+
+Așa cum am precizat mai sus, în cazul unei scrieri în modul truncate, blocurile rămase neocupate nu sunt dealocate. Dacă totuși dorim să reducem dimensiunea unui fișier, și totodată să eliberăm o parte din blocurile alocate acestuia, avem la dispoziție operația de truncate.
+
+\subsubsection{Ştergerea directoarelor}
+
+Ștergerea directoarelor poate reprezenta un proces destul de complex, mai ales în cazul folderelor, deoarece această operațiune nu presupune doar ștergerea directorului în cauză, ci și a tuturor descendenților direcți, cât și indirecți ai săi. Pe scurt, acest lucru presupune dealocarea blocurilor de date, marcarea acestora ca libere în cadrul bitmap-urilor pentru blocuri, ștergerea inode-urilor și marcarea acestora ca disponibile, actualizarea descriptorilor grupurilor aferente, cât și ștergerea ext2-dir-entry-ului din cadrul folder-ului părinte.
+
+\subsection{Interacțiunea cu utilizatorul}
+
+Interacțiunea cu sistemul de fișiere se realizează în mod similar ca în cazul FAT32, comenzile fiind identice. Pentru Ext2 există totuși o comandă în plus, care are rolul de a prealoca în avans blocuri pentru un fișier dat:
+
+\bigskip
+
+\textbf{preallocate (Nume fișier) (Număr bytes)} \textit{preallocate Root/MyFile 8000} - adaugă fișierului în cauză suficiente blocuri cât să încapă numărul de bytes specificat. În exemplul dat, dacă dimensiunea unui bloc este de 1024 bytes, fișierului în cauză îi vor fi adăugate 8 blocuri.
+
+\bigskip
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/2.8.png}
+    \caption{Utilizarea comenzii \textit{preallocate}}
+    \label{fig:enter-label}
+\end{figure}
+
+\subsection{Concluzii Ext2}
+
+În concluzie, Ext2 este un sistem de fișiere robust, oferind un mod eficient de stocare și gestionare a datelor în cadrul unui sistem de calcul, acesta fiind cunoscut în special pentru utilizarea sa în cadrul sistemului de operare Linux. Cu toate că a fost înlocuit în mare măsură de versiunile mai noi precum Ext3 și Ext4, Ext2 rămâne în continuare un sistem de fișiere larg utilizat, datorită simplității sale și stabilității de care a dat dovadă de-a lungul timpului.
