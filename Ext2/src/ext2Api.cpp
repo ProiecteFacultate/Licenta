@@ -10,6 +10,7 @@
 #include "../include/codes/ext2Attributes.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/codes/ext2ApiResponseCodes.h"
+#include "../include/codes/ext2BlocksAllocationCodes.h"
 #include "../include/ext2.h"
 #include "../include/utils.h"
 #include "../include/ext2Api.h"
@@ -387,4 +388,41 @@ uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, ext2_super_block*
     updateInodeLastAccessedDataAndTime(diskInfo, superBlock, actualInode);
 
     return DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_SUCCESS;
+}
+
+uint32_t preallocateBlocks(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, uint32_t numberOfBytesToPreallocateBlocksFor,
+                           uint32_t& numberOfBlocksSuccessfullyPreallocate)
+{
+    numberOfBlocksSuccessfullyPreallocate = 0;
+
+    ext2_inode *actualInode = nullptr;
+    bool isParentRoot;
+    uint32_t findDirectoryEntryResult = searchInodeByFullPath(diskInfo, superBlock, directoryPath, &actualInode, isParentRoot);
+    if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
+        return PREALLOCATE_BLOCKS_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
+
+    if(actualInode->i_mode != FILE_TYPE_REGULAR_FILE)
+    {
+        delete actualInode;
+        return PREALLOCATE_BLOCKS_CAN_NOT_PREALLOCATE_TO_GIVEN_FILE_TYPE;
+    }
+
+    uint32_t numberOfBlocksToAdd = numberOfBytesToPreallocateBlocksFor / superBlock->s_log_block_size + 1;
+    if(numberOfBytesToPreallocateBlocksFor % superBlock->s_log_block_size == 0)
+        numberOfBlocksToAdd--;
+
+    uint32_t newBlockGlobalIndex;
+    for(uint32_t i = 1; i <= numberOfBlocksToAdd; i++)
+    {
+        ext2_inode* updatedInode = new ext2_inode();
+        memcpy(updatedInode, actualInode, sizeof(ext2_inode));
+        uint32_t addBlockToDirectoryResult = allocateBlockToDirectory(diskInfo, superBlock, actualInode, newBlockGlobalIndex, updatedInode); //we also update the inode if blocks added
+        if(addBlockToDirectoryResult != ADD_BLOCK_TO_DIRECTORY_SUCCESS)
+            return PREALLOCATE_BLOCKS_INCOMPLETE_ALLOCATION;
+
+        memcpy(actualInode, updatedInode, sizeof(ext2_inode));
+        numberOfBlocksSuccessfullyPreallocate++;
+    }
+
+    return PREALLOCATE_BLOCKS_SUCCESS;
 }

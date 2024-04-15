@@ -271,7 +271,7 @@ void commandTruncateFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::
             std::cout << "Given file do not exist or search fail!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
             break;
         case TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE:
-            std::cout << "Can not read to given file type!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
+            std::cout << "Can not truncate to given file type!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
             break;
         case TRUNCATE_FILE_NEW_SIZE_GREATER_THAN_ACTUAL_SIZE:
             std::cout << "New truncate size can't be greater than actual file size!\n";
@@ -371,6 +371,53 @@ void commandShowDirectoryAttributes(DiskInfo* diskInfo, ext2_super_block* superB
 
             std::cout << "Last change - " << attributes->LastChangeYear << ":" << attributes->LastChangeMonth << ":" << attributes->LastChangeDay
                       << " - " << attributes->LastChangeHour << ":" << attributes->LastChangeMinute << ":" << attributes->LastChangeSecond << '\n';
+    }
+}
+
+void commandPreallocateBlocks(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens)
+{
+    if(commandTokens.size() < 3)
+    {
+        std::cout << "Insufficient arguments for 'preallocate' command!\n";
+        return;
+    }
+    else if(commandTokens.size() > 3)
+    {
+        std::cout << "Too many arguments for 'preallocate' command!\n";
+        return;
+    }
+
+    char* parentPath = new char[100];
+    memset(parentPath, 0, 100);
+    memcpy(parentPath, commandTokens[1].c_str(), commandTokens[1].length());
+    char* originalParentPath = new char[100];
+    memset(originalParentPath, 0, 100);
+    memcpy(originalParentPath, parentPath, commandTokens[1].length());
+
+    uint32_t preallocateSizeInBytes = atoi(commandTokens[2].c_str());
+
+    uint32_t numberOfBlocksThatShouldAdd = preallocateSizeInBytes / superBlock->s_log_block_size + 1;
+    if(preallocateSizeInBytes % superBlock->s_log_block_size == 0)
+        numberOfBlocksThatShouldAdd--;
+
+    uint32_t numberOfBlocksSuccessfullyAdded;
+    uint32_t preallocateResult = preallocateBlocks(diskInfo, superBlock, parentPath, preallocateSizeInBytes, numberOfBlocksSuccessfullyAdded);
+
+    switch (preallocateResult) {
+        case PREALLOCATE_BLOCKS_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL:
+            std::cout << "Given directory do not exit!\n";
+            break;
+        case PREALLOCATE_BLOCKS_INCOMPLETE_ALLOCATION:
+            std::cout << "Blocks allocation to directory partially succeeded!\n";
+            std::cout << "Added " << numberOfBlocksSuccessfullyAdded << "/" << numberOfBlocksThatShouldAdd << " to directory!\n";
+            break;
+        case PREALLOCATE_BLOCKS_CAN_NOT_PREALLOCATE_TO_GIVEN_FILE_TYPE:
+            std::cout << "Can not preallocate blocks to folders!\n";
+            break;
+        case PREALLOCATE_BLOCKS_SUCCESS:
+            std::cout << "Successfully allocated all blocks required!\n";
+            std::cout << "Added " << numberOfBlocksThatShouldAdd << "/" << numberOfBlocksThatShouldAdd << " to directory!\n";
+            break;
     }
 }
 

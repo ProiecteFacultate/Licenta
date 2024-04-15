@@ -13,12 +13,12 @@
 #define ADD_BLOCK_INDEX_TO_LOWER_ORDER_BLOCK_SUCCESS                                       9999
 
 #define UPDATE_BLOCK_ALLOCATION_FAILED                                                     0
-#define UPDATE_BLOCK_ALLOCATION_SUCCESS                                                    1
+#define UPDATE_BLOCK_ALLOCATION_SUCCESS                                                    9999
 
 #define CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_FAILED                               0
-#define CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_SUCCESS                              1
+#define CHECK_AND_DEALLOCATE_HIGHER_ORDER_TABLE_BLOCK_SUCCESS                              9999
 
 #define DEALLOCATE_LAST_BLOCK_IN_DIRECTORY_FAILED                                          0
-#define DEALLOCATE_LAST_BLOCK_IN_DIRECTORY_SUCCESS                                         1
+#define DEALLOCATE_LAST_BLOCK_IN_DIRECTORY_SUCCESS                                         9999
 
 #endif

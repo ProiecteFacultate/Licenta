@@ -26,4 +26,8 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, ext2_super_block* superBlock,
 
 uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, DirectoryDisplayableAttributes* attributes);
 
+//Given a number of bytes to preallocate for a block, it adds to that block the corresponding number to blocks
+uint32_t preallocateBlocks(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, uint32_t numberOfBytesToPreallocateBlocksFor,
+                           uint32_t& numberOfBlocksSuccessfullyPreallocate);
+
 #endif

@@ -31,6 +31,9 @@ void commandDeleteDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, st
 //Model 'la Root/File_1' - shows directory attributes
 void commandShowDirectoryAttributes(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
 
+//Model 'preallocate Root/File_1 8000' - allocate enough blocks to accommodate 8000 new bytes (this bytes are added to actual allocated blocks)
+void commandPreallocateBlocks(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);
+
 //////////////////////////////////
 
 static void commandListSubdirectoriesWithSize(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vector<std::string> commandTokens);

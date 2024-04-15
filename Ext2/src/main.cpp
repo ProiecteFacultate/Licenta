@@ -52,6 +52,8 @@ int main() {
             commandShowDirectoryAttributes(diskInfo, superBlock, tokens);
         else if(tokens[0] == "rmdir")
             commandDeleteDirectory(diskInfo, superBlock, tokens);
+        else if(tokens[0] == "preallocate")
+            commandPreallocateBlocks(diskInfo, superBlock, tokens);
         else
             std::cout << "Unknown command \n";
 
