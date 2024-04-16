@@ -36,68 +36,26 @@ Să luăm ca și exemplu, un disk care are dimensiunea sectoarelor de 512 bytes.
 
 \bigskip
 
-\lstset{style=code-snyppet-style}
-\begin{lstlisting}
-static int readSector(DiskInfo *diskInfo, uint32_t sector, char *buffer)
-{
-    char *fullFilePath = buildFilePath(diskInfo->diskDirectory);
-
-    HANDLE fileHandle = CreateFile(fullFilePath,OFN_READONLY,0,nullptr,
-                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,nullptr);
-
-    if(fileHandle == INVALID_HANDLE_VALUE)
-    {
-        CloseHandle(fileHandle);
-        delete[] fullFilePath;
-        return SECTOR_READ_FAILED;
-    }
-
-    OVERLAPPED overlapped;
-    memset(&overlapped, 0, sizeof(OVERLAPPED));
-    overlapped.Offset = diskInfo->diskParameters.sectorSizeBytes * sector;
-    overlapped.hEvent = nullptr;
-
-    DWORD dwBytesRead = 0;
-    bool readFileResult = ReadFile(fileHandle, buffer, 
-        diskInfo->diskParameters.sectorSizeBytes, &dwBytesRead, &overlapped
-        );
-
-    if(!readFileResult || dwBytesRead < diskInfo->diskParameters.sectorSizeBytes)
-    {
-        CloseHandle(fileHandle);
-        delete[] fullFilePath;
-        return SECTOR_READ_FAILED;
-    }
-
-    CloseHandle(fileHandle);
-    delete[] fullFilePath;
-
-    return SECTOR_READ_SUCCESS;
-}
-\end{lstlisting}
-
 \subsection{Probleme intâmpinate}
 
 Ideea din spatele acestei simulări a fost încă de la început aceea de a putea fi folosită, într-un stil similar, de toate cele 3 sisteme de fișiere care vor fi implementate folosindu-se de funcționalitățile oferite de aceasta. Astfel, în momentul finalizării librăriei, aceasta a trebuit să pună la dispoziție o interfață care urma să fie folosită în cadrul celor 3 proiecte, fără a mai fi schimbată ulterior, pentru a nu trebui să facem modificări în cadrul sistemelor de fișiere, datorită faptului că simularea disk-ului a suferit schimbări (adică s-a dorit ca toate modificările ulterioare să fie backwards compatible). Mai jos se poate vedea API-ul pus la dispoziție de către  librărie, acesta nesuferind nicio modificare ulterioară de-a lungul dezvoltării acestei lucrări de licență.
 
-\bigskip
+Interfața noastră pune la dispoziție urmatoarele metode:
 
-\lstset{style=code-snyppet-style}
-\begin{lstlisting}
-DiskInfo* initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint16_t sectorSize);
+\begin{itemize}
+  \item \textbf{initializeDisk} - inițializează disk-ul.
 
-int fillDiskInitialMemory(DiskInfo *diskInfo, uint32_t batchSize);
+  \item \textbf{fillDiskInitialMemory} - populează disk-ul cu valorea null (0).
 
-DiskInfo* getDisk(const char* diskDirectory);
+  \item \textbf{getDisk} - citește informațiile despre disc-ul deja inițiat și întoarce o structură de date de tipul DiskInfo care să le conțină.
 
-int getDiskStatus(DiskInfo *diskInfo);
+  \item \textbf{getDiskStatus} - returnează statusul disk-ului.
 
-int readDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToRead, uint32_t sector, char* buffer, uint32_t &numOfSectorsRead);
+  \item \textbf{readDiskSectors} - citește un anumit număr de sectoare.
 
-int writeDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToWrite, uint32_t sector, char buffer[], uint32_t &numOfSectorsWritten);
-\end{lstlisting}
+  \item \textbf{writeDiskSectors} - scrie un anumit număr de sectoare, primind datele ce se doresc a fi salvate prin intermediul unui buffer.
+\end{itemize}
 
-\bigskip
 
 Deși această interfață a fost gândită astfel încât să nu necesite modificări ulterioare, asta nu înseamnă că implementarea sa nu a trecut prin anumite schimbări de-a lungul timpului. Pe lângă mici bug-uri care au fost reparate, cum ar fi ștergerea unui pointer null, sau dealocarea la momentul inoportun a unui buffer folosit la scrierea/citirea datelor, a fost necesară și o regândire totală a modului în care sectoarele sunt definite în cadrul simulării.
 
@@ -117,15 +75,6 @@ Așa cum am văzut mai sus, în momentul actual disk-ul în sine, este simulat c
 De ce am făcut această schimbare drastică? Ei bine, în timpul dezvoltării primului dintre cele 3 sisteme de fișiere, și anume FAT32, am observat probleme legate de timpul necesar creării disk-ului. Inițial am ignorat acest lucru, întrucât în cadrul dezvoltării erau suficiente disk-uri de dimensiuni reduse (512 KiB) pentru testele pe care le făceam, astfel și timpul inițierii fiind unul redus, însă odată cu evoluția implementării, teste pe fișiere de dimensiuni mai ample au devenit necesare, astfel și dimensiunea disk-ului trebuind să crească în mod corespunzător. În acest moment, problemele legate de performanța instanțierii disk-ului au devenit tot mai vizibile, devenind chiar un impediment major în procesul de testare. Spre exemplu, crearea unui disk de 1 GiB dura inițial aproximativ 30 de minute, spre deosebire de câteva secunde, cât durează cu implementarea actuală, care folosește un fișier comun, și nu câte unul pentru fiecare sector.
 
 Problemele de performanță, însă, nu erau cauzate doar de existența unui număr ridicat de fișiere, ci și a modului în care se realiza popularea inițială a datelor din cadrul disk-ului, cu caracterul null (valoarea 0).
-
-\bigskip
-
-\lstset{style=code-snyppet-style}
-\begin{lstlisting}
-int fillDiskInitialMemory(DiskInfo *diskInfo, uint32_t batchSize);
-\end{lstlisting}
-
-\bigskip
 
 Astfel, au existat 3 moduri de 'umplere' a disk-ului, până să se ajungă la varianta finală, care este bineînțeles și cea mai eficientă.
 
@@ -211,68 +160,11 @@ Din aceste considerente, simularea de FAT32 rulează sub forma unui program, cu 
   
 \end{enumerate}
 
-\bigskip
-
-\lstset{style=code-snyppet-style}
-\begin{lstlisting}
-void fat32Startup(char* diskDirectory, DiskInfo** diskInfo, 
-                  BootSector** bootSector, FsInfo** fsInfo, 
-                  uint32_t sectorsNumber, uint32_t sectorSize)
-{
-    if(checkDiskInitialization(diskDirectory) == false)
-        initializeDisk(diskDirectory, diskInfo, sectorsNumber, sectorSize);
-    else
-        *diskInfo = getDisk(diskDirectory);
-
-    bool fat32AlreadyInitialized = true;
-    if(checkFat32FileSystemInitialization(*diskInfo) == false)
-    {
-        initializeBootSectors(*diskInfo);
-        fat32AlreadyInitialized = false;
-        std::cout << "Boot sectors initialized\n";
-    }
-
-    *bootSector = readBootSector(*diskInfo);
-    *fsInfo = readFsInfo(*diskInfo, *bootSector);
-
-    if(fat32AlreadyInitialized == false)
-    {
-        initializeFat(*diskInfo, *bootSector);
-        std::cout << "File allocation table initialized\n";
-    }
-}
-\end{lstlisting}
-
-\bigskip
-
 \subsubsection{Structura unui director}
 
 Directoarele din cadrul implementării noastre de FAT32 pot fi de 2 tipuri: folder sau fișier. Modul în care acestea sunt stocate în Zona de Date este unul asemănător, însă diferența o face scopul acestora și tipul de date pe care acestea îl pot îngloba. Un lucru comun pe care îl au ambele tipuri de directoare sunt intrările speciale 'dot' și 'dotdot', având lungimea de 4 bytes și aflându-se la începutul fiecărui director. Printre altele, intrarea 'dot' conține valoarea cluster-ului în care se află, în timp ce intrarea 'dotdot' conține valoarea primului cluster al părintelui, astfel acestea ajutând la traversarea arborelui de directoare ce se formează în cadrul sistemului de fișiere.
 
 Datele conținute într-un folder sunt de tipul DirectoryEntry, o structură care are lungimea de 4 bytes și care conține informații referitoare la un director copil, cum ar fi numele său, dimensiunea, valoarea primului cluster sau date temporale. Pentru fiecare urmaș direct al unui folder, acesta conține o intrare de acest fel, intrările fiind poziționate consecutiv în cadrul clusterelor. Datele aflate în clusterele corespunzătoare unui folder vor fi interpretate doar sub forma acestor tipuri de intrări, ceea ce înseamnă că un folder nu poate conține și alt tip de date.
-
-\bigskip
-
-\lstset{style=code-snyppet-style}
-\begin{lstlisting}
-typedef struct
-{
-    uint8_t FileName[11];
-    uint8_t Attributes;
-    uint8_t Reserved;
-    uint8_t CreationTimeTenths;
-    uint16_t CreationTime;
-    uint16_t CreationDate;
-    uint16_t LastAccessedDate;
-    uint16_t FirstClusterHigh;
-    uint16_t LastWriteTime;
-    uint16_t LastWriteDate;
-    uint16_t FirstClusterLow;
-    uint32_t FileSize;
-} __attribute__((packed)) DirectoryEntry;
-\end{lstlisting}
-
-\bigskip
 
 Spre deosebire de foldere, un fișier obișnuit conține numai date simple, care nu sunt interpretate sub nicio formă de către sistemul de fișiere. Ele sunt scrise și citite fără a fi analizate sau modificate în vreun fel.
 
@@ -330,44 +222,6 @@ Dacă dorim să ștergem în totalitate un director, lucrurile pot deveni mai co
 \subsection{Interacțiunea cu utilizatorul}
 
 Pentru a putea interacționa cu sistemul de fișiere, în timpul rulării simulării acestuia, utilizatorul are posibilitatea de a introduce de la terminal o serie de comenzi ce realizează operațiile descrise în detaliu mai sus, până când acesta introduce comanda 'exit' ce semnalează dorința de a închide programul.
-
-\bigskip
-
-\lstset{style=code-snyppet-style}
-\begin{lstlisting}
-while(true)
-    {
-        std::cout << '\n';
-        std::getline(std::cin, command);
-
-        if(command == "exit")
-        {
-            std::cout << "Process terminated with exit";
-            break;
-        }
-
-        std::vector<std::string> tokens = splitString(command, ' ');
-
-        if(tokens[0] == "mkdir")
-            commandCreateDirectory(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "ls")
-            commandListSubdirectories(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "write")
-            commandWriteFile(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "read")
-            commandReadFile(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "truncate")
-            commandTruncateFile(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "rmdir")
-            commandDeleteDirectory(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "la")
-            commandShowDirectoryAttributes(diskInfo, bootSector, tokens);
-        else
-            std::cout << "Unknown command \n";
-    }
-\end{lstlisting}
-
-\bigskip
 
 Comenzile ce pot fi introduse de la terminal sunt:
 
@@ -484,58 +338,9 @@ O parte dintre pașii inițializării Ext2 sunt identici cu cei din cadrul FAT32
   
 \end{enumerate}
 
-\bigskip
-
-\lstset{style=code-snyppet-style}
-\begin{lstlisting}
-void ext2Startup(char* diskDirectory, DiskInfo** diskInfo, 
-                 uint32_t sectorsNumber, uint32_t sectorSize)
-{
-    if(checkDiskInitialization(diskDirectory) == false)
-        initializeDisk(diskDirectory, diskInfo, sectorsNumber, sectorSize);
-    else
-        *diskInfo = getDisk(diskDirectory);
-
-    bool ext2AlreadyInitialized = true;
-    if(checkExt2FileSystemInitialization(*diskInfo) == false)
-    {
-        initializeFirstSuperBlockInFirstGroup(*diskInfo);
-        ext2AlreadyInitialized = false;
-        std::cout << "First super block initialized\n";
-    }
-
-    ext2_super_block* firstSuperBlock = readFirstSuperBlock(*diskInfo);
-
-    if(ext2AlreadyInitialized == false)
-    {
-        initializeGroups(*diskInfo, firstSuperBlock);
-        initializeRootDirectory(*diskInfo, firstSuperBlock);
-        std::cout << "Groups initialized\n";
-    }
-}
-\end{lstlisting}
-
-\bigskip
-
 \subsubsection{Structura unui director}
 
 Așa cum am menționat și mai devreme, și la fel ca și în cazul FAT32, implementarea noastră are două tipuri de directoare: folder și fișier. Fiecare astfel de director este reprezentat prin intermediul a două structuri de date, ext2-inode, care se află în tabelul de inode-uri din cadrul grupului corespunzător, și ext2-dir-entry, care se află în blocurile de date ale folder-ului părinte. În implementarea originală Ext2, această structură de date are dimensiune dinamică, în funcție de lungimea numelui directorului, însă pentru ușurarea implementării, am decis standardizarea acesteia la 128 bytes, ceea ce presupune un nume de maxim 120 de caractere.
-
-\bigskip
-
-\lstset{style=code-snyppet-style}
-\begin{lstlisting}
-typedef struct
-{
-    uint32_t inode;
-    uint16_t rec_len;
-    uint8_t name_len;
-    uint8_t file_type;
-    char name[120]; 
-} __attribute__((packed)) ext2_dir_entry;
-\end{lstlisting}
-
-\bigskip
 
 \subsubsection{Structura blocurile de date din cadrul unui director}
 
@@ -586,20 +391,6 @@ Pentru crearea unui director, sunt folosiți o serie de algoritmi pentru a decid
   \end{enumerate}
 
 \end{enumerate}
-
-\bigskip
-
-\lstset{style=code-snyppet-style}
-\begin{lstlisting}
-if(fileType == FILE_TYPE_FOLDER)
-   searchInodeResult = (isParentRoot ? searchFreeInodeForDirectoryHavingParentRoot(diskInfo, superBlock,                                                   inodeGlobalIndex) :
-   searchFreeInodeForNestedDirectory(diskInfo, superBlock, parentInode,                             
-                                     inodeGlobalIndex));
-else if(fileType == FILE_TYPE_REGULAR_FILE)
-   searchInodeResult = searchFreeInodeForRegularFile(diskInfo, superBlock, parentInode, inodeGlobalIndex);
-\end{lstlisting}
-
-\bigskip
 
 După găsirea și scrierea în memorie a inode-ului, trebuie găsite și prealocate o listă de blocuri pentru noul director. Astfel, fiind dat un număr de blocuri care să fie prealocate (în cazul implementării noastre această valoare este 8), sunt urmați următorii pași:
 
@@ -655,3 +446,35 @@ Interacțiunea cu sistemul de fișiere se realizează în mod similar ca în caz
 \subsection{Concluzii Ext2}
 
 În concluzie, Ext2 este un sistem de fișiere robust, oferind un mod eficient de stocare și gestionare a datelor în cadrul unui sistem de calcul, acesta fiind cunoscut în special pentru utilizarea sa în cadrul sistemului de operare Linux. Cu toate că a fost înlocuit în mare măsură de versiunile mai noi precum Ext3 și Ext4, Ext2 rămâne în continuare un sistem de fișiere larg utilizat, datorită simplității sale și stabilității de care a dat dovadă de-a lungul timpului.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+
+\section{Veritas?}
+
+Va urma...
