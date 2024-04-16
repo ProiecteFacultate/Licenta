@@ -12,6 +12,6 @@
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
 -- Could NOT find PkgConfig (missing: PKG_CONFIG_EXECUTABLE) 
--- Configuring done (6.6s)
+-- Configuring done (10.2s)
 -- Generating done (0.1s)
 -- Build files have been written to: D:/Facultate/Licenta/Implementare/Ext2/cmake-build-debug

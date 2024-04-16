@@ -157,28 +157,88 @@ int readDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToRead, uint32_t se
 
 int writeDiskSectors(DiskInfo *diskInfo, uint32_t numOfSectorsToWrite, uint32_t sector, char* buffer, uint32_t &numOfSectorsWritten)
 {
-    for(uint32_t sectorNum = 0; sectorNum < numOfSectorsToWrite; sectorNum++)
+    numOfSectorsWritten = 0;
+    DWORD bytesWritten = 0;
+
+    if(sector >= diskInfo->diskParameters.sectorsNumber)
     {
-        if(sector + sectorNum > diskInfo->diskParameters.sectorsNumber)
-        {
-            numOfSectorsWritten = sectorNum;
-            diskInfo->status = EC_SECTOR_NOT_FOUND;
-            return EC_SECTOR_NOT_FOUND;
-        }
+        diskInfo->status = EC_SECTOR_NOT_FOUND;
+        return EC_SECTOR_NOT_FOUND;
+    }
 
-        int writeSectorResult = writeSector(diskInfo, sector + sectorNum, buffer);
+    uint32_t batchSize = 1000, numOfBytesAlreadyWritten = 0; //batch size is in number of sectors
+    uint32_t lastSectorToWrite = sector + numOfSectorsToWrite - 1;
+    uint32_t numOfSectorsToActuallyWrite = std::min(numOfSectorsToWrite, diskInfo->diskParameters.sectorsNumber - sector);
+    char* fullFilePath = buildFilePath(diskInfo->diskDirectory);
+    char* writeBuffer = new char[diskInfo->diskParameters.sectorSizeBytes * batchSize];
 
-        if(writeSectorResult == SECTOR_WRITE_FAILED)
+    HANDLE fileHandle = CreateFile(fullFilePath,OF_READWRITE,0,nullptr,OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL,nullptr);
+
+    if(fileHandle == INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(fileHandle);
+        delete[] fullFilePath, delete[] writeBuffer;
+
+        diskInfo->status = EC_ERROR_IN_DISK_CONTROLLER;
+        return EC_ERROR_IN_DISK_CONTROLLER;
+    }
+
+    OVERLAPPED overlapped;
+    memset(&overlapped, 0, sizeof(OVERLAPPED));
+    overlapped.hEvent = nullptr;
+
+    for(uint32_t startSector = sector; startSector + batchSize - 1 <= lastSectorToWrite; startSector += batchSize)
+    {
+        uint32_t numOfBytesToWrite = diskInfo->diskParameters.sectorSizeBytes * batchSize;
+        memcpy(writeBuffer, buffer + numOfBytesAlreadyWritten, numOfBytesToWrite);
+        overlapped.Offset = diskInfo->diskParameters.sectorSizeBytes * startSector;
+
+        bool writeFileResult = WriteFile(fileHandle,writeBuffer,numOfBytesToWrite, &bytesWritten, &overlapped);
+        if(!writeFileResult || bytesWritten < numOfBytesToWrite)
         {
-            numOfSectorsWritten = sectorNum;
+            numOfSectorsWritten += bytesWritten / diskInfo->diskParameters.sectorSizeBytes;
+            CloseHandle(fileHandle);
+            delete[] fullFilePath, delete[] writeBuffer;
+
             diskInfo->status = EC_ERROR_IN_DISK_CONTROLLER;
             return EC_ERROR_IN_DISK_CONTROLLER;
         }
 
-        buffer += diskInfo->diskParameters.sectorSizeBytes;
+        numOfBytesAlreadyWritten += numOfBytesToWrite;
+        numOfSectorsWritten += batchSize;
     }
 
-    numOfSectorsWritten = numOfSectorsToWrite;
+    if(numOfSectorsWritten < numOfSectorsToActuallyWrite) //for the last sectors where the num of sectors remained < batchSize
+    {
+        uint32_t numOfSectorsRemained = numOfSectorsToActuallyWrite - numOfSectorsWritten;
+        uint32_t numOfBytesToWrite = diskInfo->diskParameters.sectorSizeBytes * numOfSectorsRemained;
+        memcpy(writeBuffer, buffer + numOfBytesAlreadyWritten, numOfBytesToWrite);
+        overlapped.Offset = diskInfo->diskParameters.sectorSizeBytes * (sector + numOfSectorsWritten);
+
+        bool writeFileResult = WriteFile(fileHandle,writeBuffer,numOfBytesToWrite, &bytesWritten, &overlapped);
+        if(!writeFileResult || bytesWritten < numOfBytesToWrite)
+        {
+            numOfSectorsWritten += bytesWritten / diskInfo->diskParameters.sectorSizeBytes;
+            CloseHandle(fileHandle);
+            delete[] fullFilePath, delete[] writeBuffer;
+
+            diskInfo->status = EC_ERROR_IN_DISK_CONTROLLER;
+            return EC_ERROR_IN_DISK_CONTROLLER;
+        }
+
+        numOfSectorsWritten += numOfSectorsRemained;
+    }
+
+    CloseHandle(fileHandle);
+    delete[] fullFilePath, delete[] writeBuffer;
+
+    if(numOfSectorsToActuallyWrite < numOfSectorsToWrite)
+    {
+        diskInfo->status = EC_SECTOR_NOT_FOUND;
+        return EC_SECTOR_NOT_FOUND;
+    }
+
     diskInfo->status = EC_NO_ERROR;
     return EC_NO_ERROR;
 }
