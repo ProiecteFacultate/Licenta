@@ -37,3 +37,13 @@ before or after this last block, and if not find, look for a free block in any g
 any other group. If not found we divide by 2 and repeat the same process until found (so for 4, 2, 1)
 -The standard says that directory entry is dynamic in size, but we make it 128 for easier implementation. When a directory entry is deleted
 we don't extend the previous one, instead we proceed like in fat, where we move the last directory entry to its location
+
+
+
+
+
+
+
+HFS:
+Allocation file nu vine imediat dupa volume header (adica pe la byteul 1500) ci vine in blockul de dupa.
+ ex:daca un block e de 1024 vine la 2048. 

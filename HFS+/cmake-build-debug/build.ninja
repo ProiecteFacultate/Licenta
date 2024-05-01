@@ -56,6 +56,27 @@ build CMakeFiles/HFS_.dir/src/main.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
 
+build CMakeFiles/HFS_.dir/src/hsfInit.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hsfInit.cpp || cmake_object_order_depends_target_HFS_
+  DEP_FILE = CMakeFiles\HFS_.dir\src\hsfInit.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\HFS_.dir
+  OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
+
+build CMakeFiles/HFS_.dir/src/hfsFunctionUtils.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfsFunctionUtils.cpp || cmake_object_order_depends_target_HFS_
+  DEP_FILE = CMakeFiles\HFS_.dir\src\hfsFunctionUtils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\HFS_.dir
+  OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
+
+build CMakeFiles/HFS_.dir/src/utils.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/utils.cpp || cmake_object_order_depends_target_HFS_
+  DEP_FILE = CMakeFiles\HFS_.dir\src\utils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\HFS_.dir
+  OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target HFS_
@@ -64,7 +85,7 @@ build CMakeFiles/HFS_.dir/src/main.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D
 #############################################
 # Link the executable HFS_.exe
 
-build HFS_.exe: CXX_EXECUTABLE_LINKER__HFS__Debug CMakeFiles/HFS_.dir/src/main.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
+build HFS_.exe: CXX_EXECUTABLE_LINKER__HFS__Debug CMakeFiles/HFS_.dir/src/main.cpp.obj CMakeFiles/HFS_.dir/src/hsfInit.cpp.obj CMakeFiles/HFS_.dir/src/hfsFunctionUtils.cpp.obj CMakeFiles/HFS_.dir/src/utils.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
   FLAGS = -g
   LINK_LIBRARIES = D:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\HFS_.dir
