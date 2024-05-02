@@ -12,9 +12,10 @@ uint32_t getNumberOfSectorsPerBlock(DiskInfo* diskInfo, HFSPlusVolumeHeader* vol
     return volumeHeader->blockSize / diskInfo->diskParameters.sectorSizeBytes;
 }
 
-uint32_t getFirstSectorForGivenBlock(HFSPlusVolumeHeader* volumeHeader, uint32_t block)
+uint32_t getFirstSectorForGivenBlock(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t block)
 {
-    return block * volumeHeader->blockSize;
+    uint32_t sectorsPerBlock = volumeHeader->blockSize / diskInfo->diskParameters.sectorSizeBytes;
+    return block * sectorsPerBlock;
 }
 
 uint32_t getFirstBlockForAllocationFile(HFSPlusVolumeHeader* volumeHeader)

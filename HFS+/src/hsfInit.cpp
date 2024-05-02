@@ -98,10 +98,10 @@ static bool checkHfsFileSystemInitialization(DiskInfo* diskInfo)
         throw std::runtime_error("Failed to check boot sector initialization");
     }
 
-    bootSignature = *(uint16_t*)&volumeHeaderBuffer[diskInfo->diskParameters.sectorSizeBytes % 1024];
+    bootSignature = *(uint16_t*)&volumeHeaderBuffer[1024 % diskInfo->diskParameters.sectorSizeBytes];
     delete[] volumeHeaderBuffer;
 
-    return bootSignature == 18475;   //'H+' = 0x482B
+    return bootSignature == 11080;   //'H+' = 0x482B -> as uint16 0x2B48
 }
 
 ///////////////////////////////
@@ -115,7 +115,7 @@ static void initializeVolumeHeader(DiskInfo* diskInfo)
     uint64_t totalBytesOnDisk = (uint64_t) diskInfo->diskParameters.sectorsNumber * (uint64_t) diskInfo->diskParameters.sectorSizeBytes; //the first 1024 are also part of block(s)
     uint32_t blockSize = 1024, clumpBlocks = 8;
 
-    hfsVolumeHeader->signature = 18475;
+    hfsVolumeHeader->signature = 11080;
     hfsVolumeHeader->version = 4;
     hfsVolumeHeader->attributes = 8;
     hfsVolumeHeader->lastMountedVersion = 942551344; //'8.10'
@@ -161,10 +161,11 @@ static void initializeVolumeHeader(DiskInfo* diskInfo)
     else
         memcpy(blockBuffer + 1024, hfsVolumeHeader, sizeof(HFSPlusVolumeHeader));
 
-    int writeResult = writeDiskSectors(diskInfo, 1, getFirstBlockForVolumeHeader(blockSize), blockBuffer, numberOfSectorsWritten);
+    uint32_t sector = getFirstSectorForGivenBlock(diskInfo, hfsVolumeHeader, getFirstBlockForVolumeHeader(blockSize));
+    int writeResult = writeDiskSectors(diskInfo, 1, sector, blockBuffer, numberOfSectorsWritten);
     while(writeResult != EC_NO_ERROR && retryWriteCount > 0)
     {
-        writeResult = writeDiskSectors(diskInfo, 1, getFirstBlockForVolumeHeader(blockSize), blockBuffer, numberOfSectorsWritten);
+        writeResult = writeDiskSectors(diskInfo, 1, sector, blockBuffer, numberOfSectorsWritten);
         retryWriteCount--;
     }
 
@@ -183,12 +184,8 @@ static void initializeAllocationFileForkData(DiskInfo* diskInfo, HFSPlusForkData
     forkData->totalBlocks = numberOfBlocks / numberOfBlocksRepresentedInABitmapBlock + 1;
     forkData->logicalSize = forkData->totalBlocks * blockSize;
     forkData->clumpSize = 2; //we are reading from allocation file so we probably don't need more than 2 blocks (2 in case the blocks we look for in bitmap are at the end of a block)
-    HFSPlusExtentDescriptor* extent = new HFSPlusExtentDescriptor();
-    extent->blockCount = forkData->totalBlocks;
-    extent->startBlock = getFirstBlockForVolumeHeader(blockSize) + 1;
-    memcpy(&forkData->extents[0], extent, sizeof(HFSPlusExtentDescriptor));
-
-    delete extent;
+    forkData->extents[0].blockCount = forkData->totalBlocks;
+    forkData->extents[0].startBlock = getFirstBlockForVolumeHeader(blockSize) + 1;
 }
 
 static void initializeExtentsOverflowFileForkData(HFSPlusForkData* forkData, uint32_t blockSize, uint32_t totalNodes, uint32_t nodeSize, HFSPlusForkData * allocationFileForkData)
@@ -196,11 +193,8 @@ static void initializeExtentsOverflowFileForkData(HFSPlusForkData* forkData, uin
     forkData->totalBlocks = totalNodes * (nodeSize / blockSize);
     forkData->logicalSize = forkData->totalBlocks * blockSize;
     forkData->clumpSize = (nodeSize / blockSize); //we read one node at a time
-    HFSPlusExtentDescriptor* extent = new HFSPlusExtentDescriptor();
-    extent->blockCount = forkData->totalBlocks;
-    extent->startBlock = getFirstBlockForExtentsOverflowFile(allocationFileForkData);
-
-    delete extent;
+    forkData->extents[0].blockCount = forkData->totalBlocks;
+    forkData->extents[0].startBlock = getFirstBlockForExtentsOverflowFile(allocationFileForkData);
 }
 
 static void initializeCatalogFileForkData(HFSPlusForkData* forkData, uint32_t blockSize, uint32_t totalNodes, uint32_t nodeSize, HFSPlusForkData * extentsOverflowFileForkData)
@@ -208,11 +202,8 @@ static void initializeCatalogFileForkData(HFSPlusForkData* forkData, uint32_t bl
     forkData->totalBlocks = totalNodes * (nodeSize / blockSize);
     forkData->logicalSize = forkData->totalBlocks * blockSize;
     forkData->clumpSize = (nodeSize / blockSize); //we read one node at a time
-    HFSPlusExtentDescriptor* extent = new HFSPlusExtentDescriptor();
-    extent->blockCount = forkData->totalBlocks;
-    extent->startBlock = getFirstBlockForCatalogFile(extentsOverflowFileForkData);
-
-    delete extent;
+    forkData->extents[0].blockCount = forkData->totalBlocks;
+    forkData->extents[0].startBlock = getFirstBlockForCatalogFile(extentsOverflowFileForkData);
 }
 
 ///////////////////
@@ -231,7 +222,7 @@ static void initializeAllocationFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
     char* buffer = new char[numOfSectors * diskInfo->diskParameters.sectorSizeBytes];
 
     for(uint32_t byteIndex = 0; byteIndex < numOfBytesToOccupyInBitmap - 1; byteIndex++)
-        buffer[byteIndex] = (uint8_t) 255;
+        buffer[byteIndex] = 0xFF;
 
     uint32_t numOfBitsRemainedToOccupy = numOfBlocksOccupiedByStructures % 8;
     uint8_t byte = 0;
@@ -241,7 +232,7 @@ static void initializeAllocationFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
     buffer[numOfBytesToOccupyInBitmap - 1] = byte;
 
     uint32_t numberOfSectorsWritten, retryWriteCount = 2;
-    uint32_t firstSectorOfAllocationFile = getFirstSectorForGivenBlock(volumeHeader, volumeHeader->catalogFile.extents[0].startBlock);
+    uint32_t firstSectorOfAllocationFile = getFirstSectorForGivenBlock(diskInfo, volumeHeader, volumeHeader->catalogFile.extents[0].startBlock);
     int writeResult = writeDiskSectors(diskInfo, numOfSectors, firstSectorOfAllocationFile, buffer, numberOfSectorsWritten);
     while(writeResult != EC_NO_ERROR && retryWriteCount > 0)
     {
@@ -297,7 +288,7 @@ static void initializeExtentsOverflowFile(DiskInfo* diskInfo, HFSPlusVolumeHeade
 
     //now write the extent overflow file header node on disk
     uint32_t numberOfSectorsWritten, retryWriteCount = 2, numOfSectorsToWrite = nodeSize / diskInfo->diskParameters.sectorSizeBytes;
-    uint32_t firstSectorForExtentsOverflowFile = volumeHeader->allocationFile.extents[0].startBlock * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
+    uint32_t firstSectorForExtentsOverflowFile = getFirstBlockForExtentsOverflowFile(&volumeHeader->allocationFile) * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
 
     int writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForExtentsOverflowFile, nodeBuffer, numberOfSectorsWritten);
     while(writeResult != EC_NO_ERROR && retryWriteCount > 0)
@@ -354,7 +345,7 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
 
     //now write the extent overflow file header node on disk
     uint32_t numberOfSectorsWritten, retryWriteCount = 2, numOfSectorsToWrite = nodeSize / diskInfo->diskParameters.sectorSizeBytes;
-    uint32_t firstSectorForCatalogFile = volumeHeader->catalogFile.extents[0].startBlock * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
+    uint32_t firstSectorForCatalogFile = getFirstBlockForCatalogFile(&volumeHeader->extentsFile) * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
 
     int writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForCatalogFile, nodeBuffer, numberOfSectorsWritten);
     while(writeResult != EC_NO_ERROR && retryWriteCount > 0)

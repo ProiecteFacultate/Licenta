@@ -8,7 +8,7 @@ uint32_t getNumberOfSectorsPerBlock(DiskInfo* diskInfo, HFSPlusVolumeHeader* vol
 
 ///////////////
 
-uint32_t getFirstSectorForGivenBlock(HFSPlusVolumeHeader* volumeHeader, uint32_t block);
+uint32_t getFirstSectorForGivenBlock(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t block);
 
 //////////////////
 
