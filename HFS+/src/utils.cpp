@@ -9,6 +9,10 @@
 #include "../include/structures.h"
 #include "../include/utils.h"
 
+uint32_t getExtentsOverflowFileNodeSize() { return 1024; }
+
+uint32_t getCatalogFileNodeSize() { return 4096; }
+
 uint32_t getBitFromByte(uint8_t byte, uint32_t bitIndexInByte)
 {
     switch (bitIndexInByte) {

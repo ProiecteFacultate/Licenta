@@ -8,6 +8,10 @@ void hfsStartup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber
 
 HFSPlusVolumeHeader* readVolumeHeader(DiskInfo* diskInfo);
 
+ExtentsFileHeaderNode* readExtentsOverflowFileHeaderNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader);
+
+CatalogFileHeaderNode* readCatalogFileHeaderNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader);
+
 //////////
 
 static bool checkDiskInitialization(char* diskDirectory);

@@ -52,6 +52,36 @@ HFSPlusVolumeHeader* readVolumeHeader(DiskInfo* diskInfo)
     return (HFSPlusVolumeHeader*)&readBuffer[1024];
 }
 
+ExtentsFileHeaderNode* readExtentsOverflowFileHeaderNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader)
+{
+    uint32_t numberOfSectorsRead, nodeSize = getExtentsOverflowFileNodeSize();
+    uint32_t numOfSectorsOccupied = (diskInfo->diskParameters.sectorSizeBytes <= nodeSize) ? nodeSize / diskInfo->diskParameters.sectorSizeBytes : 1;
+    char* readBuffer = new char[numOfSectorsOccupied * diskInfo->diskParameters.sectorSizeBytes];
+    uint32_t firstSector = getFirstSectorForGivenBlock(diskInfo, volumeHeader, volumeHeader->extentsFile.extents[0].startBlock);
+
+    uint32_t readResult = readDiskSectors(diskInfo, numOfSectorsOccupied, firstSector, readBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+        throw std::runtime_error("Failed to read extents overflow file header node!");
+
+    return (ExtentsFileHeaderNode*)&readBuffer[0];
+}
+
+CatalogFileHeaderNode* readCatalogFileHeaderNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader)
+{
+    uint32_t numberOfSectorsRead, nodeSize = getCatalogFileNodeSize();
+    uint32_t numOfSectorsOccupied = (diskInfo->diskParameters.sectorSizeBytes <= nodeSize) ? nodeSize / diskInfo->diskParameters.sectorSizeBytes : 1;
+    char* readBuffer = new char[numOfSectorsOccupied * diskInfo->diskParameters.sectorSizeBytes];
+    uint32_t firstSector = getFirstSectorForGivenBlock(diskInfo, volumeHeader, volumeHeader->catalogFile.extents[0].startBlock);
+
+    uint32_t readResult = readDiskSectors(diskInfo, numOfSectorsOccupied, firstSector, readBuffer, numberOfSectorsRead);
+
+    if(readResult != EC_NO_ERROR)
+        throw std::runtime_error("Failed to read extents catalog file header node!");
+
+    return (CatalogFileHeaderNode*)&readBuffer[0];
+}
+
 //////////////////////////////////////
 
 static bool checkDiskInitialization(char* diskDirectory)
@@ -246,7 +276,7 @@ static void initializeAllocationFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
 
 static void initializeExtentsOverflowFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader)
 {
-    uint32_t nodeSize = 1024;
+    uint32_t nodeSize = getExtentsOverflowFileNodeSize();
 
     BTNodeDescriptor* headerNodeDescriptor = new BTNodeDescriptor();
     headerNodeDescriptor->fLink = 0;
@@ -274,7 +304,11 @@ static void initializeExtentsOverflowFile(DiskInfo* diskInfo, HFSPlusVolumeHeade
     memset(&headerRecord->reserved3[0], 0, 64);
 
     char* nodeBuffer = new char[nodeSize];
+    //copy node descriptor in memory
     memcpy(nodeBuffer, headerNodeDescriptor, sizeof(BTNodeDescriptor));
+    //copy header record in memory
+    memcpy(nodeBuffer + 14, headerRecord, sizeof(BTHeaderRec));
+    //mark first node in tree as occupied (in map record)
     uint8_t byteValueForOccupiedFirstNode = changeBitValue(0, 0, 1);
     uint32_t mapRecordIndex = sizeof(BTNodeDescriptor) + sizeof(BTHeaderRec) + 128;
     nodeBuffer[mapRecordIndex] = byteValueForOccupiedFirstNode;
@@ -303,7 +337,7 @@ static void initializeExtentsOverflowFile(DiskInfo* diskInfo, HFSPlusVolumeHeade
 
 static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader)
 {
-    uint32_t nodeSize = 4096;
+    uint32_t nodeSize = getCatalogFileNodeSize();
 
     BTNodeDescriptor* headerNodeDescriptor = new BTNodeDescriptor();
     headerNodeDescriptor->fLink = 0;
@@ -331,7 +365,11 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     memset(&headerRecord->reserved3[0], 0, 64);
 
     char* nodeBuffer = new char[nodeSize];
+    //copy node descriptor in memory
     memcpy(nodeBuffer, headerNodeDescriptor, sizeof(BTNodeDescriptor));
+    //copy header record in memory
+    memcpy(nodeBuffer + 14, headerRecord, sizeof(BTHeaderRec));
+    //mark first node in tree as occupied (in map record)
     uint8_t byteValueForOccupiedFirstNode = changeBitValue(0, 0, 1);
     uint32_t mapRecordIndex = sizeof(BTNodeDescriptor) + sizeof(BTHeaderRec) + 128;
     nodeBuffer[mapRecordIndex] = byteValueForOccupiedFirstNode;

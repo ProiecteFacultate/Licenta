@@ -142,4 +142,21 @@ typedef struct
     uint32_t startBlock;
 } __attribute__((packed)) HFSPlusExtentKey;
 
+//Custom structure
+typedef struct
+{
+    BTNodeDescriptor nodeDescriptor; //14 bytes
+    BTHeaderRec headerRecord; //106 bytes
+    uint8_t userDataRecord[128];
+    uint16_t mapRecordAndOffsets[388];
+} __attribute__((packed)) ExtentsFileHeaderNode;
+
+typedef struct
+{
+    BTNodeDescriptor nodeDescriptor; //14 bytes
+    BTHeaderRec headerRecord; //106 bytes
+    uint8_t userDataRecord[128];
+    uint16_t mapRecordAndOffsets[1924];
+} __attribute__((packed)) CatalogFileHeaderNode;
+
 #endif

@@ -7,6 +7,9 @@
 #ifndef HFS__UTILS_H
 #define HFS__UTILS_H
 
+uint32_t getExtentsOverflowFileNodeSize();
+uint32_t getCatalogFileNodeSize();
+
 uint32_t getBitFromByte(uint8_t byte, uint32_t bitIndexInByte);
 
 //CAUTION new bit value is given as a byte, but it should be either 0 or 1
