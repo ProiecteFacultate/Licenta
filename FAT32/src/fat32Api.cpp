@@ -17,9 +17,7 @@
 #include "../include/fat32FunctionUtils.h"
 #include "../include/fat32Api.h"
 
-uint32_t
-
-createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParentPath, char* newDirectoryName, uint32_t newDirectoryAttribute)
+uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParentPath, char* newDirectoryName, uint32_t newDirectoryAttribute)
 {
     if(!checkDirectoryNameValidity(newDirectoryName))
         return DIR_CREATION_INVALID_DIRNAME;

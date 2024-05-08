@@ -89,13 +89,13 @@ typedef enum {
 //Catalog structures
 typedef struct {
     uint16_t length;
-    uint16_t unicode[255];
+    uint8_t chars[510]; //in specification we have unicode so we have an uint16_t unicode[255] instead
 } __attribute__((packed)) HFSUniStr255;
 
 typedef struct {
-    uint16_t              keyLength;
-    HFSCatalogNodeID    parentID;
-    HFSUniStr255        nodeName;
+    uint16_t keyLength;
+    HFSCatalogNodeID parentID;
+    HFSUniStr255 nodeName;
 } __attribute__((packed)) HFSPlusCatalogKey;
 
 enum {
@@ -105,6 +105,7 @@ enum {
     kHFSFileThreadRecord        = 0x0400
 };
 
+//in documentation there are different structs for folder & file but the attributes that are different are irrelevant for us so we combined them in one structure
 typedef struct
 {
     int16_t recordType;
@@ -121,15 +122,8 @@ typedef struct
     uint8_t finderInfo[16]; //we don't care
     uint32_t textEncoding;
     uint32_t reserved;
-} __attribute__((packed)) HFSPlusCatalogFolder;
-
-typedef struct
-{
-    int16_t recordType;
-    int16_t reserved;
-    HFSCatalogNodeID parentID;
-    uint16_t nodeName[255];
-} __attribute__((packed)) HFSPlusCatalogThread;
+    HFSPlusForkData hfsPlusForkData;
+} __attribute__((packed)) HFSPlusCatalogDirectory;
 
 //Extent overflow structures
 
@@ -158,5 +152,17 @@ typedef struct
     uint8_t userDataRecord[128];
     uint16_t mapRecordAndOffsets[1924];
 } __attribute__((packed)) CatalogFileHeaderNode;
+
+typedef struct
+{
+    uint32_t nodeNumber;
+    uint32_t startBlock;
+} __attribute__((packed)) NextNodeInfo;
+
+typedef struct
+{
+    HFSPlusCatalogKey catalogKey;
+    HFSPlusCatalogDirectory catalogData;
+} __attribute__((packed)) CatalogDirectoryRecord;
 
 #endif

@@ -5,7 +5,24 @@
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
 #include "../include/structures.h"
+#include "../include/utils.h"
 #include "../include/hfsFunctionUtils.h"
+
+uint32_t getMaximumNumberOfRecordsPerCatalogFileNode()
+{
+    uint32_t catalogFileNodeSize = getCatalogFileNodeSize();
+    int records = 1;
+
+    while(true)
+    {
+        if(sizeof(BTNodeDescriptor) + records * sizeof(CatalogDirectoryRecord) + (records + 1) * sizeof(NextNodeInfo) > catalogFileNodeSize)
+            break;
+
+        records++;
+    }
+
+    return records - 1;
+}
 
 uint32_t getNumberOfSectorsPerBlock(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader)
 {

@@ -339,6 +339,7 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
 {
     uint32_t nodeSize = getCatalogFileNodeSize();
 
+    //create and write on disk the header node
     BTNodeDescriptor* headerNodeDescriptor = new BTNodeDescriptor();
     headerNodeDescriptor->fLink = 0;
     headerNodeDescriptor->bLink = 0;
@@ -356,7 +357,7 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     headerRecord->nodeSize = nodeSize;
     headerRecord->maxKeyLength = sizeof(HFSPlusCatalogKey);
     headerRecord->totalNodes = 1024;
-    headerRecord->freeNodes = 1023; //1 is this (the header node)
+    headerRecord->freeNodes = 1022; //1 is this (the header node) and 1 the root node
     headerRecord->reserved1 = 0;
     headerRecord->clumpSize = 0; //ignored
     headerRecord->btreeType = 0;
@@ -369,23 +370,24 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     memcpy(nodeBuffer, headerNodeDescriptor, sizeof(BTNodeDescriptor));
     //copy header record in memory
     memcpy(nodeBuffer + 14, headerRecord, sizeof(BTHeaderRec));
-    //mark first node in tree as occupied (in map record)
-    uint8_t byteValueForOccupiedFirstNode = changeBitValue(0, 0, 1);
+    //mark first node and second in tree as occupied (in map record)
+    uint8_t byteValueForNodes = changeBitValue(0, 0, 1); //header node
+    byteValueForNodes = changeBitValue(0, 1, 1); //root node
     uint32_t mapRecordIndex = sizeof(BTNodeDescriptor) + sizeof(BTHeaderRec) + 128;
-    nodeBuffer[mapRecordIndex] = byteValueForOccupiedFirstNode;
+    nodeBuffer[mapRecordIndex] = byteValueForNodes;
 
-    uint16_t offset0 = 14;
-    memcpy(&nodeBuffer[nodeSize - 2], &offset0, 2);
-    uint16_t offset1 = 14 + sizeof(BTHeaderRec);
-    memcpy(&nodeBuffer[nodeSize - 4], &offset1, 2);
-    uint16_t offset2 = 14 + sizeof(BTHeaderRec) + 128;  //128 is hardcoded; the user data record is not used anyway
-    memcpy(&nodeBuffer[nodeSize - 6], &offset2, 2);
+//    uint16_t offset0 = 14;
+//    memcpy(&nodeBuffer[nodeSize - 2], &offset0, 2);
+//    uint16_t offset1 = 14 + sizeof(BTHeaderRec);
+//    memcpy(&nodeBuffer[nodeSize - 4], &offset1, 2);
+//    uint16_t offset2 = 14 + sizeof(BTHeaderRec) + 128;  //128 is hardcoded; the user data record is not used anyway
+//    memcpy(&nodeBuffer[nodeSize - 6], &offset2, 2);
 
     //now write the extent overflow file header node on disk
     uint32_t numberOfSectorsWritten, retryWriteCount = 2, numOfSectorsToWrite = nodeSize / diskInfo->diskParameters.sectorSizeBytes;
     uint32_t firstSectorForCatalogFile = getFirstBlockForCatalogFile(&volumeHeader->extentsFile) * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
 
-    int writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForCatalogFile, nodeBuffer, numberOfSectorsWritten);
+    uint32_t writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForCatalogFile, nodeBuffer, numberOfSectorsWritten);
     while(writeResult != EC_NO_ERROR && retryWriteCount > 0)
     {
         writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForCatalogFile, nodeBuffer, numberOfSectorsWritten);
@@ -394,6 +396,31 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
 
     if(retryWriteCount == 0)
         throw std::runtime_error("Failed to initialize catalog file node header!");
+
+
+    //create and write on disk the root node
+    uint32_t numberOfBlocksPerNode = nodeSize / volumeHeader->blockSize;
+    uint32_t firstSectorForRootNode = (getFirstBlockForCatalogFile(&volumeHeader->extentsFile) + numberOfBlocksPerNode)
+                                             * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
+
+    BTNodeDescriptor* rootNodeDescriptor = new BTNodeDescriptor();
+    rootNodeDescriptor->fLink = 0;
+    rootNodeDescriptor->bLink = 0;
+    rootNodeDescriptor->kind = kBTLeafNode;
+    rootNodeDescriptor->height = 0;
+    rootNodeDescriptor->numRecords = 0;
+    rootNodeDescriptor->reserved = 0;
+
+    memcpy(nodeBuffer, rootNodeDescriptor, sizeof(BTNodeDescriptor));
+    writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForRootNode, nodeBuffer, numberOfSectorsWritten);
+    while(writeResult != EC_NO_ERROR && retryWriteCount > 0)
+    {
+        writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForRootNode, nodeBuffer, numberOfSectorsWritten);
+        retryWriteCount--;
+    }
+
+    if(retryWriteCount == 0)
+        throw std::runtime_error("Failed to initialize catalog file root node!");
 }
 
 ////////////////////////////////

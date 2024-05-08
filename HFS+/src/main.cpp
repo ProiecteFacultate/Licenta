@@ -5,6 +5,7 @@
 #include "../include/diskCodes.h"
 #include "../include/structures.h"
 #include "../include/hfsInit.h"
+#include "../include/hfsApi.h"
 
 int main() {
     char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_100Mib\0";
