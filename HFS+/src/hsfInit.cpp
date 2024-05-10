@@ -8,6 +8,7 @@
 #include "../include/structures.h"
 #include "../include/hfsInit.h"
 #include "../include/utils.h"
+#include "../include/codes/hfsAttributes.h"
 #include "../include/hfsFunctionUtils.h"
 
 void hfsStartup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
@@ -284,7 +285,7 @@ static void initializeExtentsOverflowFile(DiskInfo* diskInfo, HFSPlusVolumeHeade
     headerNodeDescriptor->kind = kBTHeaderNode;
     headerNodeDescriptor->height = 0;
     headerNodeDescriptor->numRecords = 0;
-    headerNodeDescriptor->reserved = 0;
+    headerNodeDescriptor->isLeaf = NODE_IS_LEAF;
 
     BTHeaderRec* headerRecord = new BTHeaderRec();
     headerRecord->treeDepth = 0;
@@ -346,7 +347,7 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     headerNodeDescriptor->kind = kBTHeaderNode;
     headerNodeDescriptor->height = 0;
     headerNodeDescriptor->numRecords = 0;
-    headerNodeDescriptor->reserved = 0;
+    headerNodeDescriptor->isLeaf = NODE_IS_LEAF;
 
     BTHeaderRec* headerRecord = new BTHeaderRec();
     headerRecord->treeDepth = 0;
@@ -409,7 +410,7 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     rootNodeDescriptor->kind = kBTLeafNode;
     rootNodeDescriptor->height = 0;
     rootNodeDescriptor->numRecords = 0;
-    rootNodeDescriptor->reserved = 0;
+    rootNodeDescriptor->isLeaf = NODE_IS_LEAF;
 
     memcpy(nodeBuffer, rootNodeDescriptor, sizeof(BTNodeDescriptor));
     writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForRootNode, nodeBuffer, numberOfSectorsWritten);

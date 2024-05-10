@@ -35,13 +35,13 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 28,
+				"line" : 31,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 27,
+				"line" : 30,
 				"parent" : 0
 			}
 		]
@@ -78,8 +78,9 @@
 				5,
 				7,
 				9,
-				11,
-				14
+				12,
+				15,
+				17
 			]
 		}
 	],
@@ -126,8 +127,9 @@
 				5,
 				7,
 				9,
-				11,
-				14
+				12,
+				15,
+				17
 			]
 		},
 		{
@@ -140,9 +142,11 @@
 				6,
 				8,
 				10,
-				12,
+				11,
 				13,
-				15
+				14,
+				16,
+				18
 			]
 		}
 	],
@@ -205,34 +209,50 @@
 		},
 		{
 			"backtrace" : 1,
-			"path" : "include/hfs.h",
-			"sourceGroupIndex" : 1
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "src/hfs.cpp",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
 			"path" : "include/codes/hfsAttributes.h",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
-			"path" : "include/bTreeCatalog.h",
+			"path" : "include/catalog_file/bTreeCatalog.h",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "src/bTreeCatalog.cpp",
+			"path" : "src/catalog_file/bTreeCatalog.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "include/codes/bTreeResponseCodes.h",
+			"path" : "include/catalog_file/codes/bTreeResponseCodes.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/catalog_file/catalogFileOperations.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/catalog_file/catalogFileOperations.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/catalog_file/catalogFileUtils.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/catalog_file/catalogFileUtils.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/catalog_file/codes/catalogFileResponseCodes.h",
 			"sourceGroupIndex" : 1
 		}
 	],

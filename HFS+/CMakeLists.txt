@@ -15,12 +15,15 @@ add_executable(HFS_ src/main.cpp
         src/utils.cpp
         include/hfsApi.h
         src/hfsApi.cpp
-        include/hfs.h
-        src/hfs.cpp
         include/codes/hfsAttributes.h
-        include/bTreeCatalog.h
-        src/bTreeCatalog.cpp
-        include/codes/bTreeResponseCodes.h)
+        include/catalog_file/bTreeCatalog.h
+        src/catalog_file/bTreeCatalog.cpp
+        include/catalog_file/codes/bTreeResponseCodes.h
+        include/catalog_file/catalogFileOperations.h
+        src/catalog_file/catalogFileOperations.cpp
+        include/catalog_file/catalogFileUtils.h
+        src/catalog_file/catalogFileUtils.cpp
+        include/catalog_file/codes/catalogFileResponseCodes.h)
 
 include(FindPkgConfig)
 find_package(DiskEmulation REQUIRED)

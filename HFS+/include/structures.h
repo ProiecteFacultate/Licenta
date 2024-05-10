@@ -57,13 +57,13 @@ typedef struct
     int8_t kind;
     uint8_t height;
     uint16_t numRecords;
-    uint16_t reserved;
+    uint16_t isLeaf;     //normally here is a reserved field but we use it to check if the node is leaf
 } __attribute__((packed)) BTNodeDescriptor;
 
 typedef struct
 {
     uint16_t treeDepth;
-    uint32_t rootNode;
+    uint32_t rootNode; //the root number (index) of the root node; it is initially 0 but it might change
     uint32_t leafRecords;
     uint32_t firstLeafNode;
     uint32_t lastLeafNode;
@@ -153,11 +153,12 @@ typedef struct
     uint16_t mapRecordAndOffsets[1924];
 } __attribute__((packed)) CatalogFileHeaderNode;
 
+//multiple of these are placed at the end of a node (after all the CatalogDirectoryRecord in that node) CAUTION they are placed in reverse order
 typedef struct
 {
     uint32_t nodeNumber;
     uint32_t startBlock;
-} __attribute__((packed)) NextNodeInfo;
+} __attribute__((packed)) ChildNodeInfo;
 
 typedef struct
 {

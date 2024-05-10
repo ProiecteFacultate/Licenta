@@ -5,6 +5,7 @@
 #include "../include/diskCodes.h"
 #include "../include/structures.h"
 #include "../include/hfsInit.h"
+#include "../include/codes/hfsAttributes.h"
 #include "../include/hfsApi.h"
 
 int main() {
@@ -15,14 +16,21 @@ int main() {
     ExtentsFileHeaderNode* extentsOverflowFileHeaderNode = readExtentsOverflowFileHeaderNode(diskInfo, volumeHeader);
     CatalogFileHeaderNode* catalogFileHeaderNode = readCatalogFileHeaderNode(diskInfo, volumeHeader);
 
-    char* readBuffer = new char[4096];
-    uint32_t numberOfSectorsRead = 0;
-    uint32_t readResult = readDiskSectors(diskInfo, 2, 30, readBuffer, numberOfSectorsRead);
-    BTNodeDescriptor* extentsHeaderNode = (BTNodeDescriptor*)&readBuffer[0];
-    BTHeaderRec* extentsHeaderRecord = (BTHeaderRec*)&readBuffer[14];
 
-    readResult = readDiskSectors(diskInfo, 2, 2078, readBuffer, numberOfSectorsRead);
-    BTNodeDescriptor* catalogHeaderNode = (BTNodeDescriptor*)&readBuffer[0];
+    char* parentPath = new char[100];
+    memcpy(parentPath, "Root\0", 5);
+    char* newDirName = new char[100];
+    memcpy(newDirName, "Dir_1\0", 6);
+    createDirectory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPath, newDirName, DIRECTORY_TYPE_FILE);
+
+//    char* readBuffer = new char[4096];
+//    uint32_t numberOfSectorsRead = 0;
+//    uint32_t readResult = readDiskSectors(diskInfo, 2, 30, readBuffer, numberOfSectorsRead);
+//    BTNodeDescriptor* extentsHeaderNode = (BTNodeDescriptor*)&readBuffer[0];
+//    BTHeaderRec* extentsHeaderRecord = (BTHeaderRec*)&readBuffer[14];
+//
+//    readResult = readDiskSectors(diskInfo, 2, 2078, readBuffer, numberOfSectorsRead);
+//    BTNodeDescriptor* catalogHeaderNode = (BTNodeDescriptor*)&readBuffer[0];
 
     return 0;
 }

@@ -15,7 +15,7 @@ uint32_t getMaximumNumberOfRecordsPerCatalogFileNode()
 
     while(true)
     {
-        if(sizeof(BTNodeDescriptor) + records * sizeof(CatalogDirectoryRecord) + (records + 1) * sizeof(NextNodeInfo) > catalogFileNodeSize)
+        if(sizeof(BTNodeDescriptor) + records * sizeof(CatalogDirectoryRecord) + (records + 1) * sizeof(ChildNodeInfo) > catalogFileNodeSize)
             break;
 
         records++;
