@@ -21,6 +21,9 @@ uint32_t getMaximumNumberOfRecordsPerCatalogFileNode()
         records++;
     }
 
+    if(records % 2 == 1) //we want an odd number of max records per node
+        records--;
+
     return records - 1;
 }
 

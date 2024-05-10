@@ -8,6 +8,15 @@
 #define SEARCH_RECORD_IN_GIVEN_DATA_FAILED_FOR_OTHER_REASON                                                              1
 #define SEARCH_RECORD_IN_GIVEN_DATA_SUCCESS                                                                              999
 
+#define INSERT_RECORD_IN_TREE_FAILED                                                                                     0
+#define INSERT_RECORD_IN_TREE_SUCCESS                                                                                    999
+
+#define SPLIT_CHILD_FAILED                                                                                               0
+#define SPLIT_CHILD_SUCCESS                                                                                              999
+
+#define INSERT_NON_FULL_FAILED                                                                                           0
+#define INSERT_NON_FULL_SUCCESS                                                                                          999
+
 #define CREATE_NODE_ON_DISK_FAILED                                                                                       0
 #define CREATE_NODE_ON_DISK_SUCCESS                                                                                      999
 
