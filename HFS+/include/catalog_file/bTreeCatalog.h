@@ -11,10 +11,13 @@ uint32_t searchRecordForGivenNodeDataAndSearchedKey(DiskInfo* diskInfo, HFSPlusV
 
 uint32_t insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, CatalogDirectoryRecord* recordToInsert);
 
+uint32_t traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumberOfNodeToTraverseItsSubtree, HFSCatalogNodeID parentRecordId,
+                         std::vector<CatalogDirectoryRecord*>& recordsVector);
+
 //////////////////////////////////////////////
 
 static uint32_t splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumberToMoveOneRecordTo,
-                    uint32_t nodeNumberToSplit, uint32_t indexToMoveTheRecordTo);
+                    uint32_t nodeNumberToSplit, int32_t indexToMoveTheRecordTo);
 
 static uint32_t insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumberToInsertRecordInto,
                               CatalogDirectoryRecord* recordToInsert);
@@ -36,4 +39,7 @@ uint32_t insertRecordInNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
 //CAUTION 2: ChildNodeInfo structures are stored in reverse order: if idx = 0 it is at catalogNodeSize - sizeOf(ChildNodeInfo); idx = 1 at catalogNodeSize - 2 * sizeOf(ChildNodeInfo)
 uint32_t insertChildNodeInfoInNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ChildNodeInfo* childNodeInfoToInsert, uint32_t nodeNumber, uint32_t childNodeInfoIndexInNode);
 
+
+
+char* readNodeTEST(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber);
 #endif

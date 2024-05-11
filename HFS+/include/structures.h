@@ -17,7 +17,7 @@ typedef struct
     HFSPlusExtentDescriptor extents[8];
 } __attribute__((packed)) HFSPlusForkData;
 
-typedef uint32_t HFSCatalogNodeID;
+typedef uint32_t HFSCatalogNodeID; //this is nod the id of the nodes but of the records. its name is wrong in documentation probably
 
 typedef struct
 {

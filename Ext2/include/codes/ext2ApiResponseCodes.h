@@ -12,7 +12,7 @@
 #define GET_SUBDIRECTORIES_GIVEN_DIRECTORY_DO_NOT_EXIST                                              0
 #define GET_SUBDIRECTORIES_GIVEN_DIRECTORY_NOT_A_FOLDER                                              1
 #define GET_SUBDIRECTORIES_FAILED_FOR_OTHER_REASON                                                   2
-#define GET_SUB_DIRECTORIES_SUCCESS                                                                  9999
+#define GET_SUBDIRECTORIES_SUCCESS                                                                   9999
 
 #define WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE                                                 0
 #define WRITE_BYTES_TO_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL                                   1

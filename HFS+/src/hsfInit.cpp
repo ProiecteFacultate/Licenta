@@ -162,7 +162,7 @@ static void initializeVolumeHeader(DiskInfo* diskInfo)
     hfsVolumeHeader->nextAllocation = 0;
     hfsVolumeHeader->rsrcClumpSize = 0;
     hfsVolumeHeader->dataClumpSize = hfsVolumeHeader->blockSize * clumpBlocks;
-    hfsVolumeHeader->nextCatalogID = 0;
+    hfsVolumeHeader->nextCatalogID = 1; //first record will have id 1, and its parent is root (which is not an actual record) so 0; any record directly under root will have parent 0
     hfsVolumeHeader->writeCount = 0;
     hfsVolumeHeader->encodingsBitmap = 0;
     // hfsVolumeHeader->finderInfo -> this array stays at 0 for all fields
@@ -358,7 +358,7 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     headerRecord->nodeSize = nodeSize;
     headerRecord->maxKeyLength = sizeof(HFSPlusCatalogKey);
     headerRecord->totalNodes = 1024;
-    headerRecord->freeNodes = 1022; //1 is this (the header node) and 1 the root node
+    headerRecord->freeNodes = 1023; //1 is this (the header node)
     headerRecord->reserved1 = 0;
     headerRecord->clumpSize = 0; //ignored
     headerRecord->btreeType = 0;
@@ -372,17 +372,9 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     //copy header record in memory
     memcpy(nodeBuffer + 14, headerRecord, sizeof(BTHeaderRec));
     //mark first node and second in tree as occupied (in map record)
-    uint8_t byteValueForNodes = changeBitValue(0, 0, 1); //header node
-    byteValueForNodes = changeBitValue(0, 1, 1); //root node
+    uint8_t byteValueForHeaderNode = changeBitValue(0, 0, 1); //header node
     uint32_t mapRecordIndex = sizeof(BTNodeDescriptor) + sizeof(BTHeaderRec) + 128;
-    nodeBuffer[mapRecordIndex] = byteValueForNodes;
-
-//    uint16_t offset0 = 14;
-//    memcpy(&nodeBuffer[nodeSize - 2], &offset0, 2);
-//    uint16_t offset1 = 14 + sizeof(BTHeaderRec);
-//    memcpy(&nodeBuffer[nodeSize - 4], &offset1, 2);
-//    uint16_t offset2 = 14 + sizeof(BTHeaderRec) + 128;  //128 is hardcoded; the user data record is not used anyway
-//    memcpy(&nodeBuffer[nodeSize - 6], &offset2, 2);
+    nodeBuffer[mapRecordIndex] = byteValueForHeaderNode;
 
     //now write the extent overflow file header node on disk
     uint32_t numberOfSectorsWritten, retryWriteCount = 2, numOfSectorsToWrite = nodeSize / diskInfo->diskParameters.sectorSizeBytes;
@@ -397,46 +389,9 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
 
     if(retryWriteCount == 0)
         throw std::runtime_error("Failed to initialize catalog file node header!");
-
-
-    //create and write on disk the root node
-    uint32_t numberOfBlocksPerNode = nodeSize / volumeHeader->blockSize;
-    uint32_t firstSectorForRootNode = (getFirstBlockForCatalogFile(&volumeHeader->extentsFile) + numberOfBlocksPerNode)
-                                             * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
-
-    BTNodeDescriptor* rootNodeDescriptor = new BTNodeDescriptor();
-    rootNodeDescriptor->fLink = 0;
-    rootNodeDescriptor->bLink = 0;
-    rootNodeDescriptor->kind = kBTLeafNode;
-    rootNodeDescriptor->height = 0;
-    rootNodeDescriptor->numRecords = 0;
-    rootNodeDescriptor->isLeaf = NODE_IS_LEAF;
-
-    memcpy(nodeBuffer, rootNodeDescriptor, sizeof(BTNodeDescriptor));
-    writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForRootNode, nodeBuffer, numberOfSectorsWritten);
-    while(writeResult != EC_NO_ERROR && retryWriteCount > 0)
-    {
-        writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForRootNode, nodeBuffer, numberOfSectorsWritten);
-        retryWriteCount--;
-    }
-
-    if(retryWriteCount == 0)
-        throw std::runtime_error("Failed to initialize catalog file root node!");
 }
 
 ////////////////////////////////
-
-static uint32_t getFirstBlockForVolumeHeader(uint32_t blockSize)
-{
-    switch (blockSize) {
-        case 512:
-            return 2;
-        case 1024:
-            return 1;
-        default:
-            return 0;
-    }
-}
 
 static uint32_t getFirstBlockForExtentsOverflowFile(HFSPlusForkData* allocationFileForkData)
 {

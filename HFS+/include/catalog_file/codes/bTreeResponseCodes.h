@@ -26,4 +26,7 @@
 #define INSERT_CHILD_NODE_INFO_IN_NODE_FAILED                                                                            0
 #define INSERT_CHILD_NODE_INFO_IN_NODE_SUCCESS                                                                           999
 
+#define TRAVERSE_SUBTREE_FAILED                                                                                          0
+#define TRAVERSE_SUBTREE_SUCCESS                                                                                         999
+
 #endif

@@ -13,4 +13,6 @@
 #define KEYS_EQUAL                                                                                                       0
 #define KEY_2_HIGHER                                                                                                     (-1)
 
+#define CREATE_DIRECTORY_RECORD_SUCCESS                                                                                  999
+
 #endif

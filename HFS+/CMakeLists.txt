@@ -23,7 +23,13 @@ add_executable(HFS_ src/main.cpp
         src/catalog_file/catalogFileOperations.cpp
         include/catalog_file/catalogFileUtils.h
         src/catalog_file/catalogFileUtils.cpp
-        include/catalog_file/codes/catalogFileResponseCodes.h)
+        include/catalog_file/codes/catalogFileResponseCodes.h
+        include/codes/hfsApiResponseCodes.h
+        src/hfs.cpp
+        include/hfs.h
+        include/interface.h
+        src/interface.cpp
+)
 
 include(FindPkgConfig)
 find_package(DiskEmulation REQUIRED)

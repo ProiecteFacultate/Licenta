@@ -465,7 +465,7 @@ uint32_t getSubDirectoriesByParentInode(DiskInfo* diskInfo, ext2_super_block* su
     }
 
     delete[] blockBuffer;
-    return GET_SUB_DIRECTORIES_SUCCESS;
+    return GET_SUBDIRECTORIES_SUCCESS;
 }
 
 uint32_t freeBlocksOfDirectoryAndChildren(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inode* inode, std::string& warning)
@@ -475,7 +475,7 @@ uint32_t freeBlocksOfDirectoryAndChildren(DiskInfo* diskInfo, ext2_super_block* 
     if(inode->i_mode == FILE_TYPE_FOLDER)
     {
         uint32_t getSubdirectoriesResult = getSubDirectoriesByParentInode(diskInfo, superBlock, inode, subDirectories);
-        if(getSubdirectoriesResult != GET_SUB_DIRECTORIES_SUCCESS)
+        if(getSubdirectoriesResult != GET_SUBDIRECTORIES_SUCCESS)
             return FREE_ALL_DIRECTORY_AND_CHILDREN_BLOCKS_FAILED;
 
         for(std::pair<ext2_inode*, ext2_dir_entry*> childEntry : subDirectories)
@@ -514,7 +514,7 @@ uint32_t deleteInodeOfDirectoryAndChildren(DiskInfo* diskInfo, ext2_super_block*
     if(inode->i_mode == FILE_TYPE_FOLDER)
     {
         uint32_t getSubdirectoriesResult = getSubDirectoriesByParentInode(diskInfo, superBlock, inode, subDirectories);
-        if(getSubdirectoriesResult != GET_SUB_DIRECTORIES_SUCCESS)
+        if(getSubdirectoriesResult != GET_SUBDIRECTORIES_SUCCESS)
             return FREE_ALL_DIRECTORY_AND_CHILDREN_BLOCKS_FAILED;
 
         for(std::pair<ext2_inode*, ext2_dir_entry*> childEntry : subDirectories)

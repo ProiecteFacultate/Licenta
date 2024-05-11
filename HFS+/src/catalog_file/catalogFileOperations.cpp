@@ -25,8 +25,10 @@ uint32_t findCatalogDirectoryRecordByFullPath(DiskInfo* diskInfo, HFSPlusVolumeH
 
     while(actualDirectoryName != nullptr)
     {
-        uint32_t searchedCatalogDirectoryRecordResult = searchDirectoryRecordByDirectoryNameBeingGivenParentDirectoryRecord(diskInfo, volumeHeader, *catalogDirectoryRecord,
-                                                                                                                             actualDirectoryName, searchedCatalogDirectoryRecord);
+        uint32_t searchedCatalogDirectoryRecordResult = searchDirectoryRecordByDirectoryNameBeingGivenParentDirectoryRecord(diskInfo, volumeHeader, catalogFileHeaderNode,
+                                                                                                                            *catalogDirectoryRecord,
+                                                                                                                             actualDirectoryName,
+                                                                                                                             searchedCatalogDirectoryRecord);
 
         if(searchedCatalogDirectoryRecordResult == SEARCH_DIRECTORY_RECORD_BY_DIRECTORY_NAME_BEING_GIVEN_PARENT_RECORD_SUCCESS)
             *catalogDirectoryRecord = searchedCatalogDirectoryRecord;
@@ -46,8 +48,9 @@ uint32_t findCatalogDirectoryRecordByFullPath(DiskInfo* diskInfo, HFSPlusVolumeH
     return SEARCH_RECORD_BY_FULL_PATH_SUCCESS;
 }
 
-static uint32_t searchDirectoryRecordByDirectoryNameBeingGivenParentDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* parentDirectoryRecord,
-                                                                             char* searchedDirectoryName, CatalogDirectoryRecord* searchedDirectoryRecord)
+uint32_t searchDirectoryRecordByDirectoryNameBeingGivenParentDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode,
+                                                                             CatalogDirectoryRecord* parentDirectoryRecord, char* searchedDirectoryName,
+                                                                             CatalogDirectoryRecord* searchedDirectoryRecord)
 {
     if(parentDirectoryRecord == nullptr) //if we are looking for root, which is not an actual directory
     {
@@ -55,7 +58,7 @@ static uint32_t searchDirectoryRecordByDirectoryNameBeingGivenParentDirectoryRec
         return SEARCH_DIRECTORY_RECORD_BY_DIRECTORY_NAME_BEING_GIVEN_PARENT_RECORD_SUCCESS;
     }
 
-    uint32_t actualNodeNumber = 0;
+    uint32_t actualNodeNumber = catalogFileHeaderNode->headerRecord.rootNode;
     char* nodeBuffer = new char[getCatalogFileNodeSize()];
 
     uint32_t readNodeFromDiskResult = readNodeFromDisk(diskInfo, volumeHeader, nodeBuffer, actualNodeNumber);
@@ -66,6 +69,7 @@ static uint32_t searchDirectoryRecordByDirectoryNameBeingGivenParentDirectoryRec
     }
 
     HFSPlusCatalogKey* searchedKey = new HFSPlusCatalogKey();
+    searchedKey->parentID = parentDirectoryRecord->catalogData.folderID;
     searchedKey->nodeName.length = strlen(searchedDirectoryName) + 1;
     memcpy(&searchedKey->nodeName.chars, searchedDirectoryName, searchedKey->nodeName.length);
     searchedKey->nodeName.chars[searchedKey->nodeName.length] = 0;
@@ -86,7 +90,7 @@ static uint32_t searchDirectoryRecordByDirectoryNameBeingGivenParentDirectoryRec
 
 //////////////////////////////
 
-void updateHeaderNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* updatedCatalogFileHeaderNode)
+void updateCatalogHeaderNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* updatedCatalogFileHeaderNode)
 {
     uint32_t numberOfSectorsWritten, retryWriteCount = 2;
     uint32_t numOfSectorsToWrite = getNumberOfBlocksPerNode(volumeHeader) * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);

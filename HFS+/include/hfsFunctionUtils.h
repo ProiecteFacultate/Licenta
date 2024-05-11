@@ -16,4 +16,6 @@ uint32_t getFirstSectorForGivenBlock(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
 
 uint32_t getFirstBlockForAllocationFile(HFSPlusVolumeHeader* volumeHeader);
 
+uint32_t getFirstBlockForVolumeHeader(uint32_t blockSize);
+
 #endif

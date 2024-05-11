@@ -42,3 +42,15 @@ uint32_t getFirstBlockForAllocationFile(HFSPlusVolumeHeader* volumeHeader)
 {
     return 1024 / volumeHeader->blockSize + 1;
 }
+
+uint32_t getFirstBlockForVolumeHeader(uint32_t blockSize)
+{
+    switch (blockSize) {
+        case 512:
+            return 2;
+        case 1024:
+            return 1;
+        default:
+            return 0;
+    }
+}

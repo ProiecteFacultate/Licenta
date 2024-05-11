@@ -1,4 +1,5 @@
 #include "string.h"
+#include "windows.h"
 
 #include "../include/disk.h"
 #include "../../include/structures.h"
@@ -44,6 +45,30 @@ CatalogFileHeaderNode* updateNodeOccupiedInHeaderNodeMapRecord(CatalogFileHeader
     updatedCatalogFileHeaderNode->mapRecordAndOffsets[byteIndexForNodeNumber] = newByteValueForNodes;
 
     return updatedCatalogFileHeaderNode;
+}
+
+uint32_t createDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* parentRecord, CatalogDirectoryRecord* createdRecord,
+                                char* directoryName, int16_t fileType)
+{
+    uint32_t nameLen = strlen(directoryName);
+    createdRecord->catalogKey.keyLength = nameLen;
+    createdRecord->catalogKey.parentID = parentRecord->catalogData.folderID;
+    createdRecord->catalogKey.nodeName.length = nameLen;
+    memcpy(&createdRecord->catalogKey.nodeName.chars, directoryName, nameLen);
+    createdRecord->catalogKey.nodeName.chars[nameLen] = 0;
+
+    SYSTEMTIME time;
+    GetSystemTime(&time);
+
+    createdRecord->catalogData.recordType = fileType;
+    createdRecord->catalogData.folderID = volumeHeader->nextCatalogID;
+    //high 7 bits represent how many years since 1900, next 4 for month, next 5 for day and the low 16 represent the second in that day with a granularity of 2 (see in fat)
+    createdRecord->catalogData.createDate = ((time.wYear - 1900) << 25) | (time.wMonth << 21) | (time.wDay << 16) | ((time.wHour * 3600 + time.wMinute * 60 + time.wSecond) / 2);
+    createdRecord->catalogData.contentModDate = createdRecord->catalogData.createDate;
+    createdRecord->catalogData.accessDate = createdRecord->catalogData.createDate;
+
+    return CREATE_DIRECTORY_RECORD_SUCCESS;
+    //TODO PREALLOCATE EXTENTS?
 }
 
 uint32_t getNumberOfBlocksPerNode(HFSPlusVolumeHeader* volumeHeader)

@@ -35,7 +35,6 @@ static void initializeExtentsOverflowFile(DiskInfo* diskInfo, HFSPlusVolumeHeade
 static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader);
 
 /////////
-static uint32_t getFirstBlockForVolumeHeader(uint32_t blockSize);
 static uint32_t getFirstBlockForExtentsOverflowFile(HFSPlusForkData * allocationFileForkData);
 static uint32_t getFirstBlockForCatalogFile(HFSPlusForkData* extentsFileForkData);
 

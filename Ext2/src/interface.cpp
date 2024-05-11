@@ -456,7 +456,7 @@ static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, ext2_super_
         case GET_SUBDIRECTORIES_FAILED_FOR_OTHER_REASON:
             std::cout << "Failed to retrieve subdirectories for " << originalParentPath << "\n";
             break;
-        case GET_SUB_DIRECTORIES_SUCCESS:
+        case GET_SUBDIRECTORIES_SUCCESS:
             std::cout << "Subdirectories for " << originalParentPath<< ":\n";
 
             for(std::pair<ext2_inode*, ext2_dir_entry*> child: subDirectories)
@@ -502,7 +502,7 @@ static void commandListSubdirectoriesWithSize(DiskInfo* diskInfo, ext2_super_blo
         case GET_SUBDIRECTORIES_FAILED_FOR_OTHER_REASON:
             std::cout << "Failed to retrieve subdirectories for " << originalParentPath << "\n";
             break;
-        case GET_SUB_DIRECTORIES_SUCCESS:
+        case GET_SUBDIRECTORIES_SUCCESS:
             std::cout << "Subdirectories for " << originalParentPath<< ":\n";
 
             for(std::pair<ext2_inode*, ext2_dir_entry*> child: subDirectories)
