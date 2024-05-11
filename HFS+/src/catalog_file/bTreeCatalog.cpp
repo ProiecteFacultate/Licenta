@@ -60,7 +60,7 @@ uint32_t insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
         if(createNodeOnDiskResult == CREATE_NODE_ON_DISK_FAILED)
             return INSERT_RECORD_IN_TREE_FAILED;
 
-        uint32_t insertFirstKeyInRootNodeResult = insertRecordInNode(diskInfo, volumeHeader, recordToInsert, 0, 0);
+        uint32_t insertFirstKeyInRootNodeResult = insertRecordInNode(diskInfo, volumeHeader, recordToInsert, 0, 0, true);
 
         return (insertFirstKeyInRootNodeResult == INSERT_RECORD_IN_NODE_SUCCESS) ? INSERT_RECORD_IN_TREE_SUCCESS : INSERT_RECORD_IN_TREE_FAILED;
     }
@@ -84,13 +84,12 @@ uint32_t insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
             char* newNodeData = new char[getCatalogFileNodeSize()];
             uint32_t createNodeOnDiskResult = createNodeOnDisk(diskInfo, volumeHeader, catalogFileHeaderNode, newNodeData, newNodeNumber, NODE_IS_NOT_LEAF);
 
+            delete[] rootNodeData;
             if(createNodeOnDiskResult == CREATE_NODE_ON_DISK_FAILED)
             {
-                delete[] rootNodeData, delete[] newNodeData;
+                delete[] newNodeData;
                 return INSERT_RECORD_IN_TREE_FAILED;
             }
-
-            BTNodeDescriptor* newNodeDescriptor = (BTNodeDescriptor*)&newNodeData[0];
 
             //make old root the child of this new root
             ChildNodeInfo* childNodeInfoToInsert = new ChildNodeInfo();
@@ -99,7 +98,7 @@ uint32_t insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
 
             if(insertChildNodeInfoResult == INSERT_CHILD_NODE_INFO_IN_NODE_FAILED)
             {
-                delete[] rootNodeData, delete[] newNodeData;
+                delete[] newNodeData;
                 return INSERT_RECORD_IN_TREE_FAILED;
             }
 
@@ -108,8 +107,17 @@ uint32_t insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
 
             if(splitChildResult == SPLIT_CHILD_FAILED)
             {
-                delete[] rootNodeData, delete[] newNodeData;
+                delete[] newNodeData;
                 return INSERT_RECORD_IN_TREE_FAILED;
+            }
+
+            //read the new node from disk after the split child
+            uint32_t readNewNodeFromDiskAfterUpdateResult = readNodeFromDisk(diskInfo, volumeHeader, newNodeData, newNodeNumber);
+
+            if(readNewNodeFromDiskAfterUpdateResult == READ_NODE_FROM_DISK_FAILED)
+            {
+                delete[] newNodeData;
+                return INSERT_RECORD_IN_NODE_FAILED;
             }
 
             //new root has 2 children now; decide which of them will have the new record
@@ -120,14 +128,13 @@ uint32_t insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
 
             uint32_t byteIndexOfChildNodeInfo = getCatalogFileNodeSize() - (i + 1) * sizeof(ChildNodeInfo);
             ChildNodeInfo* childNodeInfo = (ChildNodeInfo*)&newNodeData[byteIndexOfChildNodeInfo];
+            delete[] newNodeData;
 
             uint32_t insertNonNullResult = insertNonFull(diskInfo, volumeHeader, catalogFileHeaderNode, childNodeInfo->nodeNumber, recordToInsert);
             if(insertNonNullResult == INSERT_NON_FULL_FAILED)
-            {
-                delete[] rootNodeData, delete[] newNodeData;
                 return INSERT_RECORD_IN_TREE_FAILED;
-            }
 
+            //change root
             CatalogFileHeaderNode* updatedCatalogFileHeaderNode = new CatalogFileHeaderNode();
             memcpy(updatedCatalogFileHeaderNode, catalogFileHeaderNode, sizeof(CatalogFileHeaderNode));
             updatedCatalogFileHeaderNode->headerRecord.rootNode = newNodeNumber;
@@ -135,14 +142,14 @@ uint32_t insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
             updateHeaderNodeOnDisk(diskInfo, volumeHeader, updatedCatalogFileHeaderNode);
             memcpy(catalogFileHeaderNode, updatedCatalogFileHeaderNode, sizeof(CatalogFileHeaderNode));
 
-            delete[] rootNodeData, delete[] newNodeData, delete updatedCatalogFileHeaderNode;
+            delete rootNodeDescriptor, delete childNodeInfoToInsert, delete newNodeFirstRecord, delete childNodeInfo, delete updatedCatalogFileHeaderNode;
             return INSERT_RECORD_IN_TREE_SUCCESS;
         }
         else //if root is not full
         {
             uint32_t insertNonNullResult = insertNonFull(diskInfo, volumeHeader, catalogFileHeaderNode, catalogFileHeaderNode->headerRecord.rootNode, recordToInsert);
 
-            delete[] rootNodeData;
+            delete[] rootNodeData, delete rootNodeDescriptor;
             return (insertNonNullResult == INSERT_NON_FULL_SUCCESS) ? INSERT_RECORD_IN_TREE_SUCCESS : INSERT_RECORD_IN_TREE_FAILED;
         }
     }
@@ -153,23 +160,23 @@ static uint32_t splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
 {
     uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerCatalogFileNode() / 2 + 1; //t (maximum is always odd so it will actually be the great half for 5 will be 3)
     //read the 2 existing nodes from disk
-    char* nodeToMoveOneKeyToData = new char[getCatalogFileNodeSize()]; //s
-    uint32_t readNodeFromDiskResult = readNodeFromDisk(diskInfo, volumeHeader, nodeToMoveOneKeyToData, nodeNumberToMoveOneRecordTo);
+    char* nodeToMoveOneRecordToData = new char[getCatalogFileNodeSize()]; //s
+    uint32_t readNodeFromDiskResult = readNodeFromDisk(diskInfo, volumeHeader, nodeToMoveOneRecordToData, nodeNumberToMoveOneRecordTo);
 
     if(readNodeFromDiskResult == READ_NODE_FROM_DISK_FAILED)
     {
-        delete[] nodeToMoveOneKeyToData;
+        delete[] nodeToMoveOneRecordToData;
         return SPLIT_CHILD_FAILED;
     }
 
-    BTNodeDescriptor* nodeToMoveOneKeyToNodeDescriptor = (BTNodeDescriptor*)&nodeToMoveOneKeyToData[0];
+    BTNodeDescriptor* nodeToMoveOneRecordToNodeDescriptor = (BTNodeDescriptor*)&nodeToMoveOneRecordToData[0];
 
     char* nodeToSplitData = new char[getCatalogFileNodeSize()]; //y
     readNodeFromDiskResult = readNodeFromDisk(diskInfo, volumeHeader, nodeToSplitData, nodeNumberToSplit);
 
     if(readNodeFromDiskResult == READ_NODE_FROM_DISK_FAILED)
     {
-        delete[] nodeToMoveOneKeyToData, delete[] nodeToSplitData;
+        delete[] nodeToMoveOneRecordToData, delete[] nodeToSplitData;
         return SPLIT_CHILD_FAILED;
     }
 
@@ -180,23 +187,23 @@ static uint32_t splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
     uint32_t newNodeNumber;
 
     uint32_t createNodeOnDiskResult = createNodeOnDisk(diskInfo, volumeHeader, catalogFileHeaderNode, newNodeData, newNodeNumber, nodeToSplitNodeDescriptor->isLeaf);
-    delete[] newNodeData;
 
     if(createNodeOnDiskResult == CREATE_NODE_ON_DISK_FAILED)
     {
-        delete[] nodeToMoveOneKeyToData, delete[] nodeToSplitData, delete[] newNodeData;
+        delete[] nodeToMoveOneRecordToData, delete[] nodeToSplitData, delete[] newNodeData;
         return SPLIT_CHILD_FAILED;
     }
 
-    //copy the last t-1 keys of nodeToSplit to the new node
+    //copy the last t-1 records of nodeToSplit to the new node
     for (uint32_t j = 0; j < halfOfTheMaxNumberOfRecordsPerNode - 1; j++)
     {
         uint32_t startingByteOfRecord = sizeof(BTNodeDescriptor) + (j + halfOfTheMaxNumberOfRecordsPerNode) * sizeof(CatalogDirectoryRecord);
         CatalogDirectoryRecord *recordToInsert = (CatalogDirectoryRecord*) &nodeToSplitData[startingByteOfRecord];
-        uint32_t insertRecordInNodeResult = insertRecordInNode(diskInfo, volumeHeader, recordToInsert, newNodeNumber,
-                                                               j);
+        uint32_t insertRecordInNodeResult = insertRecordInNode(diskInfo, volumeHeader, recordToInsert, newNodeNumber, j,
+                                                               false);
+
         if (insertRecordInNodeResult == INSERT_RECORD_IN_NODE_FAILED) {
-            delete[] nodeToMoveOneKeyToData, delete[] nodeToSplitData, delete[] newNodeData;
+            delete[] nodeToMoveOneRecordToData, delete[] nodeToSplitData, delete[] newNodeData;
             return SPLIT_CHILD_FAILED;
         }
     }
@@ -210,7 +217,7 @@ static uint32_t splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
             uint32_t insertChildNodeInfoInNodeResult = insertChildNodeInfoInNode(diskInfo, volumeHeader, childNodeInfoToInsert, newNodeNumber, j);
 
             if (insertChildNodeInfoInNodeResult == INSERT_CHILD_NODE_INFO_IN_NODE_FAILED) {
-                delete[] nodeToMoveOneKeyToData, delete[] nodeToSplitData, delete[] newNodeData;
+                delete[] nodeToMoveOneRecordToData, delete[] nodeToSplitData, delete[] newNodeData;
                 return SPLIT_CHILD_FAILED;
             }
         }
@@ -221,14 +228,14 @@ static uint32_t splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
     updateNodeOnDisk(diskInfo, volumeHeader, nodeToSplitData, nodeNumberToSplit);
 
     //move existing children of nodeNumberToMoveOneRecordTo to right to make space for the new child
-    for(uint32_t j = nodeToMoveOneKeyToNodeDescriptor->numRecords; j >= indexToMoveTheRecordTo + 1; j--)
+    for(uint32_t j = nodeToMoveOneRecordToNodeDescriptor->numRecords; j >= indexToMoveTheRecordTo + 1; j--)
     {
         uint32_t startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (j + 1) * sizeof(ChildNodeInfo);
-        ChildNodeInfo *childNodeInfoToInsert = (ChildNodeInfo*) &nodeToSplitData[startingByteOfChildNodeInfo];
+        ChildNodeInfo *childNodeInfoToInsert = (ChildNodeInfo*) &nodeToMoveOneRecordToData[startingByteOfChildNodeInfo];
         uint32_t insertChildNodeInfoResult = insertChildNodeInfoInNode(diskInfo, volumeHeader, childNodeInfoToInsert, nodeNumberToMoveOneRecordTo, j + 1);
 
         if (insertChildNodeInfoResult == INSERT_CHILD_NODE_INFO_IN_NODE_FAILED) {
-            delete[] nodeToMoveOneKeyToData, delete[] nodeToSplitData, delete[] newNodeData;
+            delete[] nodeToMoveOneRecordToData, delete[] nodeToSplitData, delete[] newNodeData;
             return SPLIT_CHILD_FAILED;
         }
     }
@@ -241,40 +248,31 @@ static uint32_t splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
 
     if (insertChildNodeInfoResult == INSERT_CHILD_NODE_INFO_IN_NODE_FAILED)
     {
-        delete[] nodeToMoveOneKeyToData, delete[] nodeToSplitData, delete[] newNodeData;
+        delete[] nodeToMoveOneRecordToData, delete[] nodeToSplitData, delete[] newNodeData;
         return SPLIT_CHILD_FAILED;
     }
 
     //move all records with greater keys (of nodeToMoveOneRecordTo) than the record to move one space to right to make space for the moved record
-    for(uint32_t j = nodeToMoveOneKeyToNodeDescriptor->numRecords - 1; j >= indexToMoveTheRecordTo; j--)
+    for(uint32_t j = nodeToMoveOneRecordToNodeDescriptor->numRecords - 1; j >= indexToMoveTheRecordTo; j--)
     {
         uint32_t startingByteOfRecord = sizeof(BTNodeDescriptor) + j * sizeof(CatalogDirectoryRecord);
-        CatalogDirectoryRecord *recordToInsert = (CatalogDirectoryRecord*) &nodeToMoveOneKeyToData[startingByteOfRecord];
-        uint32_t insertRecordInNodeResult = insertRecordInNode(diskInfo, volumeHeader, recordToInsert, nodeNumberToMoveOneRecordTo, j + 1);
+        CatalogDirectoryRecord *recordToInsert = (CatalogDirectoryRecord*) &nodeToMoveOneRecordToData[startingByteOfRecord];
+        uint32_t insertRecordInNodeResult = insertRecordInNode(diskInfo, volumeHeader, recordToInsert, nodeNumberToMoveOneRecordTo, j + 1,
+                                                               false);
 
         if (insertRecordInNodeResult == INSERT_RECORD_IN_NODE_FAILED) {
-            delete[] nodeToMoveOneKeyToData, delete[] nodeToSplitData, delete[] newNodeData;
+            delete[] nodeToMoveOneRecordToData, delete[] nodeToSplitData, delete[] newNodeData;
             return SPLIT_CHILD_FAILED;
         }
     }
 
     //copy the middle record of nodeToSplit to nodeToMoveOneRecordTo
-    uint32_t startingByteOfRecord = sizeof(BTNodeDescriptor) + (indexToMoveTheRecordTo - 1) * sizeof(CatalogDirectoryRecord);
+    uint32_t startingByteOfRecord = sizeof(BTNodeDescriptor) + (halfOfTheMaxNumberOfRecordsPerNode - 1) * sizeof(CatalogDirectoryRecord);
     CatalogDirectoryRecord *recordToInsert = (CatalogDirectoryRecord*) &nodeToSplitData[startingByteOfRecord];
-    uint32_t insertRecordInNodeResult = insertRecordInNode(diskInfo, volumeHeader, recordToInsert, nodeNumberToMoveOneRecordTo, indexToMoveTheRecordTo);
+    uint32_t insertRecordInNodeResult = insertRecordInNode(diskInfo, volumeHeader, recordToInsert, nodeNumberToMoveOneRecordTo, indexToMoveTheRecordTo, true);
 
-    if (insertRecordInNodeResult == INSERT_RECORD_IN_NODE_FAILED)
-    {
-        delete[] nodeToMoveOneKeyToData, delete[] nodeToSplitData, delete[] newNodeData;
-        return SPLIT_CHILD_FAILED;
-    }
-
-    //increment number of records for nodeToMoveOneRecordTo
-    nodeToMoveOneKeyToNodeDescriptor->numRecords++;
-    updateNodeOnDisk(diskInfo, volumeHeader, nodeToMoveOneKeyToData, nodeNumberToMoveOneRecordTo);
-
-    delete[] nodeToMoveOneKeyToData, delete[] nodeToSplitData, delete[] newNodeData;
-    return SPLIT_CHILD_SUCCESS;
+    delete[] nodeToMoveOneRecordToData, delete[] nodeToSplitData, delete[] newNodeData;
+    return (insertRecordInNodeResult == INSERT_RECORD_IN_NODE_SUCCESS) ? SPLIT_CHILD_SUCCESS : SPLIT_CHILD_FAILED;
 }
 
 static uint32_t insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumberToInsertRecordInto,
@@ -299,11 +297,11 @@ static uint32_t insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHea
     {
         //find location where the new record to be inserted and move all records with greater key one place at right
         uint32_t byteIndexOfRecord = sizeof(BTNodeDescriptor) + index * sizeof(CatalogDirectoryRecord);
-        CatalogDirectoryRecord* record = (CatalogDirectoryRecord*)&nodeToInsertRecordIntoData[byteIndexOfRecord];
+        CatalogDirectoryRecord* record = (CatalogDirectoryRecord*) &nodeToInsertRecordIntoData[byteIndexOfRecord];
 
         while(index >= 0 && compareKeys(&record->catalogKey, &recordToInsert->catalogKey) > 0)
         {
-            uint32_t insertRecordInNodeResult = insertRecordInNode(diskInfo, volumeHeader, record, nodeNumberToInsertRecordInto, index + 1);
+            uint32_t insertRecordInNodeResult = insertRecordInNode(diskInfo, volumeHeader, record, nodeNumberToInsertRecordInto, index + 1, false);
 
             if (insertRecordInNodeResult == INSERT_RECORD_IN_NODE_FAILED)
             {
@@ -317,16 +315,10 @@ static uint32_t insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHea
         }
 
         //insert the new record at found location
-        uint32_t insertRecordInNodeResult = insertRecordInNode(diskInfo, volumeHeader, recordToInsert, nodeNumberToInsertRecordInto, index + 1);
+        uint32_t insertRecordInNodeResult = insertRecordInNode(diskInfo, volumeHeader, recordToInsert, nodeNumberToInsertRecordInto, index + 1, true);
 
-        if (insertRecordInNodeResult == INSERT_RECORD_IN_NODE_FAILED)
-        {
-            delete[] nodeToInsertRecordIntoData;
-            return INSERT_NON_FULL_FAILED;
-        }
-
-        nodeToInsertRecordIntoDescriptor->numRecords++;
-        updateNodeOnDisk(diskInfo, volumeHeader, nodeToInsertRecordIntoData, nodeNumberToInsertRecordInto);
+        delete[] nodeToInsertRecordIntoData;
+        return (insertRecordInNodeResult == INSERT_RECORD_IN_NODE_SUCCESS) ? INSERT_NON_FULL_SUCCESS : INSERT_NON_FULL_FAILED;
     }
     else //node is not leaf
     {
@@ -369,24 +361,30 @@ static uint32_t insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHea
                 return INSERT_NON_FULL_FAILED;
             }
 
+            //we read the node again from disk because it got changed on split
+            readNodeFromDiskResult = readNodeFromDisk(diskInfo, volumeHeader, nodeToInsertRecordIntoData, nodeNumberToInsertRecordInto);
+
+            if(readNodeFromDiskResult == READ_NODE_FROM_DISK_FAILED)
+            {
+                delete[] nodeToInsertRecordIntoData;
+                return INSERT_NON_FULL_FAILED;
+            }
+
             // after split, the middle record of childNodeInfo[i] goes up and childNodeInfo[i] is split into two. See which of the two is going to have the new record
             byteIndexOfRecord = sizeof(BTNodeDescriptor) + (index + 1) * sizeof(CatalogDirectoryRecord);
             record = (CatalogDirectoryRecord*)&nodeToInsertRecordIntoData[byteIndexOfRecord];
 
-            if(compareKeys(&record->catalogKey, & recordToInsert->catalogKey) < 0)
+            if(compareKeys(&record->catalogKey, &recordToInsert->catalogKey) < 0)
                 index++;
         }
 
+        startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (index + 2) * sizeof(ChildNodeInfo);
+        childNodeInfo = (ChildNodeInfo*) &nodeToInsertRecordIntoData[startingByteOfChildNodeInfo];
         uint32_t insertNonNullResult = insertNonFull(diskInfo, volumeHeader, catalogFileHeaderNode, childNodeInfo->nodeNumber, recordToInsert);
-        if(insertNonNullResult == INSERT_NON_FULL_FAILED)
-        {
-            delete[] nodeToInsertRecordIntoData, delete[] foundChildNodeData;
-            return INSERT_NON_FULL_FAILED;
-        }
-    }
 
-    delete[] nodeToInsertRecordIntoData;
-    return INSERT_NON_FULL_SUCCESS;
+        delete[] nodeToInsertRecordIntoData, delete[] foundChildNodeData;
+        return (insertNonNullResult == INSERT_NON_FULL_SUCCESS) ? INSERT_NON_FULL_SUCCESS : INSERT_NON_FULL_FAILED;
+    }
 }
 
 ///////////////////////////
@@ -415,7 +413,10 @@ uint32_t createNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
                                             numberOfSectorsWritten);
 
     if(writeResult != EC_NO_ERROR)
+    {
+        delete newNodeDescriptor;
         return CREATE_NODE_ON_DISK_FAILED;
+    }
 
     //mark node as occupied in header node map record and decrease number of free nodes
     CatalogFileHeaderNode* updatedCatalogFileHeaderNode = updateNodeOccupiedInHeaderNodeMapRecord(catalogFileHeaderNode, newNodeNumber, 1);
@@ -424,12 +425,13 @@ uint32_t createNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
     updateHeaderNodeOnDisk(diskInfo, volumeHeader, updatedCatalogFileHeaderNode);
     memcpy(catalogFileHeaderNode, updatedCatalogFileHeaderNode, sizeof(CatalogFileHeaderNode));
 
-    delete updatedCatalogFileHeaderNode;
+    delete updatedCatalogFileHeaderNode, delete newNodeDescriptor;
 
     return CREATE_NODE_ON_DISK_SUCCESS;
 }
 
-uint32_t insertRecordInNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* recordToInsert, uint32_t nodeNumber, uint32_t recordIndexInNode)
+uint32_t insertRecordInNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* recordToInsert, uint32_t nodeNumber, uint32_t recordIndexInNode,
+                               bool shouldIncreaseNumOfRecordsInNodeDescriptor)
 {
     char* nodeData = new char[getCatalogFileNodeSize()];
     uint32_t readNodeFromDiskResult = readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
@@ -441,9 +443,11 @@ uint32_t insertRecordInNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
     }
 
     BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
-    uint32_t byteIndexInNodeToInsertTheRecord = sizeof(BTNodeDescriptor) + (recordIndexInNode + 1) * sizeof(CatalogDirectoryRecord);
+    uint32_t byteIndexInNodeToInsertTheRecord = sizeof(BTNodeDescriptor) + recordIndexInNode * sizeof(CatalogDirectoryRecord);
     memcpy(nodeData + byteIndexInNodeToInsertTheRecord, recordToInsert, sizeof(CatalogDirectoryRecord));
-    nodeDescriptor->numRecords++; //making this operation on the pointer also changes the value in nodeData buffer... HOPEFULLY
+
+    if(shouldIncreaseNumOfRecordsInNodeDescriptor == true)
+        nodeDescriptor->numRecords++; //making this operation on the pointer also changes the value in nodeData buffer... HOPEFULLY
 
     updateNodeOnDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
@@ -477,7 +481,7 @@ uint32_t insertChildNodeInfoInNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
 uint32_t readNodeFromDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, char* nodeBuffer, uint32_t nodeNumber)
 {
     uint32_t numberOfSectorsRead;
-    uint32_t firstBlockForNode = getFirstBlockForGivenNodeIndex(volumeHeader, nodeNumber); //root node
+    uint32_t firstBlockForNode = getFirstBlockForGivenNodeIndex(volumeHeader, nodeNumber);
     uint32_t firstSector = getFirstSectorForGivenBlock(diskInfo, volumeHeader, firstBlockForNode);
 
     uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerNode(diskInfo, volumeHeader), firstSector, nodeBuffer, numberOfSectorsRead);

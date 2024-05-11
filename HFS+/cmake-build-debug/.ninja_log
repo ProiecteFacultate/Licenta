@@ -36,3 +36,6 @@
 2466	5680	7370820259616084	CMakeFiles/HFS_.dir/src/catalog_file/catalogFileOperations.cpp.obj	49dd44f6ac334efd
 4445	6429	7370820267115319	CMakeFiles/HFS_.dir/src/catalog_file/catalogFileUtils.cpp.obj	ef3c705927e121f
 6429	7050	7370820273043471	HFS_.exe	50bbea50eb37e266
+6	1798	7370907995700237	CMakeFiles/HFS_.dir/src/catalog_file/bTreeCatalog.cpp.obj	defb08f851a34aa1
+12	1908	7370907996807272	CMakeFiles/HFS_.dir/src/catalog_file/catalogFileOperations.cpp.obj	49dd44f6ac334efd
+1908	2202	7370907998511608	HFS_.exe	50bbea50eb37e266

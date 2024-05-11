@@ -112,7 +112,8 @@ void updateNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, cha
 {
     uint32_t numberOfSectorsWritten, retryWriteCount = 2;
     uint32_t numOfSectorsToWrite = getNumberOfBlocksPerNode(volumeHeader) * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
-    uint32_t firstSectorForGivenNode = getFirstSectorForGivenBlock(diskInfo, volumeHeader, nodeNumber);
+    uint32_t firstBlockForNode = getFirstBlockForGivenNodeIndex(volumeHeader, nodeNumber);
+    uint32_t firstSectorForGivenNode = getFirstSectorForGivenBlock(diskInfo, volumeHeader, firstBlockForNode);
 
     uint32_t writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForGivenNode, updatedNodeData, numberOfSectorsWritten);
 
