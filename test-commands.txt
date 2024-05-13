@@ -1,0 +1,16 @@
+mkdir Root Dir_1 DIRECTORY_TYPE_FOLDER
+mkdir Root File_1 DIRECTORY_TYPE_FILE
+
+mkdir Root/Dir_1 D1_File_1 DIRECTORY_TYPE_FILE
+mkdir Root/Dir_1 D1_Dir_1 DIRECTORY_TYPE_FOLDER
+
+mkdir Root File_2 DIRECTORY_TYPE_FILE
+mkdir Root Dir_2 DIRECTORY_TYPE_FOLDER
+
+mkdir Root/Dir_2 D2_File_1 DIRECTORY_TYPE_FILE
+
+mkdir Root/Dir_1/D1_Dir_1 F_1 DIRECTORY_TYPE_FILE
+
+ls Root/Dir_1
+ls Root/Dir_2
+ls Root/Dir_1/D1_Dir_1

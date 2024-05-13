@@ -163,7 +163,7 @@ static void initializeVolumeHeader(DiskInfo* diskInfo)
     hfsVolumeHeader->rsrcClumpSize = 0;
     hfsVolumeHeader->dataClumpSize = hfsVolumeHeader->blockSize * clumpBlocks;
     hfsVolumeHeader->nextCatalogID = 1; //first record will have id 1, and its parent is root (which is not an actual record) so 0; any record directly under root will have parent 0
-    hfsVolumeHeader->writeCount = 0;
+    hfsVolumeHeader->nextExtentsID = 1; //same as for nextCatalogID
     hfsVolumeHeader->encodingsBitmap = 0;
     // hfsVolumeHeader->finderInfo -> this array stays at 0 for all fields
 
@@ -206,6 +206,8 @@ static void initializeVolumeHeader(DiskInfo* diskInfo)
     delete[] blockBuffer, delete allocationFileForkData, delete extentsOverflowFileForkData, delete catalogFileForkData;
 }
 
+//in documentation the allocation file represents all blocks (including the ones for structures). we make to to include only the data blocks so first bit in allocation file represents
+//first data block. However the allocation file size is enough to represent all blocks (including the ones for structures) not only the fata blocks
 static void initializeAllocationFileForkData(DiskInfo* diskInfo, HFSPlusForkData* forkData, uint32_t blockSize)
 {
     uint64_t diskSize = (uint64_t) diskInfo->diskParameters.sectorsNumber * (uint64_t) diskInfo->diskParameters.sectorSizeBytes;

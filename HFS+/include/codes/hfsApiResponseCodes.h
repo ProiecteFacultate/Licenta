@@ -13,4 +13,9 @@
 #define GET_SUBDIRECTORIES_FAILED_FOR_OTHER_REASON                                                                       2
 #define GET_SUBDIRECTORIES_SUCCESS                                                                                       999
 
+#define WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE                                                                     0
+#define WRITE_BYTES_TO_FILE_DIRECTORY_DO_NOT_EXIST                                                                       1
+#define WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON                                                                      2
+#define WRITE_BYTES_TO_FILE_SUCCESS                                                                                      999
+
 #endif

@@ -29,6 +29,15 @@ add_executable(HFS_ src/main.cpp
         include/hfs.h
         include/interface.h
         src/interface.cpp
+        include/codes/hfsCodes.h
+        include/extents_file/codes/bTreeResponseCodes.h
+        include/extents_file/codes/extentsFileResponseCodes.h
+        include/extents_file/bTreeCatalog.h
+        include/extents_file/extentsFileOperations.h
+        include/extents_file/extentsFileUtils.h
+        src/extents_file/bTreeCatalog.cpp
+        src/extents_file/extentsFileOperations.cpp
+        src/extents_file/extentsFileUtils.cpp
 )
 
 include(FindPkgConfig)

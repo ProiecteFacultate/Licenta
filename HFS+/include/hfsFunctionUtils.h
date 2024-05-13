@@ -6,6 +6,8 @@
 
 uint32_t getMaximumNumberOfRecordsPerCatalogFileNode();
 
+uint32_t getMaximumNumberOfRecordsPerExtentsFileNode();
+
 uint32_t getNumberOfSectorsPerBlock(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader);
 
 ///////////////
@@ -17,5 +19,7 @@ uint32_t getFirstSectorForGivenBlock(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
 uint32_t getFirstBlockForAllocationFile(HFSPlusVolumeHeader* volumeHeader);
 
 uint32_t getFirstBlockForVolumeHeader(uint32_t blockSize);
+
+uint32_t changeBlockAllocationInAllocationFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t blockGlobalIndex, uint8_t newValue);
 
 #endif

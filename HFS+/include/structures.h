@@ -39,7 +39,7 @@ typedef struct
     uint32_t rsrcClumpSize;
     uint32_t dataClumpSize;
     HFSCatalogNodeID nextCatalogID;
-    uint32_t writeCount;
+    HFSCatalogNodeID nextExtentsID; //custom
     uint64_t encodingsBitmap;
     uint32_t finderInfo[8];
     HFSPlusForkData allocationFile;
@@ -121,20 +121,9 @@ typedef struct
     uint8_t userInfo[16]; //we don't care
     uint8_t finderInfo[16]; //we don't care
     uint32_t textEncoding;
-    uint32_t reserved;
+    uint32_t fileSize;   //this was a reserved field but we use it for this
     HFSPlusForkData hfsPlusForkData;
 } __attribute__((packed)) HFSPlusCatalogDirectory;
-
-//Extent overflow structures
-
-typedef struct
-{
-    uint16_t keyLength;
-    uint8_t forkType;
-    uint8_t pad;
-    HFSCatalogNodeID fileID;
-    uint32_t startBlock;
-} __attribute__((packed)) HFSPlusExtentKey;
 
 //Custom structure
 typedef struct
@@ -165,5 +154,24 @@ typedef struct
     HFSPlusCatalogKey catalogKey;
     HFSPlusCatalogDirectory catalogData;
 } __attribute__((packed)) CatalogDirectoryRecord;
+
+typedef struct {
+    uint16_t keyLength;
+    HFSCatalogNodeID parentID;
+    HFSUniStr255 nodeName;
+    uint32_t extentOverflowIndex; //every extent of a file that is overflowed has an index in normal order 0, 1, 2.. which represents the 9th, 10th.. etch extent of the file
+} __attribute__((packed)) ExtentsFileCatalogKey;
+
+typedef struct
+{
+    HFSCatalogNodeID folderID;
+    HFSPlusExtentDescriptor extent;
+} __attribute__((packed)) ExtentsFileCatalogDirectory;
+
+typedef struct
+{
+    ExtentsFileCatalogKey catalogKey;
+    ExtentsFileCatalogDirectory catalogData;
+} __attribute__((packed)) ExtentsDirectoryRecord;
 
 #endif
