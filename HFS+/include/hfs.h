@@ -6,7 +6,7 @@
 
 uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* fileRecord, CatalogFileHeaderNode* catalogFileHeaderNode,
                                       ExtentsFileHeaderNode* extentsFileHeaderNode, char* dataBuffer, uint32_t maxBytesToWrite, uint32_t& numberOfBytesWritten,
-                                      uint32_t& reasonForIncompleteWrite, uint32_t nodeNumberOfRecord, std::vector<HFSPlusExtentDescriptor*> foundExtents);
+                                      uint32_t& reasonForIncompleteWrite, uint32_t nodeNumberOfRecord, std::vector<HFSPlusExtentDescriptor*>& foundExtents);
 
 //CRITICAL
 void updateVolumeHeaderNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, HFSPlusVolumeHeader* updatedVolumeHeader);
@@ -18,7 +18,11 @@ static uint32_t writeDataToExtent(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
 
 static uint32_t searchFreeExtentOfGivenNumberOfBlocks(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t numberOfBlocksInExtent, HFSPlusExtentDescriptor* foundExtent);
 
-uint32_t setExtentsForDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, CatalogDirectoryRecord* fileRecord,
+uint32_t setExtentsForDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, CatalogDirectoryRecord* fileRecord,
                                       std::vector<HFSPlusExtentDescriptor*> extents, uint32_t nodeNumberOfRecord);
+
+//HIDDEN FEATURE The extents are returned sorted
+uint32_t getAllExtentsForGivenDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode,
+                                              CatalogDirectoryRecord* fileRecord, std::vector<HFSPlusExtentDescriptor*>& extents);
 
 #endif

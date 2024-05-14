@@ -46,6 +46,10 @@ int main() {
             commandCreateDirectory(diskInfo, volumeHeader, catalogFileHeaderNode, tokens);
         else if(tokens[0] == "ls")
             commandListSubdirectories(diskInfo, volumeHeader, catalogFileHeaderNode, tokens);
+        else if(tokens[0] == "write")
+            commandWriteFile(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
+        else if(tokens[0] == "read")
+            commandReadFile(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
         else
             std::cout << "Unknown command \n";
 

@@ -84,10 +84,11 @@ uint32_t changeBlockAllocationInAllocationFile(DiskInfo* diskInfo, HFSPlusVolume
 
     uint32_t byteIndexInBlock = (blockLocalIndexInDataBlocks / 8) % volumeHeader->blockSize;
     uint32_t bitIndex = blockLocalIndexInDataBlocks % 8;
+    uint32_t blockToUpdate = volumeHeader->allocationFile.extents[0].startBlock + blockLocalIndexInDataBlocks;
 
     char* blockBuffer = new char[volumeHeader->blockSize];
     uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, volumeHeader),
-                                 getFirstSectorForGivenBlock(diskInfo, volumeHeader, blockGlobalIndex), blockBuffer, numOfSectorsRead);
+                                 getFirstSectorForGivenBlock(diskInfo, volumeHeader, blockToUpdate), blockBuffer, numOfSectorsRead);
 
     if(readResult != EC_NO_ERROR)
     {
@@ -99,7 +100,7 @@ uint32_t changeBlockAllocationInAllocationFile(DiskInfo* diskInfo, HFSPlusVolume
     blockBuffer[byteIndexInBlock] = newByteValue;
 
     uint32_t writeResult = writeDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, volumeHeader),
-                                          getFirstSectorForGivenBlock(diskInfo, volumeHeader, blockGlobalIndex), blockBuffer, numOfSectorsWritten);
+                                          getFirstSectorForGivenBlock(diskInfo, volumeHeader, blockToUpdate), blockBuffer, numOfSectorsWritten);
 
     delete[] blockBuffer;
     return (writeResult == EC_NO_ERROR) ? CHANGE_BLOCK_ALLOCATION_SUCCESS : CHANGE_BLOCK_ALLOCATION_FAILED;

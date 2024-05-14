@@ -5,6 +5,7 @@
 #include "../../include/structures.h"
 #include "../../include/utils.h"
 #include "../../include/hfsFunctionUtils.h"
+#include "../../include/hfs.h"
 #include "../../include/catalog_file/catalogFileUtils.h"
 #include "../../include/catalog_file/codes/catalogFileResponseCodes.h"
 
@@ -47,27 +48,36 @@ CatalogFileHeaderNode* cf_updateNodeOccupiedInHeaderNodeMapRecord(CatalogFileHea
     return updatedCatalogFileHeaderNode;
 }
 
-uint32_t cf_createDirectoryRecord(HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* parentRecord, CatalogDirectoryRecord* createdRecord,
-                               char* directoryName, int16_t fileType)
+CatalogDirectoryRecord* cf_createDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* parentRecord, char* directoryName,
+                                                 int16_t fileType)
 {
+    CatalogDirectoryRecord* record = new CatalogDirectoryRecord();
+
     uint32_t nameLen = strlen(directoryName);
-    createdRecord->catalogKey.keyLength = nameLen;
-    createdRecord->catalogKey.parentID = parentRecord->catalogData.folderID;
-    createdRecord->catalogKey.nodeName.length = nameLen;
-    memcpy(&createdRecord->catalogKey.nodeName.chars, directoryName, nameLen);
-    createdRecord->catalogKey.nodeName.chars[nameLen] = 0;
+    record->catalogKey.keyLength = nameLen;
+    record->catalogKey.parentID = parentRecord->catalogData.folderID;
+    record->catalogKey.nodeName.length = nameLen;
+    memcpy(&record->catalogKey.nodeName.chars, directoryName, nameLen);
+    record->catalogKey.nodeName.chars[nameLen] = 0;
 
     SYSTEMTIME time;
     GetSystemTime(&time);
 
-    createdRecord->catalogData.recordType = fileType;
-    createdRecord->catalogData.folderID = volumeHeader->nextCatalogID;
+    record->catalogData.recordType = fileType;
+    record->catalogData.folderID = volumeHeader->nextCatalogID;
     //high 7 bits represent how many years since 1900, next 4 for month, next 5 for day and the low 16 represent the second in that day with a granularity of 2 (see in fat)
-    createdRecord->catalogData.createDate = ((time.wYear - 1900) << 25) | (time.wMonth << 21) | (time.wDay << 16) | ((time.wHour * 3600 + time.wMinute * 60 + time.wSecond) / 2);
-    createdRecord->catalogData.contentModDate = createdRecord->catalogData.createDate;
-    createdRecord->catalogData.accessDate = createdRecord->catalogData.createDate;
+    record->catalogData.createDate = ((time.wYear - 1900) << 25) | (time.wMonth << 21) | (time.wDay << 16) | ((time.wHour * 3600 + time.wMinute * 60 + time.wSecond) / 2);
+    record->catalogData.contentModDate = record->catalogData.createDate;
+    record->catalogData.accessDate = record->catalogData.createDate;
 
-    return CF_CREATE_DIRECTORY_RECORD_SUCCESS;
+    //we attribute a new catalog record so we gave it the next catalog id so we need to increase it now
+    HFSPlusVolumeHeader* updatedVolumeHeader = new HFSPlusVolumeHeader();
+    memcpy(updatedVolumeHeader, volumeHeader, sizeof(HFSPlusVolumeHeader));
+    updatedVolumeHeader->nextCatalogID++;
+    updateVolumeHeaderNodeOnDisk(diskInfo, volumeHeader, updatedVolumeHeader);
+    memcpy(volumeHeader, updatedVolumeHeader, sizeof(HFSPlusVolumeHeader));
+
+    return record;
     //TODO PREALLOCATE EXTENTS?
 }
 

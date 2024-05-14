@@ -120,7 +120,7 @@ typedef struct
     uint8_t permissions[16]; //we don't care
     uint8_t userInfo[16]; //we don't care
     uint8_t finderInfo[16]; //we don't care
-    uint32_t textEncoding;
+    uint32_t totalNumOfExtents; //custom
     uint32_t fileSize;   //this was a reserved field but we use it for this
     HFSPlusForkData hfsPlusForkData;
 } __attribute__((packed)) HFSPlusCatalogDirectory;
@@ -156,9 +156,7 @@ typedef struct
 } __attribute__((packed)) CatalogDirectoryRecord;
 
 typedef struct {
-    uint16_t keyLength;
-    HFSCatalogNodeID parentID;
-    HFSUniStr255 nodeName;
+    HFSCatalogNodeID fileId;
     uint32_t extentOverflowIndex; //every extent of a file that is overflowed has an index in normal order 0, 1, 2.. which represents the 9th, 10th.. etch extent of the file
 } __attribute__((packed)) ExtentsFileCatalogKey;
 

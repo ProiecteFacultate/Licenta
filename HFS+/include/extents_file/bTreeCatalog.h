@@ -11,8 +11,8 @@ uint32_t eof_searchRecordForGivenNodeDataAndSearchedKey(DiskInfo* diskInfo, HFSP
 
 uint32_t eof_insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, ExtentsDirectoryRecord* recordToInsert);
 
-uint32_t eof_traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumberOfNodeToTraverseItsSubtree, HFSCatalogNodeID parentRecordId,
-                         std::vector<ExtentsDirectoryRecord*>& recordsVector);
+uint32_t eof_traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumberOfNodeToTraverseItsSubtree, HFSCatalogNodeID fileId,
+                             std::vector<ExtentsDirectoryRecord*>& recordsVector);
 
 //////////////////////////////////////////////
 

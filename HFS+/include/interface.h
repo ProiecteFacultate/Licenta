@@ -15,6 +15,15 @@ void commandCreateDirectory(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
 //Model 2: 'ls -l Root/Level_1' - lists all direct children of given parent with size
 void commandListSubdirectories(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, std::vector<std::string> commandTokens);
 
+//Model: 'write Root/Level_1 10000 TRUNCATE EOF' and o the next lines is the text to be written to the file for max bytes (10000 in the example).
+//Text read stops when encounters the given end of text marker (in or example EOF)
+void commandWriteFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode,
+                      std::vector<std::string> commandTokens);
+
+//Model: 'read Root/Level_1 100 10000' - reads starting from byte, up to max bytes from a file and prints them to the console
+void commandReadFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode,
+                     std::vector<std::string> commandTokens);
+
 //////////////////////////////////
 
 static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, std::vector<std::string> commandTokens);

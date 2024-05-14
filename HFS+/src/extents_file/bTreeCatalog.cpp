@@ -168,7 +168,7 @@ uint32_t eof_insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeH
     return EOF_INSERT_RECORD_IN_TREE_SUCCESS;
 }
 
-uint32_t eof_traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumberOfNodeToTraverseItsSubtree, HFSCatalogNodeID parentRecordId,
+uint32_t eof_traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumberOfNodeToTraverseItsSubtree, HFSCatalogNodeID fileId,
                          std::vector<ExtentsDirectoryRecord*>& recordsVector)
 {
     //read node to traverse its subtree from disk
@@ -190,7 +190,7 @@ uint32_t eof_traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHead
         uint32_t indexOfRecord = sizeof(BTNodeDescriptor) + index * sizeof(ExtentsDirectoryRecord);
         ExtentsDirectoryRecord* record = new ExtentsDirectoryRecord();
         memcpy(record, &nodeToTraverseItsSubtreeData[indexOfRecord], sizeof(ExtentsDirectoryRecord));
-        if(record->catalogKey.parentID == parentRecordId)
+        if(record->catalogKey.fileId == fileId)
             recordsVector.push_back(record);
         else
             delete record;
@@ -199,11 +199,12 @@ uint32_t eof_traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHead
         {
             uint32_t indexOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
             ChildNodeInfo* childNodeInfo = (ChildNodeInfo*)&nodeToTraverseItsSubtreeData[indexOfChildNodeInfo];
-            uint32_t traverseResult = eof_traverseSubtree(diskInfo, volumeHeader, childNodeInfo->nodeNumber, parentRecordId, recordsVector);
+            uint32_t traverseResult = eof_traverseSubtree(diskInfo, volumeHeader, childNodeInfo->nodeNumber, fileId, recordsVector);
 
+            delete childNodeInfo;
             if(traverseResult == EOF_TRAVERSE_SUBTREE_FAILED)
             {
-                delete[] nodeToTraverseItsSubtreeData;
+                delete[] nodeToTraverseItsSubtreeData, delete nodeToTraverseItsSubtreeDescriptor;
                 return EOF_TRAVERSE_SUBTREE_FAILED;
             }
         }
@@ -213,9 +214,9 @@ uint32_t eof_traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHead
     {
         uint32_t indexOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
         ChildNodeInfo* childNodeInfo = (ChildNodeInfo*)&nodeToTraverseItsSubtreeData[indexOfChildNodeInfo];
-        uint32_t traverseResult = eof_traverseSubtree(diskInfo, volumeHeader, childNodeInfo->nodeNumber, parentRecordId, recordsVector);
+        uint32_t traverseResult = eof_traverseSubtree(diskInfo, volumeHeader, childNodeInfo->nodeNumber, fileId, recordsVector);
 
-        delete[] nodeToTraverseItsSubtreeData;
+        delete[] nodeToTraverseItsSubtreeData, delete nodeToTraverseItsSubtreeDescriptor, delete childNodeInfo;
         if(traverseResult == EOF_TRAVERSE_SUBTREE_FAILED)
             return EOF_TRAVERSE_SUBTREE_FAILED;
     }

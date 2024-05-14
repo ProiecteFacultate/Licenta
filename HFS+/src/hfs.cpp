@@ -1,6 +1,7 @@
 #include "iostream"
 #include "string.h"
 #include "vector"
+#include <algorithm>
 
 #include "disk.h"
 #include "diskCodes.h"
@@ -10,13 +11,19 @@
 #include "../include/codes/hfsCodes.h"
 #include "../include/catalog_file/catalogFileOperations.h"
 #include "../include/catalog_file/codes/catalogFileResponseCodes.h"
+#include "../include/extents_file/extentsFileOperations.h"
+#include "../include/extents_file/bTreeCatalog.h"
+#include "../include/extents_file/extentsFileUtils.h"
+#include "../include/extents_file/codes/extentsFileResponseCodes.h"
+#include "../include/extents_file/codes/bTreeResponseCodes.h"
 #include "../include/codes/hfsCodes.h"
+#include "../include/codes/hfsApiResponseCodes.h"
 #include "../include/hfs.h"
 
 //TODO ADD UPDATE RECORD  IN ALL BRANCHES
 uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* fileRecord, CatalogFileHeaderNode* catalogFileHeaderNode,
                                       ExtentsFileHeaderNode* extentsFileHeaderNode, char* dataBuffer, uint32_t maxBytesToWrite, uint32_t& numberOfBytesWritten,
-                                      uint32_t& reasonForIncompleteWrite, uint32_t nodeNumberOfRecord, std::vector<HFSPlusExtentDescriptor*> foundExtents)
+                                      uint32_t& reasonForIncompleteWrite, uint32_t nodeNumberOfRecord, std::vector<HFSPlusExtentDescriptor*>& foundExtents)
 {
     uint32_t searchExtentResult, extentSize, startPositionInBufferToWriteFrom, writeDataToExtentResult;
     if(maxBytesToWrite == 0) //it might be given 0
@@ -29,11 +36,13 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, HFSPlusVolumeHeader* v
     uint32_t foundBlocks = 0;
     //when we don't found an extent the size we want we reduce and look for an extent the size of the biggest extent found previously instead of starting from num of blocks still
     // not found and then decreasing one by one; it is for efficiency
-    uint32_t preferableExtentSize = numberOfBlocksRequired - foundBlocks;
+    uint32_t preferableExtentSize = numberOfBlocksRequired;
 
     //search extents and write to them
     while(foundBlocks < numberOfBlocksRequired)
     {
+        preferableExtentSize = std::min(preferableExtentSize, numberOfBlocksRequired - foundBlocks);
+
         for(extentSize = preferableExtentSize; extentSize >= 1; extentSize--)
         {
             HFSPlusExtentDescriptor* extent = new HFSPlusExtentDescriptor();
@@ -82,6 +91,8 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, HFSPlusVolumeHeader* v
         if(foundBlocks == numberOfBlocksRequired)
             numberOfBytesWritten = maxBytesToWrite;
     }
+
+    return WRITE_BYTES_TO_FILE_SUCCESS;
 }
 
 void updateVolumeHeaderNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, HFSPlusVolumeHeader* updatedVolumeHeader)
@@ -113,9 +124,9 @@ void updateVolumeHeaderNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
 
 static uint32_t writeDataToExtent(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, HFSPlusExtentDescriptor* extent, char* data)
 {
-    uint32_t numOfBytesWritten;
+    uint32_t numOfSectorsWritten;
     uint32_t writeResult = writeDiskSectors(diskInfo, extent->blockCount * getNumberOfSectorsPerBlock(diskInfo, volumeHeader),
-                                            extent->startBlock * getNumberOfSectorsPerBlock(diskInfo, volumeHeader), data, numOfBytesWritten);
+                                            extent->startBlock * getNumberOfSectorsPerBlock(diskInfo, volumeHeader), data, numOfSectorsWritten);
 
     if(writeResult != EC_NO_ERROR)
         return WRITE_DATA_TO_EXTENT_FAILED;
@@ -136,7 +147,7 @@ static uint32_t searchFreeExtentOfGivenNumberOfBlocks(DiskInfo* diskInfo, HFSPlu
     uint32_t numOfSectorsRead, readResult, blockLocalIndex, blockGlobalIndex, byteIndexInBuffer, bitIndexInByte, readBatchSize = 10; //how many blocks from allocation file to read at once
     foundExtent->startBlock = 0;
     uint32_t firstDataBlockGlobalIndex = volumeHeader->catalogFile.extents[0].startBlock + volumeHeader->catalogFile.extents[0].blockCount; //the first bitIndex in allocation file
-    uint32_t totalNumberOfDataBlocks = volumeHeader->totalBlocks - firstDataBlockGlobalIndex - 1;
+    uint32_t totalNumberOfDataBlocks = volumeHeader->totalBlocks - firstDataBlockGlobalIndex + 1;
     uint32_t numOfBlocksRepresentedInAnAllocationBlock = volumeHeader->blockSize * 8;
 
     char* allocationFileBlocks = new char[readBatchSize * volumeHeader->blockSize];
@@ -177,17 +188,14 @@ static uint32_t searchFreeExtentOfGivenNumberOfBlocks(DiskInfo* diskInfo, HFSPlu
             }
         }
         else
-        {
             foundExtent->startBlock = 0;
-            foundExtent->blockCount = 0;
-        }
     }
 
     delete[] allocationFileBlocks;
     return SEARCH_FREE_EXTENT_NO_EXTENT_WITH_DESIRED_NUMBER_OF_BLOCKS;
 }
 
-uint32_t setExtentsForDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, CatalogDirectoryRecord* fileRecord,
+uint32_t setExtentsForDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, CatalogDirectoryRecord* fileRecord,
                                       std::vector<HFSPlusExtentDescriptor*> extents, uint32_t nodeNumberOfRecord)
 {
     CatalogDirectoryRecord* updatedFileRecord = new CatalogDirectoryRecord();
@@ -195,15 +203,61 @@ uint32_t setExtentsForDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* v
 
     for(uint32_t i = 0; i < extents.size() && i < 8; i++)
     {
-        fileRecord->catalogData.hfsPlusForkData.extents[i] = *extents[i];
-        fileRecord->catalogData.hfsPlusForkData.totalBlocks += extents[i]->blockCount;
+        updatedFileRecord->catalogData.hfsPlusForkData.extents[i] = *extents[i];
+        updatedFileRecord->catalogData.hfsPlusForkData.totalBlocks += extents[i]->blockCount;
     }
 
+    updatedFileRecord->catalogData.totalNumOfExtents = extents.size();
     uint32_t updateResult = cf_updateRecordOnDisk(diskInfo, volumeHeader, fileRecord, updatedFileRecord, nodeNumberOfRecord);
 
     if(updateResult == CF_UPDATE_RECORD_ON_DISK_FAILED)
         return SET_EXTENTS_FOR_DIRECTORY_RECORD_FAILED;
 
     memcpy(fileRecord, updatedFileRecord, sizeof(CatalogDirectoryRecord));
+
+    //now add the extents thar are more than 8
+    for(uint32_t i = 8; i < extents.size(); i++)
+    {
+        ExtentsDirectoryRecord* recordToInsert = eof_createDirectoryRecord(diskInfo, volumeHeader, i = 8);
+        uint32_t insertRecordInTreeResult = eof_insertRecordInTree(diskInfo, volumeHeader, extentsFileHeaderNode, recordToInsert);
+
+        if(insertRecordInTreeResult == EOF_INSERT_RECORD_IN_TREE_FAILED)
+            return SET_EXTENTS_FOR_DIRECTORY_RECORD_FAILED;
+    }
+
     return SET_EXTENTS_FOR_DIRECTORY_RECORD_SUCCESS;
+}
+
+uint32_t getAllExtentsForGivenDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode,
+                                              CatalogDirectoryRecord* fileRecord, std::vector<HFSPlusExtentDescriptor*>& extents)
+{
+    //put extents from the record
+    for(uint32_t i = 0; i < fileRecord->catalogData.totalNumOfExtents && i < 8; i++)
+    {
+        HFSPlusExtentDescriptor* extent = new HFSPlusExtentDescriptor();
+        memcpy(extent, &fileRecord->catalogData.hfsPlusForkData.extents[i], sizeof(HFSPlusExtentDescriptor));
+        extents.push_back(extent);
+    }
+
+    std::vector<ExtentsDirectoryRecord*> recordsVector;
+    uint32_t traverseResult = eof_traverseSubtree(diskInfo, volumeHeader, extentsFileHeaderNode->headerRecord.rootNode,
+                                                 fileRecord->catalogData.folderID, recordsVector);
+
+    if(traverseResult == EOF_TRAVERSE_SUBTREE_FAILED)
+        return GET_ALL_EXTENTS_FOR_DIRECTORY_RECORD_FAILED;
+
+    //sort to have the extents ordered
+    std::sort(recordsVector.begin(), recordsVector.end(), [](ExtentsDirectoryRecord* record1, ExtentsDirectoryRecord* record2) {
+        return record1->catalogKey.extentOverflowIndex < record2->catalogKey.extentOverflowIndex;
+    });
+
+    for(uint32_t i = 0; i < recordsVector.size(); i++)
+    {
+        HFSPlusExtentDescriptor* extent = new HFSPlusExtentDescriptor();
+        memcpy(extent, &recordsVector[i]->catalogData.extent, sizeof(HFSPlusExtentDescriptor));
+        extents.push_back(extent);
+        delete recordsVector[i];
+    }
+
+    return GET_ALL_EXTENTS_FOR_DIRECTORY_RECORD_SUCCESS;
 }

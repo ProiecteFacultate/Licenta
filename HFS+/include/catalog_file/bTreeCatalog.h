@@ -24,6 +24,33 @@ static uint32_t cf_splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHea
 static uint32_t cf_insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumberToInsertRecordInto,
                               CatalogDirectoryRecord* recordToInsert);
 
+//////////REMOVE RECORD
+
+static uint32_t cf_findKey(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumberOfRootOfSubtree,
+                           CatalogDirectoryRecord* recordToFindGreaterThan, uint32_t& indexOfRecordInNode);
+
+static uint32_t cf_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber,
+                          CatalogDirectoryRecord* recordToRemove);
+
+static uint32_t cf_removeFromLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber,
+                                  uint32_t indexInNodeOfRecordToRemove);
+
+static uint32_t cf_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index);
+
+static uint32_t cf_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index,
+                           CatalogDirectoryRecord* predRecord);
+
+static uint32_t cf_getSucc(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index,
+                           CatalogDirectoryRecord* succRecord);
+
+static uint32_t cf_fill(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index);
+
+static uint32_t cf_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index);
+
+static uint32_t cf_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index);
+
+static uint32_t cf_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index);
+
 ///////////////////////////////////////////
 
 uint32_t cf_readNodeFromDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, char* nodeBuffer, uint32_t nodeNumber);

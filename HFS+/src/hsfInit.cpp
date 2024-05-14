@@ -316,13 +316,6 @@ static void initializeExtentsOverflowFile(DiskInfo* diskInfo, HFSPlusVolumeHeade
     uint32_t mapRecordIndex = sizeof(BTNodeDescriptor) + sizeof(BTHeaderRec) + 128;
     nodeBuffer[mapRecordIndex] = byteValueForOccupiedFirstNode;
 
-    uint16_t offset0 = 14;
-    memcpy(&nodeBuffer[nodeSize - 2], &offset0, 2);
-    uint16_t offset1 = 14 + sizeof(BTHeaderRec);
-    memcpy(&nodeBuffer[nodeSize - 4], &offset1, 2);
-    uint16_t offset2 = 14 + sizeof(BTHeaderRec) + 128;  //128 is hardcoded; the user data record is not used anyway
-    memcpy(&nodeBuffer[nodeSize - 6], &offset2, 2);
-
     //now write the extent overflow file header node on disk
     uint32_t numberOfSectorsWritten, retryWriteCount = 2, numOfSectorsToWrite = nodeSize / diskInfo->diskParameters.sectorSizeBytes;
     uint32_t firstSectorForExtentsOverflowFile = getFirstBlockForExtentsOverflowFile(&volumeHeader->allocationFile) * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);

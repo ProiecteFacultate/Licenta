@@ -14,3 +14,10 @@ mkdir Root/Dir_1/D1_Dir_1 F_1 DIRECTORY_TYPE_FILE
 ls Root/Dir_1
 ls Root/Dir_2
 ls Root/Dir_1/D1_Dir_1
+
+
+
+mkdir Root File_1 DIRECTORY_TYPE_FILE
+write Root/File_1 10 TRUNCATE EOF
+ABCDEFGHIJK
+read Root/File_1 0 5

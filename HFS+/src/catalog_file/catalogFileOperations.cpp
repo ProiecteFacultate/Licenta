@@ -75,6 +75,7 @@ uint32_t cf_searchDirectoryRecordByDirectoryNameBeingGivenParentDirectoryRecord(
     memcpy(&searchedKey->nodeName.chars, searchedDirectoryName, searchedKey->nodeName.length);
     searchedKey->nodeName.chars[searchedKey->nodeName.length] = 0;
 
+    nodeNumberForRecord = actualNodeNumber;
     uint32_t searchRecordResult = cf_searchRecordForGivenNodeDataAndSearchedKey(diskInfo, volumeHeader, searchedKey, nodeBuffer, searchedDirectoryRecord,
                                                                              nodeNumberForRecord);
 

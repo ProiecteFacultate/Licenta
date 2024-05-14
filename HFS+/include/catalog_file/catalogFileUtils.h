@@ -11,8 +11,8 @@ int32_t cf_compareKeys(HFSPlusCatalogKey* key1, HFSPlusCatalogKey* key2);
 //updated version CAUTION this method just creates the new updated CatalogFileHeaderNode structure, it does not write it on the disk
 CatalogFileHeaderNode* cf_updateNodeOccupiedInHeaderNodeMapRecord(CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint8_t newValue);
 
-uint32_t cf_createDirectoryRecord(HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* parentRecord, CatalogDirectoryRecord* createdRecord,
-                               char* directoryName, int16_t fileType);
+CatalogDirectoryRecord* cf_createDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* parentRecord, char* directoryName,
+                                                 int16_t fileType);
 
 uint32_t cf_getNumberOfBlocksPerNode(HFSPlusVolumeHeader* volumeHeader);
 
