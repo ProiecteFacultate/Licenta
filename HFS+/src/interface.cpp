@@ -234,6 +234,50 @@ void commandReadFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Cata
             }
     }
 }
+
+void commandDeleteDirectory(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode,
+                            std::vector<std::string> commandTokens)
+{
+    if(commandTokens.size() < 2)
+    {
+        std::cout << "Insufficient arguments for 'rmdir' command!\n";
+        return;
+    }
+    else if(commandTokens.size() > 2)
+    {
+        std::cout << "Too many arguments for 'rmdir' command!\n";
+        return;
+    }
+
+    char* directoryPath = new char[100];
+    memset(directoryPath, 0, 100);
+    memcpy(directoryPath, commandTokens[1].c_str(), commandTokens[1].length());
+
+    std::string warning;
+    uint32_t deleteDirectoryResult = deleteDirectoryByPath(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, directoryPath);
+
+    switch (deleteDirectoryResult)
+    {
+        case DELETE_DIRECTORY_CAN_NOT_DELETE_ROOT:
+            std::cout << "Can not delete root!\n";
+            break;
+        case DELETE_DIRECTORY_DIRECTORY_DO_NOT_EXIST_OR_SEARCH_FAIL:
+            std::cout << "Given directory do not exit or search fail!\n";
+            break;
+//        case DELETE_DIRECTORY_FAILED_TO_DELETE_DIRECTORY_ENTRY_FROM_PARENT:
+//            std::cout << "Failed to delete directory because error on delete directory entry from parent!\n";
+//            break;
+//        case DELETE_DIRECTORY_FAILED_TO_FREE_BLOCKS:
+//            std::cout << "\"Failed to delete directory because error on free blocks!\n";
+//            break;
+        case DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON:
+            std::cout << "Failed to delete this directory for unknown reason!\n";
+            break;
+        case DELETE_DIRECTORY_SUCCESS:
+            std::cout << "Successfully deleted this directory!\n";
+    }
+}
+
 /////////////////////////////////////////////////
 
 static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode,

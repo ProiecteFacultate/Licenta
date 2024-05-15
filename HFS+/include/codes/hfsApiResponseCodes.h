@@ -25,4 +25,9 @@
 #define READ_BYTES_FROM_FILE_FAILED_FOR_OTHER_REASON                                                                     3
 #define READ_BYTES_FROM_FILE_SUCCESS                                                                                     999
 
+#define DELETE_DIRECTORY_CAN_NOT_DELETE_ROOT                                                                             0
+#define DELETE_DIRECTORY_DIRECTORY_DO_NOT_EXIST_OR_SEARCH_FAIL                                                           1
+#define DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON                                                                         2
+#define DELETE_DIRECTORY_SUCCESS                                                                                         999
+
 #endif

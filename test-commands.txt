@@ -21,3 +21,11 @@ mkdir Root File_1 DIRECTORY_TYPE_FILE
 write Root/File_1 10 TRUNCATE EOF
 ABCDEFGHIJK
 read Root/File_1 0 5
+
+
+mkdir Root File_1 DIRECTORY_TYPE_FILE
+mkdir Root File_2 DIRECTORY_TYPE_FILE
+rmdir Root/File_1
+
+rmdir Root/Dir_55
+mkdir Root Dir_55 DIRECTORY_TYPE_FILE

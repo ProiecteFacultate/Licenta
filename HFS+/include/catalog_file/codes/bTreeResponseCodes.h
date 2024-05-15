@@ -11,6 +11,9 @@
 #define CF_INSERT_RECORD_IN_TREE_FAILED                                                0
 #define CF_INSERT_RECORD_IN_TREE_SUCCESS                                               999
 
+#define CF_REMOVE_RECORD_FROM_TREE_FAILED                                              0
+#define CF_REMOVE_RECORD_FROM_TREE_SUCCESS                                             999
+
 #define CF_SPLIT_CHILD_FAILED                                                          0
 #define CF_SPLIT_CHILD_SUCCESS                                                         999
 

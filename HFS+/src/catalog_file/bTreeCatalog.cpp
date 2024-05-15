@@ -222,7 +222,50 @@ uint32_t cf_removeRecordFromTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volume
 {
     //There is a case where tree is empty but we can't have it here because we wouldn't find the record if so and we won't reach this method
 
+    uint32_t removeResult = cf_remove(diskInfo, volumeHeader, catalogFileHeaderNode, catalogFileHeaderNode->headerRecord.rootNode, recordToRemove);
+    if(removeResult == CF_REMOVE_FAILED)
+        return CF_REMOVE_RECORD_FROM_TREE_FAILED;
 
+    //read root after changes
+    char* nodeData = new char[getCatalogFileNodeSize()];
+    uint32_t readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeData, catalogFileHeaderNode->headerRecord.rootNode);
+
+    if(readNodeFromDiskResult == CF_READ_NODE_FROM_DISK_FAILED)
+    {
+        delete[] nodeData;
+        return CF_REMOVE_RECORD_FROM_TREE_FAILED;
+    }
+    BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
+
+    //if the root node has 0 records now after remove, make its first child as the new root, if it has a child, otherwise set root as NULL
+    if(nodeDescriptor->numRecords == 0)
+    {
+        if(nodeDescriptor->isLeaf == NODE_IS_LEAF)
+        {
+            delete[] nodeData;
+            CatalogFileHeaderNode* updatedCatalogFileHeaderNode = new CatalogFileHeaderNode();
+            memcpy(updatedCatalogFileHeaderNode, catalogFileHeaderNode, sizeof(CatalogFileHeaderNode));
+            updatedCatalogFileHeaderNode->headerRecord.freeNodes++; //we will have no longer a root node
+
+            cf_updateCatalogHeaderNodeOnDisk(diskInfo, volumeHeader, updatedCatalogFileHeaderNode);
+            memcpy(catalogFileHeaderNode, updatedCatalogFileHeaderNode, sizeof(CatalogFileHeaderNode));
+        }
+        else
+        {
+            uint32_t startingByteOfChildNodeInfo = getCatalogFileNodeSize() - sizeof(ChildNodeInfo);
+            ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
+            delete[] nodeData;
+
+            CatalogFileHeaderNode* updatedCatalogFileHeaderNode = new CatalogFileHeaderNode();
+            memcpy(updatedCatalogFileHeaderNode, catalogFileHeaderNode, sizeof(CatalogFileHeaderNode));
+            updatedCatalogFileHeaderNode->headerRecord.rootNode = childNodeInfo->nodeNumber;
+
+            cf_updateCatalogHeaderNodeOnDisk(diskInfo, volumeHeader, updatedCatalogFileHeaderNode);
+            memcpy(catalogFileHeaderNode, updatedCatalogFileHeaderNode, sizeof(CatalogFileHeaderNode));
+        }
+    }
+
+    return CF_REMOVE_RECORD_FROM_TREE_SUCCESS;
 }
 
 ///////////////////////////////////////////
@@ -464,13 +507,13 @@ static uint32_t cf_insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volume
 
 /////REMOVE RECORD
 
-static uint32_t cf_findKey(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumberOfRootOfSubtree,
+static uint32_t cf_findKey(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber,
                            CatalogDirectoryRecord* recordToFindGreaterThan, uint32_t& indexOfRecordInNode)
 {
     indexOfRecordInNode = 0;
     //read root of subtree
     char* nodeData = new char[getCatalogFileNodeSize()];
-    uint32_t readRootNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumberOfRootOfSubtree);
+    uint32_t readRootNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readRootNodeFromDiskResult == CF_READ_NODE_FROM_DISK_FAILED)
     {
@@ -511,22 +554,21 @@ static uint32_t cf_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
         delete[] nodeData;
         return CF_REMOVE_FAILED;
     }
-
     BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
     uint32_t firstByteOfRecord = sizeof(BTNodeDescriptor) + index * sizeof(CatalogDirectoryRecord);
     CatalogDirectoryRecord* record = (CatalogDirectoryRecord*)&nodeData[firstByteOfRecord];
 
     if(index < nodeDescriptor->numRecords && cf_compareKeys(&record->catalogKey, & recordToRemove->catalogKey) == 0)
     {
-        delete[] nodeData;
-
         if(nodeDescriptor->isLeaf == NODE_IS_LEAF)
         {
+            delete[] nodeData;
             uint32_t removeFromLeafResult = cf_removeFromLeaf(diskInfo, volumeHeader, catalogFileHeaderNode, nodeNumber, index);
             return (removeFromLeafResult == CF_REMOVE_FROM_LEAF_SUCCESS) ? CF_REMOVE_SUCCESS : CF_REMOVE_FAILED;
         }
         else
         {
+            delete[] nodeData;
             uint32_t removeFromNonLeafResult = cf_removeFromNonLeaf(diskInfo, volumeHeader, catalogFileHeaderNode, nodeNumber, index);
             return (removeFromNonLeafResult == CF_REMOVE_FROM_NON_LEAF_SUCCESS) ? CF_REMOVE_SUCCESS : CF_REMOVE_FAILED;
         }
@@ -535,7 +577,7 @@ static uint32_t cf_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
     {
         //skip the part where key is leaf and don't exist because this can't happen in our case
         uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerCatalogFileNode() / 2 + 1;
-        bool flag = ((index == nodeDescriptor->numRecords) ? true : false);
+        bool flag = (index == nodeDescriptor->numRecords);
 
         //read C[idx]
         uint32_t startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
@@ -548,7 +590,6 @@ static uint32_t cf_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
             delete[] nodeData, delete[] childNodeData;
             return CF_REMOVE_FAILED;
         }
-
         uint32_t childNode_1 = childNodeInfo->nodeNumber;
         BTNodeDescriptor* childNodeDescriptor_1 = new BTNodeDescriptor();
         memcpy(childNodeDescriptor_1, childNodeData, sizeof(BTNodeDescriptor));
@@ -575,7 +616,6 @@ static uint32_t cf_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
                 delete[] nodeData, delete[] childNodeData;
                 return CF_REMOVE_FAILED;
             }
-
             uint32_t childNode_2 = childNodeInfo->nodeNumber;
             BTNodeDescriptor* childNodeDescriptor_2 = new BTNodeDescriptor();
             memcpy(childNodeDescriptor_2, childNodeData, sizeof(BTNodeDescriptor));
@@ -592,8 +632,7 @@ static uint32_t cf_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
     }
 }
 
-static uint32_t cf_removeFromLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber,
-                                  uint32_t indexInNodeOfRecordToRemove)
+static uint32_t cf_removeFromLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index)
 {
     char* nodeData = new char[getCatalogFileNodeSize()];
     uint32_t readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
@@ -603,12 +642,10 @@ static uint32_t cf_removeFromLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
         delete[] nodeData;
         return CF_REMOVE_FROM_LEAF_FAILED;
     }
-
     BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
     uint32_t firstByteOfRecord = sizeof(BTNodeDescriptor);
-    CatalogDirectoryRecord* record = (CatalogDirectoryRecord*)&nodeData[firstByteOfRecord];
 
-    for(uint32_t i = indexInNodeOfRecordToRemove + 1; i < nodeDescriptor->numRecords; ++i)
+    for(uint32_t i = index + 1; i < nodeDescriptor->numRecords; ++i)
     {
         firstByteOfRecord = sizeof(BTNodeDescriptor) + i * sizeof(CatalogDirectoryRecord);
         CatalogDirectoryRecord *recordToInsert = (CatalogDirectoryRecord*) &nodeData[firstByteOfRecord];
@@ -620,6 +657,16 @@ static uint32_t cf_removeFromLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
             return CF_REMOVE_FROM_LEAF_FAILED;
         }
     }
+
+    //records pointer were changed in node, so we need to reread it
+    readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
+
+    if(readNodeFromDiskResult == CF_READ_NODE_FROM_DISK_FAILED)
+    {
+        delete[] nodeData;
+        return CF_MERGE_FAILED;
+    }
+    nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
 
     nodeDescriptor->numRecords--;
     cf_updateNodeOnDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
@@ -642,7 +689,6 @@ static uint32_t cf_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
     }
 
     //make k = keys[idx];
-    BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
     uint32_t firstByteOfRecord = sizeof(BTNodeDescriptor) + index * sizeof(CatalogDirectoryRecord);
     CatalogDirectoryRecord* recordToRemove = (CatalogDirectoryRecord*)&nodeData[firstByteOfRecord];
 
@@ -657,7 +703,6 @@ static uint32_t cf_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
         delete[] nodeData, delete[] childNodeData;
         return CF_REMOVE_FROM_NON_LEAF_FAILED;
     }
-
     uint32_t childNode_1 = childNodeInfo->nodeNumber;
     BTNodeDescriptor* childNodeDescriptor_1 = new BTNodeDescriptor();
     memcpy(childNodeDescriptor_1, childNodeData, sizeof(BTNodeDescriptor));
@@ -672,7 +717,6 @@ static uint32_t cf_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
         delete[] nodeData, delete[] childNodeData;
         return CF_REMOVE_FROM_NON_LEAF_FAILED;
     }
-
     uint32_t childNode_2 = childNodeInfo->nodeNumber;
     BTNodeDescriptor* childNodeDescriptor_2 = new BTNodeDescriptor();
     memcpy(childNodeDescriptor_2, childNodeData, sizeof(BTNodeDescriptor));
@@ -739,8 +783,6 @@ static uint32_t cf_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
         return CF_GET_PRED_FAILED;
     }
 
-    BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
-
     //keep moving to rightmost node until reach a leaf
     uint32_t startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
     ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
@@ -752,8 +794,8 @@ static uint32_t cf_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
         delete[] nodeData, delete[] childNodeData;
         return CF_GET_PRED_FAILED;
     }
-
     BTNodeDescriptor* childNodeDescriptor = (BTNodeDescriptor*)&childNodeData[0];
+
     while(childNodeDescriptor->isLeaf == NODE_IS_NOT_LEAF)
     {
         startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (childNodeDescriptor->numRecords + 1) * sizeof(ChildNodeInfo);
@@ -771,7 +813,7 @@ static uint32_t cf_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
 
     //return last record of leaf
     uint32_t startingByteOfRecord = sizeof(BTNodeDescriptor) + (childNodeDescriptor->numRecords - 1) * sizeof(CatalogDirectoryRecord);
-    predRecord = (CatalogDirectoryRecord*) &childNodeData[startingByteOfRecord];
+    memcpy(predRecord, &childNodeData[startingByteOfRecord], sizeof(CatalogDirectoryRecord));
 
     delete[] nodeData, delete[] childNodeData;
     return CF_GET_PRED_SUCCESS;
@@ -789,10 +831,9 @@ static uint32_t cf_getSucc(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
         return CF_GET_SUCC_FAILED;
     }
 
-    BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
-
     //keep moving to leftmost node until reach a leaf
-    ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[0];
+    uint32_t startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (index + 2) * sizeof(ChildNodeInfo);
+    ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
     char* childNodeData = new char[getCatalogFileNodeSize()];
     readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
@@ -801,8 +842,8 @@ static uint32_t cf_getSucc(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
         delete[] nodeData, delete[] childNodeData;
         return CF_GET_SUCC_FAILED;
     }
-
     BTNodeDescriptor* childNodeDescriptor = (BTNodeDescriptor*)&childNodeData[0];
+
     while(childNodeDescriptor->isLeaf == NODE_IS_NOT_LEAF)
     {
         childNodeInfo = (ChildNodeInfo*) &childNodeData[0];
@@ -818,7 +859,7 @@ static uint32_t cf_getSucc(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
     }
 
     //return first record of leaf
-    succRecord = (CatalogDirectoryRecord*) &childNodeData[0];
+    memcpy(succRecord, &childNodeData[sizeof(BTNodeDescriptor)], sizeof(CatalogDirectoryRecord));
 
     delete[] nodeData, delete[] childNodeData;
     return CF_GET_SUCC_SUCCESS;
@@ -850,7 +891,6 @@ static uint32_t cf_fill(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, C
         delete[] nodeData, delete[] childNodeData;
         return CF_FILL_FAILED;
     }
-
     BTNodeDescriptor* childNodeDescriptor_1 = new BTNodeDescriptor();
     memcpy(childNodeDescriptor_1, childNodeData, sizeof(BTNodeDescriptor));
 
@@ -864,11 +904,10 @@ static uint32_t cf_fill(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, C
         delete[] nodeData, delete[] childNodeData;
         return CF_FILL_FAILED;
     }
-
     BTNodeDescriptor* childNodeDescriptor_2 = new BTNodeDescriptor();
     memcpy(childNodeDescriptor_2, childNodeData, sizeof(BTNodeDescriptor));
 
-    //If the previous child(C[idx-1]) has more than t-1 keys, borrow a key from that child
+    //if the previous child(C[idx-1]) has more than t-1 keys, borrow a key from that child
     if(index != 0 && childNodeDescriptor_1->numRecords >= halfOfTheMaxNumberOfRecordsPerNode)
     {
         uint32_t borrowFromPrevResult = cf_borrowFromPrev(diskInfo, volumeHeader, catalogFileHeaderNode, nodeNumber, index);
@@ -892,6 +931,7 @@ static uint32_t cf_fill(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, C
         else
             mergeResult = cf_merge(diskInfo, volumeHeader, catalogFileHeaderNode, nodeNumber, index - 1);
 
+        delete[] nodeData, delete[] childNodeData;
         return(mergeResult == CF_MERGE_SUCCESS) ? CF_FILL_SUCCESS : CF_FILL_FAILED;
     }
 }
@@ -908,8 +948,6 @@ static uint32_t cf_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     }
 
     //get child (c[idx])
-    BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
-
     uint32_t startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
     ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
     char* childNodeData = new char[getCatalogFileNodeSize()];
@@ -920,7 +958,6 @@ static uint32_t cf_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
         delete[] nodeData, delete[] childNodeData;
         return CF_BORROW_FROM_PREV_FAILED;
     }
-
     BTNodeDescriptor* childNodeDescriptor = (BTNodeDescriptor*)&childNodeData[0];
 
     //get sibling (c[idx - 1])
@@ -934,11 +971,10 @@ static uint32_t cf_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
         delete[] nodeData, delete[] childNodeData, delete[] siblingNodeData;
         return CF_BORROW_FROM_PREV_FAILED;
     }
-
     BTNodeDescriptor* siblingNodeDescriptor = (BTNodeDescriptor*)&siblingNodeData[0];
 
     //move all keys in c[idx] one step ahead
-    for(uint32_t i = childNodeDescriptor->numRecords - 1; i >= 0; --i)
+    for(int32_t i = childNodeDescriptor->numRecords - 1; i >= 0; --i)
     {
         uint32_t firstByteOfRecord = sizeof(BTNodeDescriptor) + i * sizeof(CatalogDirectoryRecord);
         CatalogDirectoryRecord *record = (CatalogDirectoryRecord*) &childNodeData[firstByteOfRecord];
@@ -955,7 +991,7 @@ static uint32_t cf_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     //if C[idx] is not a leaf, move all its child pointers one step ahead
     if(childNodeDescriptor->isLeaf == NODE_IS_NOT_LEAF)
     {
-        for(uint32_t i = childNodeDescriptor->numRecords; i >= 0; --i)
+        for(int32_t i = childNodeDescriptor->numRecords; i >= 0; --i)
         {
             startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (i + 1) * sizeof(ChildNodeInfo);
             ChildNodeInfo *childNodeInfoToInsert = (ChildNodeInfo*) &childNodeData[startingByteOfChildNodeInfo];
@@ -971,7 +1007,8 @@ static uint32_t cf_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     //setting child's first key equal to keys[idx-1] from the current node
     uint32_t firstByteOfRecord = sizeof(BTNodeDescriptor) + (index - 1) * sizeof(CatalogDirectoryRecord);
     CatalogDirectoryRecord *record = (CatalogDirectoryRecord*) &nodeData[firstByteOfRecord];
-    uint32_t insertRecordInNodeResult = cf_insertRecordInNode(diskInfo, volumeHeader, record, childNodeInfo->nodeNumber, 0,false);
+    uint32_t insertRecordInNodeResult = cf_insertRecordInNode(diskInfo, volumeHeader, record, childNodeInfo->nodeNumber, 0,
+                                                              false);
 
     if (insertRecordInNodeResult == CF_INSERT_RECORD_IN_NODE_FAILED)
     {
@@ -1003,9 +1040,20 @@ static uint32_t cf_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
         return CF_BORROW_FROM_PREV_FAILED;
     }
 
+    //records & children pointer were changed in child, so we need to reread it
+    readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
+
+    if(readNodeFromDiskResult == CF_READ_NODE_FROM_DISK_FAILED)
+    {
+        delete[] nodeData, delete[] childNodeData, delete[] siblingNodeData;
+        return CF_MERGE_FAILED;
+    }
+    childNodeDescriptor = (BTNodeDescriptor*)&childNodeData[0];
+
     childNodeDescriptor->numRecords++;
     cf_updateNodeOnDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
+    //sibling records & children were not changed, so we don't need to reread it
     siblingNodeDescriptor->numRecords--;
     cf_updateNodeOnDisk(diskInfo, volumeHeader, siblingNodeData, siblingNodeInfo->nodeNumber);
 
@@ -1025,8 +1073,6 @@ static uint32_t cf_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     }
 
     //get child (c[idx])
-    BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
-
     uint32_t startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
     ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
     char* childNodeData = new char[getCatalogFileNodeSize()];
@@ -1037,10 +1083,9 @@ static uint32_t cf_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
         delete[] nodeData, delete[] childNodeData;
         return CF_BORROW_FROM_NEXT_FAILED;
     }
-
     BTNodeDescriptor* childNodeDescriptor = (BTNodeDescriptor*)&childNodeData[0];
 
-    //get sibling (c[idx - 1])
+    //get sibling (c[idx + 1])
     startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (index + 2) * sizeof(ChildNodeInfo);
     ChildNodeInfo *siblingNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
     char* siblingNodeData = new char[getCatalogFileNodeSize()];
@@ -1051,7 +1096,6 @@ static uint32_t cf_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
         delete[] nodeData, delete[] childNodeData, delete[] siblingNodeData;
         return CF_BORROW_FROM_NEXT_FAILED;
     }
-
     BTNodeDescriptor* siblingNodeDescriptor = (BTNodeDescriptor*)&siblingNodeData[0];
 
     //keys[idx] is inserted as the last key in C[idx]
@@ -1122,8 +1166,28 @@ static uint32_t cf_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
         }
     }
 
+    //records & children pointer were changed in child, so we need to reread it
+    readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
+
+    if(readNodeFromDiskResult == CF_READ_NODE_FROM_DISK_FAILED)
+    {
+        delete[] nodeData, delete[] childNodeData, delete[] siblingNodeData;
+        return CF_MERGE_FAILED;
+    }
+    childNodeDescriptor = (BTNodeDescriptor*)&childNodeData[0];
+
     childNodeDescriptor->numRecords++;
     cf_updateNodeOnDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
+
+    //records & children pointer were changed in sibling node, so we need to reread it
+    readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, siblingNodeData, siblingNodeInfo->nodeNumber);
+
+    if(readNodeFromDiskResult == CF_READ_NODE_FROM_DISK_FAILED)
+    {
+        delete[] nodeData, delete[] childNodeData, delete[] siblingNodeData;
+        return CF_MERGE_FAILED;
+    }
+    siblingNodeDescriptor = (BTNodeDescriptor*)&siblingNodeData[0];
 
     siblingNodeDescriptor->numRecords--;
     cf_updateNodeOnDisk(diskInfo, volumeHeader, siblingNodeData, siblingNodeInfo->nodeNumber);
@@ -1144,10 +1208,9 @@ static uint32_t cf_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
         delete[] nodeData;
         return CF_MERGE_FAILED;
     }
-
-    //get child (c[idx])
     BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
 
+    //get child (c[idx])
     uint32_t startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
     ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
     char* childNodeData = new char[getCatalogFileNodeSize()];
@@ -1158,10 +1221,9 @@ static uint32_t cf_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
         delete[] nodeData, delete[] childNodeData;
         return CF_MERGE_FAILED;
     }
-
     BTNodeDescriptor* childNodeDescriptor = (BTNodeDescriptor*)&childNodeData[0];
 
-    //get sibling (c[idx - 1])
+    //get sibling (c[idx + 1])
     startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (index + 2) * sizeof(ChildNodeInfo);
     ChildNodeInfo *siblingNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
     char* siblingNodeData = new char[getCatalogFileNodeSize()];
@@ -1172,7 +1234,6 @@ static uint32_t cf_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
         delete[] nodeData, delete[] childNodeData, delete[] siblingNodeData;
         return CF_MERGE_FAILED;
     }
-
     BTNodeDescriptor* siblingNodeDescriptor = (BTNodeDescriptor*)&siblingNodeData[0];
 
     //pulling a key from the current node and inserting it into (t-1)th position of C[idx]
@@ -1204,7 +1265,7 @@ static uint32_t cf_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
     }
 
     // Copying the child pointers from C[idx+1] to C[idx]
-    if(siblingNodeDescriptor->isLeaf == NODE_IS_NOT_LEAF)
+    if(childNodeDescriptor->isLeaf == NODE_IS_NOT_LEAF)
     {
         for(uint32_t i = 0; i <= siblingNodeDescriptor->numRecords; ++i)
         {
@@ -1247,13 +1308,41 @@ static uint32_t cf_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
         }
     }
 
+    //records & children pointer were changed in child, so we need to reread it
+    readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
+
+    if(readNodeFromDiskResult == CF_READ_NODE_FROM_DISK_FAILED)
+    {
+        delete[] nodeData, delete[] childNodeData, delete[] siblingNodeData;
+        return CF_MERGE_FAILED;
+    }
+    childNodeDescriptor = (BTNodeDescriptor*)&childNodeData[0];
+
     childNodeDescriptor->numRecords += siblingNodeDescriptor->numRecords + 1;
     cf_updateNodeOnDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
+
+    //records & children pointer were changed in node, so we need to reread it
+    readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
+
+    if(readNodeFromDiskResult == CF_READ_NODE_FROM_DISK_FAILED)
+    {
+        delete[] nodeData, delete[] childNodeData, delete[] siblingNodeData;
+        return CF_MERGE_FAILED;
+    }
+    nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
 
     nodeDescriptor->numRecords--;
     cf_updateNodeOnDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     delete[] nodeData, delete[] childNodeData, delete[] siblingNodeData;
+
+    //delete sibling
+    CatalogFileHeaderNode* updatedCatalogFileHeaderNode = new CatalogFileHeaderNode();
+    memcpy(updatedCatalogFileHeaderNode, catalogFileHeaderNode, sizeof(CatalogFileHeaderNode));
+    updatedCatalogFileHeaderNode->headerRecord.freeNodes++;
+
+    cf_updateCatalogHeaderNodeOnDisk(diskInfo, volumeHeader, updatedCatalogFileHeaderNode);
+
     return CF_MERGE_SUCCESS;
 }
 

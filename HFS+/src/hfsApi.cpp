@@ -246,3 +246,23 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
     delete fileRecord;
     return READ_BYTES_FROM_FILE_SUCCESS;
 }
+
+uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode,
+                               char* directoryPath)
+{
+    if(strcmp(directoryPath, "Root\0") == 0)
+        return DELETE_DIRECTORY_CAN_NOT_DELETE_ROOT;
+
+    CatalogDirectoryRecord* directoryRecord = nullptr;
+    uint32_t nodeOfNewRecord, writeResult;
+    uint32_t findCatalogDirectoryRecordResult = cf_findCatalogDirectoryRecordByFullPath(diskInfo, volumeHeader, catalogFileHeaderNode, directoryPath,
+                                                                                        &directoryRecord, nodeOfNewRecord);
+
+    if(findCatalogDirectoryRecordResult == CF_SEARCH_RECORD_IN_GIVEN_DATA_KEY_DO_NOT_EXIST_IN_TREE)
+        return DELETE_DIRECTORY_DIRECTORY_DO_NOT_EXIST_OR_SEARCH_FAIL;
+    else if(findCatalogDirectoryRecordResult == CF_SEARCH_RECORD_IN_GIVEN_DATA_FAILED_FOR_OTHER_REASON)
+        return DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON;
+
+    uint32_t removeDirectoryRecordFromTreeResult = cf_removeRecordFromTree(diskInfo, volumeHeader, catalogFileHeaderNode, directoryRecord);
+    return (removeDirectoryRecordFromTreeResult == CF_REMOVE_RECORD_FROM_TREE_SUCCESS) ? DELETE_DIRECTORY_SUCCESS : DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON;
+}

@@ -50,6 +50,8 @@ int main() {
             commandWriteFile(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
         else if(tokens[0] == "read")
             commandReadFile(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
+        else if(tokens[0] == "rmdir")
+            commandDeleteDirectory(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
         else
             std::cout << "Unknown command \n";
 
@@ -58,7 +60,7 @@ int main() {
                   << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() % 1000  << '\n';
     }
 
-    return 0;
+   // return 0;
 
 
 
@@ -81,13 +83,13 @@ int main() {
         std::cout << "Create " << newDirName << ": " << createDirectoryResult << '\n';
     }
 
-    memcpy(parentPath, "Root/Dir_10/Dir_L2\0", 19);
-    memcpy(newDirName, "F", 1);
-    newDirName[1] = 0;
-    uint32_t createDirectoryResult = createDirectory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPath,
-                                                     newDirName, DIRECTORY_TYPE_FILE);
-
-    std::cout << "Create " << newDirName << ": " << createDirectoryResult << '\n';
+//    memcpy(parentPath, "Root/Dir_10/Dir_L2\0", 19);
+//    memcpy(newDirName, "F", 1);
+//    newDirName[1] = 0;
+//    uint32_t createDirectoryResult = createDirectory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPath,
+//                                                     newDirName, DIRECTORY_TYPE_FILE);
+//
+//    std::cout << "Create " << newDirName << ": " << createDirectoryResult << '\n';
 
 //    char* readBuffer = new char[4096];
 //    uint32_t numberOfSectorsRead = 0;
