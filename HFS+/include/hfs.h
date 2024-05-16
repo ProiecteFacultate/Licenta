@@ -21,8 +21,16 @@ static uint32_t searchFreeExtentOfGivenNumberOfBlocks(DiskInfo* diskInfo, HFSPlu
 uint32_t setExtentsForDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, CatalogDirectoryRecord* fileRecord,
                                       std::vector<HFSPlusExtentDescriptor*> extents, uint32_t nodeNumberOfRecord);
 
+//extentsDirectoryRecords are returned for extents records that are found in extents overflow file, so their number will be extents - 8
 //HIDDEN FEATURE The extents are returned sorted
 uint32_t getAllExtentsForGivenDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode,
-                                              CatalogDirectoryRecord* fileRecord, std::vector<HFSPlusExtentDescriptor*>& extents);
+                                              CatalogDirectoryRecord* fileRecord, std::vector<HFSPlusExtentDescriptor*>& extents,
+                                              std::vector<ExtentsDirectoryRecord*>& extentsDirectoryRecords);
+
+uint32_t deleteDirectoryAndChildren(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode,
+                                    ExtentsFileHeaderNode* extentsFileHeaderNode, CatalogDirectoryRecord* catalogDirectoryRecordToDelete);
+
+static uint32_t deleteDirectoryRecordAndAllItsRelatedData(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode,
+                                                   ExtentsFileHeaderNode* extentsFileHeaderNode, CatalogDirectoryRecord* catalogDirectoryRecordToDelete);
 
 #endif

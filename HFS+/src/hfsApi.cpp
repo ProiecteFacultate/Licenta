@@ -165,7 +165,8 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
     uint32_t sectorsPerBlock = getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
 
     std::vector<HFSPlusExtentDescriptor*> extents;
-    uint32_t getAllExtentsForRecordResult = getAllExtentsForGivenDirectoryRecord(diskInfo, volumeHeader, extentsFileHeaderNode, fileRecord, extents);
+    std::vector<ExtentsDirectoryRecord*> dummy;
+    uint32_t getAllExtentsForRecordResult = getAllExtentsForGivenDirectoryRecord(diskInfo, volumeHeader, extentsFileHeaderNode, fileRecord, extents, dummy);
 
     if(getAllExtentsForRecordResult == GET_ALL_EXTENTS_FOR_DIRECTORY_RECORD_FAILED)
     {
@@ -254,7 +255,7 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHe
         return DELETE_DIRECTORY_CAN_NOT_DELETE_ROOT;
 
     CatalogDirectoryRecord* directoryRecord = nullptr;
-    uint32_t nodeOfNewRecord, writeResult;
+    uint32_t nodeOfNewRecord;
     uint32_t findCatalogDirectoryRecordResult = cf_findCatalogDirectoryRecordByFullPath(diskInfo, volumeHeader, catalogFileHeaderNode, directoryPath,
                                                                                         &directoryRecord, nodeOfNewRecord);
 
@@ -263,6 +264,6 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHe
     else if(findCatalogDirectoryRecordResult == CF_SEARCH_RECORD_IN_GIVEN_DATA_FAILED_FOR_OTHER_REASON)
         return DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON;
 
-    uint32_t removeDirectoryRecordFromTreeResult = cf_removeRecordFromTree(diskInfo, volumeHeader, catalogFileHeaderNode, directoryRecord);
-    return (removeDirectoryRecordFromTreeResult == CF_REMOVE_RECORD_FROM_TREE_SUCCESS) ? DELETE_DIRECTORY_SUCCESS : DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON;
+    uint32_t deleteDirectoryResult = deleteDirectoryAndChildren(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, directoryRecord);
+    return (deleteDirectoryResult == DELETE_DIRECTORY_RECORD_AND_RELATED_DATA_SUCCESS) ? DELETE_DIRECTORY_SUCCESS : DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON;
 }

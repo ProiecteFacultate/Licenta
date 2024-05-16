@@ -2,8 +2,8 @@
 #include "vector"
 #include "../structures.h"
 
-#ifndef HFS__BTREECATALOG_H
-#define HFS__BTREECATALOG_H
+#ifndef HFS__EXTENTS_BTREECATALOG_H
+#define HFS__EXTENTS_BTREECATALOG_H
 
 //HIDDEN FEATURE this method also returns the node number where the record is placed
 uint32_t eof_searchRecordForGivenNodeDataAndSearchedKey(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileCatalogKey* searchedKey, char* nodeData,
@@ -14,6 +14,8 @@ uint32_t eof_insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeH
 uint32_t eof_traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumberOfNodeToTraverseItsSubtree, HFSCatalogNodeID fileId,
                              std::vector<ExtentsDirectoryRecord*>& recordsVector);
 
+uint32_t eof_removeRecordFromTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, ExtentsDirectoryRecord* recordToRemove);
+
 //////////////////////////////////////////////
 
 static uint32_t eof_splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, uint32_t nodeNumberToMoveOneRecordTo,
@@ -21,6 +23,29 @@ static uint32_t eof_splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHe
 
 static uint32_t eof_insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, uint32_t nodeNumberToInsertRecordInto,
                               ExtentsDirectoryRecord* recordToInsert);
+
+//////////REMOVE RECORD
+
+static uint32_t eof_findKey(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, ExtentsDirectoryRecord* recordToFindGreaterThan, uint32_t& index);
+
+static uint32_t eof_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentFileHeaderNode, uint32_t nodeNumber,
+                          ExtentsDirectoryRecord* recordToRemove);
+
+static uint32_t eof_removeFromLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index);
+
+static uint32_t eof_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, uint32_t nodeNumber, uint32_t index);
+
+static uint32_t eof_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index, ExtentsDirectoryRecord* predRecord);
+
+static uint32_t eof_getSucc(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index, ExtentsDirectoryRecord* succRecord);
+
+static uint32_t eof_fill(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, uint32_t nodeNumber, uint32_t index);
+
+static uint32_t eof_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index);
+
+static uint32_t eof_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index);
+
+static uint32_t eof_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, uint32_t nodeNumber, uint32_t index);
 
 ///////////////////////////////////////////
 

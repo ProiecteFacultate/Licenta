@@ -23,4 +23,10 @@
 #define GET_ALL_EXTENTS_FOR_DIRECTORY_RECORD_FAILED                                                                      0
 #define GET_ALL_EXTENTS_FOR_DIRECTORY_RECORD_SUCCESS                                                                     999
 
+#define DELETE_DIRECTORY_RECORD_AND_RELATED_DATA_FAILED                                                                  0
+#define DELETE_DIRECTORY_RECORD_AND_RELATED_DATA_SUCCESS                                                                 999
+
+#define DELETE_DIRECTORY_AND_CHILDREN_FAILED                                                                             0
+#define DELETE_DIRECTORY_AND_CHILDREN_SUCCESS                                                                            999
+
 #endif

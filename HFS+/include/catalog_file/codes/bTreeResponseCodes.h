@@ -1,5 +1,5 @@
-#ifndef HFS__BTREERESPONSECODES_H
-#define HFS__BTREERESPONSECODES_H
+#ifndef HFS__CATALOG_BTREERESPONSECODES_H
+#define HFS__CATALOG_BTREERESPONSECODES_H
 
 #define CF_READ_NODE_FROM_DISK_FAILED                                                  0
 #define CF_READ_NODE_FROM_DISK_SUCCESS                                                 999

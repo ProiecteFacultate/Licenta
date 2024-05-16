@@ -60,7 +60,7 @@ int main() {
                   << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() % 1000  << '\n';
     }
 
-   // return 0;
+    return 0;
 
 
 
@@ -71,17 +71,17 @@ int main() {
     memcpy(parentPath, "Root\0", 5);
     char* newDirName = new char[100];
 
-    for(int i = 10; i <= 99; i++)
-    {
-        memcpy(newDirName, "Dir_", 4);
-        memcpy(newDirName + 4, std::to_string(i).c_str(), 2);
-        newDirName[6] = 0;
-
-        uint32_t createDirectoryResult = createDirectory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPath,
-                        newDirName, DIRECTORY_TYPE_FOLDER);
-
-        std::cout << "Create " << newDirName << ": " << createDirectoryResult << '\n';
-    }
+//    for(int i = 10; i <= 99; i++)
+//    {
+//        memcpy(newDirName, "Dir_", 4);
+//        memcpy(newDirName + 4, std::to_string(i).c_str(), 2);
+//        newDirName[6] = 0;
+//
+//        uint32_t createDirectoryResult = createDirectory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPath,
+//                        newDirName, DIRECTORY_TYPE_FOLDER);
+//
+//        std::cout << "Create " << newDirName << ": " << createDirectoryResult << '\n';
+//    }
 
 //    memcpy(parentPath, "Root/Dir_10/Dir_L2\0", 19);
 //    memcpy(newDirName, "F", 1);

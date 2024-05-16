@@ -8,7 +8,6 @@
 #include "../../include/hfsFunctionUtils.h"
 #include "../../include/catalog_file/codes/bTreeResponseCodes.h"
 #include "../../include/catalog_file/codes/catalogFileResponseCodes.h"
-#include "../../include/codes/hfsAttributes.h"
 #include "../../include/catalog_file/bTreeCatalog.h"
 #include "../../include/catalog_file/catalogFileUtils.h"
 #include "../../include/catalog_file/catalogFileOperations.h"

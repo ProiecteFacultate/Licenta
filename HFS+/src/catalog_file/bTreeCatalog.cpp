@@ -7,7 +7,6 @@
 #include "../../include/utils.h"
 #include "../../include/hfsFunctionUtils.h"
 #include "../../include/catalog_file/codes/bTreeResponseCodes.h"
-#include "../../include/catalog_file/codes/catalogFileResponseCodes.h"
 #include "../../include/hfs.h"
 #include "../../include/codes/hfsAttributes.h"
 #include "../../include/catalog_file/catalogFileUtils.h"
@@ -507,7 +506,7 @@ static uint32_t cf_insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volume
 
 /////REMOVE RECORD
 
-static uint32_t cf_findKey(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber,
+static uint32_t cf_findKey(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber,
                            CatalogDirectoryRecord* recordToFindGreaterThan, uint32_t& indexOfRecordInNode)
 {
     indexOfRecordInNode = 0;
@@ -540,7 +539,7 @@ static uint32_t cf_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
                           CatalogDirectoryRecord* recordToRemove)
 {
     uint32_t index;
-    uint32_t findKeyResult = cf_findKey(diskInfo, volumeHeader, catalogFileHeaderNode, nodeNumber, recordToRemove, index);
+    uint32_t findKeyResult = cf_findKey(diskInfo, volumeHeader, nodeNumber, recordToRemove, index);
 
     if(findKeyResult == CF_FIND_KEY_FAILED)
         return CF_REMOVE_FAILED;
@@ -563,7 +562,7 @@ static uint32_t cf_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
         if(nodeDescriptor->isLeaf == NODE_IS_LEAF)
         {
             delete[] nodeData;
-            uint32_t removeFromLeafResult = cf_removeFromLeaf(diskInfo, volumeHeader, catalogFileHeaderNode, nodeNumber, index);
+            uint32_t removeFromLeafResult = cf_removeFromLeaf(diskInfo, volumeHeader, nodeNumber, index);
             return (removeFromLeafResult == CF_REMOVE_FROM_LEAF_SUCCESS) ? CF_REMOVE_SUCCESS : CF_REMOVE_FAILED;
         }
         else
@@ -632,7 +631,7 @@ static uint32_t cf_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
     }
 }
 
-static uint32_t cf_removeFromLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index)
+static uint32_t cf_removeFromLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index)
 {
     char* nodeData = new char[getCatalogFileNodeSize()];
     uint32_t readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
@@ -727,7 +726,7 @@ static uint32_t cf_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
         delete[] nodeData, delete[] childNodeData;
 
         CatalogDirectoryRecord* predRecord = new CatalogDirectoryRecord();
-        uint32_t getPredResult = cf_getPred(diskInfo, volumeHeader, catalogFileHeaderNode, nodeNumber, index, predRecord);
+        uint32_t getPredResult = cf_getPred(diskInfo, volumeHeader, nodeNumber, index, predRecord);
         if(getPredResult == CF_GET_PRED_FAILED)
             return CF_REMOVE_FROM_NON_LEAF_FAILED;
 
@@ -745,7 +744,7 @@ static uint32_t cf_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
         delete[] nodeData, delete[] childNodeData;
 
         CatalogDirectoryRecord* succRecord = new CatalogDirectoryRecord();
-        uint32_t getSuccResult = cf_getSucc(diskInfo, volumeHeader, catalogFileHeaderNode, nodeNumber, index, succRecord);
+        uint32_t getSuccResult = cf_getSucc(diskInfo, volumeHeader, nodeNumber, index, succRecord);
         if(getSuccResult == CF_GET_PRED_FAILED)
             return CF_REMOVE_FROM_NON_LEAF_FAILED;
 
@@ -771,7 +770,7 @@ static uint32_t cf_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
     }
 }
 
-static uint32_t cf_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index,
+static uint32_t cf_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index,
                  CatalogDirectoryRecord* predRecord)
 {
     char* nodeData = new char[getCatalogFileNodeSize()];
@@ -819,7 +818,7 @@ static uint32_t cf_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
     return CF_GET_PRED_SUCCESS;
 }
 
-static uint32_t cf_getSucc(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index,
+static uint32_t cf_getSucc(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index,
                  CatalogDirectoryRecord* succRecord)
 {
     char* nodeData = new char[getCatalogFileNodeSize()];
@@ -910,14 +909,14 @@ static uint32_t cf_fill(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, C
     //if the previous child(C[idx-1]) has more than t-1 keys, borrow a key from that child
     if(index != 0 && childNodeDescriptor_1->numRecords >= halfOfTheMaxNumberOfRecordsPerNode)
     {
-        uint32_t borrowFromPrevResult = cf_borrowFromPrev(diskInfo, volumeHeader, catalogFileHeaderNode, nodeNumber, index);
+        uint32_t borrowFromPrevResult = cf_borrowFromPrev(diskInfo, volumeHeader, nodeNumber, index);
         delete[] nodeData, delete[] childNodeData;
 
         return (borrowFromPrevResult == CF_BORROW_FROM_PREV_SUCCESS) ? CF_FILL_SUCCESS : CF_FILL_FAILED;
     }
     else if(index != nodeDescriptor->numRecords && childNodeDescriptor_2->numRecords >= halfOfTheMaxNumberOfRecordsPerNode)
     {
-        uint32_t borrowFromNextResult = cf_borrowFromNext(diskInfo, volumeHeader, catalogFileHeaderNode, nodeNumber, index);
+        uint32_t borrowFromNextResult = cf_borrowFromNext(diskInfo, volumeHeader, nodeNumber, index);
         delete[] nodeData, delete[] childNodeData;
 
         return (borrowFromNextResult == CF_BORROW_FROM_NEXT_SUCCESS) ? CF_FILL_SUCCESS : CF_FILL_FAILED;
@@ -936,7 +935,7 @@ static uint32_t cf_fill(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, C
     }
 }
 
-static uint32_t cf_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index)
+static uint32_t cf_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index)
 {
     char* nodeData = new char[getCatalogFileNodeSize()];
     uint32_t readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
@@ -1061,7 +1060,7 @@ static uint32_t cf_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     return CF_BORROW_FROM_PREV_SUCCESS;
 }
 
-static uint32_t cf_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, uint32_t nodeNumber, uint32_t index)
+static uint32_t cf_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index)
 {
     char* nodeData = new char[getCatalogFileNodeSize()];
     uint32_t readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);

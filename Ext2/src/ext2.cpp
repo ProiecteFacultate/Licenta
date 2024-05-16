@@ -522,10 +522,7 @@ uint32_t deleteInodeOfDirectoryAndChildren(DiskInfo* diskInfo, ext2_super_block*
             uint32_t deleteChildDirectoryEntryResult = deleteInodeOfDirectoryAndChildren(diskInfo, superBlock, childEntry.first);
 
             if(deleteChildDirectoryEntryResult == FREE_ALL_DIRECTORY_AND_CHILDREN_BLOCKS_FAILED)
-            {
-                for(std::pair<ext2_inode*, ext2_dir_entry*> entry : subDirectories)
-                    delete entry.first, delete entry.second;
-            }
+                break;
         }
 
         for(std::pair<ext2_inode*, ext2_dir_entry*> entry : subDirectories)

@@ -10,7 +10,9 @@
 #include "../include/hfsFunctionUtils.h"
 #include "../include/codes/hfsCodes.h"
 #include "../include/catalog_file/catalogFileOperations.h"
+#include "../include/catalog_file/bTreeCatalog.h"
 #include "../include/catalog_file/codes/catalogFileResponseCodes.h"
+#include "../include/catalog_file/codes/bTreeResponseCodes.h"
 #include "../include/extents_file/extentsFileOperations.h"
 #include "../include/extents_file/bTreeCatalog.h"
 #include "../include/extents_file/extentsFileUtils.h"
@@ -18,6 +20,7 @@
 #include "../include/extents_file/codes/bTreeResponseCodes.h"
 #include "../include/codes/hfsCodes.h"
 #include "../include/codes/hfsApiResponseCodes.h"
+#include "../include/codes/hfsAttributes.h"
 #include "../include/hfs.h"
 
 //TODO ADD UPDATE RECORD  IN ALL BRANCHES
@@ -229,7 +232,8 @@ uint32_t setExtentsForDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* v
 }
 
 uint32_t getAllExtentsForGivenDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode,
-                                              CatalogDirectoryRecord* fileRecord, std::vector<HFSPlusExtentDescriptor*>& extents)
+                                              CatalogDirectoryRecord* fileRecord, std::vector<HFSPlusExtentDescriptor*>& extents,
+                                              std::vector<ExtentsDirectoryRecord*>& extentsDirectoryRecords)
 {
     //put extents from the record
     for(uint32_t i = 0; i < fileRecord->catalogData.totalNumOfExtents && i < 8; i++)
@@ -256,8 +260,70 @@ uint32_t getAllExtentsForGivenDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeH
         HFSPlusExtentDescriptor* extent = new HFSPlusExtentDescriptor();
         memcpy(extent, &recordsVector[i]->catalogData.extent, sizeof(HFSPlusExtentDescriptor));
         extents.push_back(extent);
-        delete recordsVector[i];
+        extentsDirectoryRecords.push_back(recordsVector[i]);
     }
 
     return GET_ALL_EXTENTS_FOR_DIRECTORY_RECORD_SUCCESS;
+}
+
+uint32_t deleteDirectoryAndChildren(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode,
+                                                   ExtentsFileHeaderNode* extentsFileHeaderNode, CatalogDirectoryRecord* catalogDirectoryRecordToDelete)
+{
+    std::vector<CatalogDirectoryRecord*> subDirectoryCatalogRecords;
+
+    if(catalogDirectoryRecordToDelete->catalogData.recordType == DIRECTORY_TYPE_FOLDER)
+    {
+        uint32_t traverseResult = cf_traverseSubtree(diskInfo, volumeHeader, catalogFileHeaderNode->headerRecord.rootNode,
+                                                     catalogDirectoryRecordToDelete->catalogData.folderID, subDirectoryCatalogRecords);
+
+        if(traverseResult == CF_TRAVERSE_SUBTREE_FAILED)
+            return DELETE_DIRECTORY_AND_CHILDREN_FAILED;
+
+        for(CatalogDirectoryRecord* childEntry : subDirectoryCatalogRecords)
+        {
+            uint32_t deleteChildResult = deleteDirectoryAndChildren(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, childEntry);
+
+            if(deleteChildResult == DELETE_DIRECTORY_RECORD_AND_RELATED_DATA_FAILED)
+                break;
+        }
+
+        for(CatalogDirectoryRecord* entry : subDirectoryCatalogRecords)
+            delete entry;
+    }
+
+    uint32_t deleteChildResult = deleteDirectoryRecordAndAllItsRelatedData(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode,
+                                                                           catalogDirectoryRecordToDelete);
+
+    return (deleteChildResult == DELETE_DIRECTORY_RECORD_AND_RELATED_DATA_SUCCESS) ? DELETE_DIRECTORY_AND_CHILDREN_SUCCESS : DELETE_DIRECTORY_AND_CHILDREN_FAILED;
+}
+
+static uint32_t deleteDirectoryRecordAndAllItsRelatedData(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode,
+                                                   ExtentsFileHeaderNode* extentsFileHeaderNode, CatalogDirectoryRecord* catalogDirectoryRecordToDelete)
+{
+    std::vector<HFSPlusExtentDescriptor *> extents;
+    std::vector<ExtentsDirectoryRecord *> extentsDirectoryRecords;
+    uint32_t getAllExtentsForRecordResult = getAllExtentsForGivenDirectoryRecord(diskInfo, volumeHeader,
+                                                                                 extentsFileHeaderNode,
+                                                                                 catalogDirectoryRecordToDelete,
+                                                                                 extents, extentsDirectoryRecords);
+
+    if (getAllExtentsForRecordResult == GET_ALL_EXTENTS_FOR_DIRECTORY_RECORD_FAILED)
+        return DELETE_DIRECTORY_RECORD_AND_RELATED_DATA_FAILED;
+
+    //deallocate blocks
+    for (uint32_t i = 0; i < extents.size(); i++)
+    {
+        //if this fails we will have trash blocks
+        for (uint32_t j = 0; j < extents[i]->blockCount; j++)
+            changeBlockAllocationInAllocationFile(diskInfo, volumeHeader, extents[i]->startBlock + j, (uint8_t) 0);
+    }
+
+    //remove extents records from extents overflow file
+    for (uint32_t i = 0; i < extentsDirectoryRecords.size(); i++)
+        eof_removeRecordFromTree(diskInfo, volumeHeader, extentsFileHeaderNode, extentsDirectoryRecords[i]); //if this fails, we will have trash extents dir entries
+
+    uint32_t removeCatalogDirectoryRecordFromTreeResult = cf_removeRecordFromTree(diskInfo, volumeHeader, catalogFileHeaderNode, catalogDirectoryRecordToDelete);
+
+    return (removeCatalogDirectoryRecordFromTreeResult == CF_REMOVE_RECORD_FROM_TREE_SUCCESS) ? DELETE_DIRECTORY_RECORD_AND_RELATED_DATA_SUCCESS :
+                                                                                        DELETE_DIRECTORY_RECORD_AND_RELATED_DATA_FAILED;
 }
