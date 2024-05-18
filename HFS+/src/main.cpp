@@ -90,13 +90,13 @@ int main() {
 //                                                     newDirName, DIRECTORY_TYPE_FILE);
 //
 //    std::cout << "Create " << newDirName << ": " << createDirectoryResult << '\n';
-
+//
 //    char* readBuffer = new char[4096];
 //    uint32_t numberOfSectorsRead = 0;
-//    uint32_t readResult = readDiskSectors(diskInfo, 2, 30, readBuffer, numberOfSectorsRead);
+//    uint32_t readResult = readDiskSectors(diskInfo, 1, 4, readBuffer, numberOfSectorsRead);
 //    BTNodeDescriptor* extentsHeaderNode = (BTNodeDescriptor*)&readBuffer[0];
 //    BTHeaderRec* extentsHeaderRecord = (BTHeaderRec*)&readBuffer[14];
-//
+
 //    readResult = readDiskSectors(diskInfo, 2, 2078, readBuffer, numberOfSectorsRead);
 //    BTNodeDescriptor* catalogHeaderNode = (BTNodeDescriptor*)&readBuffer[0];
 

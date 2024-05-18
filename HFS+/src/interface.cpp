@@ -195,7 +195,7 @@ void commandReadFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Cata
     uint32_t startingPosition = atoi(commandTokens[2].c_str());
     uint32_t maxBytesToRead = atoi(commandTokens[3].c_str());
 
-    uint32_t bufferSize = ((maxBytesToRead / volumeHeader->blockSize) + 1) * volumeHeader->blockSize; //in order to avoid overflows
+    uint32_t bufferSize = ((maxBytesToRead / volumeHeader->blockSize) + 2) * volumeHeader->blockSize; //in order to avoid overflows
     char* readBuffer = new char[bufferSize];
     uint32_t numberOfBytesRead = 0;
     uint32_t reasonForIncompleteRead;
@@ -229,7 +229,7 @@ void commandReadFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Cata
             std::cout << originalFilePath << " content:\n\n";
             if(numberOfBytesRead != 0)
             {
-                std::cout.write(readBuffer, maxBytesToRead);
+                std::cout.write(readBuffer, numberOfBytesRead);
                 std::cout << "\n\n";
             }
     }

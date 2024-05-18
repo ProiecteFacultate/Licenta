@@ -86,9 +86,9 @@ uint32_t write(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFil
 //        return WRITE_BYTES_TO_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
 
     CatalogDirectoryRecord* fileRecord = nullptr;
-    uint32_t nodeOfNewRecord, writeResult;
+    uint32_t nodeOfRecord, writeResult;
     uint32_t findCatalogDirectoryRecordResult = cf_findCatalogDirectoryRecordByFullPath(diskInfo, volumeHeader, catalogFileHeaderNode, directoryPath,
-                                                                                        &fileRecord, nodeOfNewRecord);
+                                                                                        &fileRecord, nodeOfRecord);
 
     if(findCatalogDirectoryRecordResult == CF_SEARCH_RECORD_IN_GIVEN_DATA_KEY_DO_NOT_EXIST_IN_TREE)
         return WRITE_BYTES_TO_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
@@ -99,16 +99,21 @@ uint32_t write(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFil
         return WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE;
 
     std::vector<HFSPlusExtentDescriptor*> foundExtents;
+    uint32_t numberOfAlreadyExistingExtents;
+
     if(writeAttribute == WRITE_WITH_TRUNCATE)
-        writeResult = writeBytesToFileWithTruncate(diskInfo, volumeHeader, fileRecord, catalogFileHeaderNode, extentsFileHeaderNode, dataBuffer,
-                                                   maxBytesToWrite, numberOfBytesWritten, reasonForIncompleteWrite, nodeOfNewRecord, foundExtents);
+        writeResult = writeBytesToFileWithTruncate(diskInfo, volumeHeader, fileRecord, extentsFileHeaderNode, dataBuffer, maxBytesToWrite, numberOfBytesWritten,
+                                                   reasonForIncompleteWrite, foundExtents);
+    else
+        writeResult = writeBytesToFileWithAppend(diskInfo, volumeHeader, fileRecord, extentsFileHeaderNode, dataBuffer, maxBytesToWrite, numberOfBytesWritten,
+                                                   reasonForIncompleteWrite, foundExtents, numberOfAlreadyExistingExtents);
 
     if(writeResult == WRITE_BYTES_TO_FILE_SUCCESS)
     {
         if(writeAttribute == WRITE_WITH_TRUNCATE)
         {
             uint32_t setExtentsResult = setExtentsForDirectoryRecord(diskInfo, volumeHeader, extentsFileHeaderNode, fileRecord, foundExtents,
-                                                                     nodeOfNewRecord);
+                                                                     nodeOfRecord);
 
             if(setExtentsResult == SET_EXTENTS_FOR_DIRECTORY_RECORD_FAILED)
                 return WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON;
@@ -122,7 +127,28 @@ uint32_t write(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFil
                 updatedRecord->catalogData.hfsPlusForkData.totalBlocks--;
 
             uint32_t updateRecordOnDiskResult = cf_updateRecordOnDisk(diskInfo, volumeHeader, fileRecord, updatedRecord,
-                                                                      nodeOfNewRecord);
+                                                                      nodeOfRecord);
+
+            //if this is a fail we will have written and occupied blocks, but untracked by any record (trash blocks)
+            return (updateRecordOnDiskResult == CF_UPDATE_RECORD_ON_DISK_SUCCESS) ? WRITE_BYTES_TO_FILE_SUCCESS : WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON;
+        }
+        else
+        {
+            uint32_t setExtentsResult = addExtentsToDirectoryRecord(diskInfo, volumeHeader, extentsFileHeaderNode, fileRecord, foundExtents,
+                                                                    nodeOfRecord, numberOfAlreadyExistingExtents);
+
+            if(setExtentsResult == ADD_EXTENTS_TO_DIRECTORY_RECORD_FAILED)
+                return WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON;
+
+            //now update the record file size and number of blocks
+            CatalogDirectoryRecord* updatedRecord = new CatalogDirectoryRecord();
+            memcpy(updatedRecord, fileRecord, sizeof(CatalogDirectoryRecord));
+            updatedRecord->catalogData.fileSize += numberOfBytesWritten;
+            for(uint32_t i = 0; i < foundExtents.size(); i++)
+                updatedRecord->catalogData.hfsPlusForkData.totalBlocks += foundExtents[i]->blockCount;
+
+            uint32_t updateRecordOnDiskResult = cf_updateRecordOnDisk(diskInfo, volumeHeader, fileRecord, updatedRecord,
+                                                                      nodeOfRecord);
 
             //if this is a fail we will have written and occupied blocks, but untracked by any record (trash blocks)
             return (updateRecordOnDiskResult == CF_UPDATE_RECORD_ON_DISK_SUCCESS) ? WRITE_BYTES_TO_FILE_SUCCESS : WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON;
@@ -183,7 +209,7 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
         if(localIndex + extents[i]->blockCount >= blockLocalIndex)
         {
             actualExtentIndex = i; //when we read the first extent to read from this will pe the start extent index
-            startBlockInExtentIndex = blockLocalIndex - localIndex - 1; //we decrease 1 because blocks are considered from 0 in extent
+            startBlockInExtentIndex = blockLocalIndex - localIndex;
             break;
         }
 
@@ -194,13 +220,15 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
     //read the first extent (the one that is incomplete)
     uint32_t numOfBlocksRemainedInThisExtent = extents[actualExtentIndex]->blockCount - startBlockInExtentIndex;
 
-    numOfBlocksRemainedToRead = maxBytesToRead / volumeHeader->blockSize + 1;
+    uint32_t startBlockToReadLocalIndex = startingPosition / volumeHeader->blockSize;
+    uint32_t lastBlockToReadLocalIndex = (startingPosition + maxBytesToRead - 1) / volumeHeader->blockSize;
+    numOfBlocksRemainedToRead = lastBlockToReadLocalIndex - startBlockToReadLocalIndex + 1;
     if(maxBytesToRead % volumeHeader->blockSize == 0)
         numOfBlocksRemainedToRead--;
 
     numOfBlocksToReadFromThisExtent = std::min(numOfBlocksRemainedToRead, numOfBlocksRemainedInThisExtent);
     uint32_t readResult = readDiskSectors(diskInfo, numOfBlocksToReadFromThisExtent * sectorsPerBlock,
-                                          (extents[actualExtentIndex]->startBlock + actualExtentIndex) * sectorsPerBlock, readBuffer, numOfSectorsRead);
+                                          (extents[actualExtentIndex]->startBlock + startBlockInExtentIndex) * sectorsPerBlock, readBuffer, numOfSectorsRead);
 
     if(readResult != EC_NO_ERROR)
     {
@@ -210,7 +238,8 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
 
     extentSize = (extents[0]->blockCount) * volumeHeader->blockSize;
     numberOfBytesRead = std::min(fileRecord->catalogData.fileSize - startingPosition, std::min(extentSize - startingPosition, maxBytesToRead));
-    memcpy(readBuffer, readBuffer + startingPosition, numberOfBytesRead);
+    uint32_t startingByteInFirstBlock = startingPosition % volumeHeader->blockSize;
+    memcpy(readBuffer, readBuffer + startingByteInFirstBlock, numberOfBytesRead);
 
     while(numberOfBytesRead < maxBytesToRead)
     {
@@ -227,7 +256,7 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
         if(numOfBytesRemainedToRead % volumeHeader->blockSize == 0)
             numOfBlocksRemainedToRead--;
 
-        numOfBlocksToReadFromThisExtent = std::min(numOfBlocksRemainedToRead, extents[actualExtentIndex]->blockCount);
+        numOfBlocksToReadFromThisExtent = std::min((int32_t) numOfBlocksRemainedToRead, (int32_t) extents[actualExtentIndex]->blockCount);
 
         readResult = readDiskSectors(diskInfo, numOfBlocksToReadFromThisExtent * sectorsPerBlock,
                                      extents[actualExtentIndex]->startBlock * sectorsPerBlock, readBuffer + numberOfBytesRead, numOfSectorsRead);
@@ -239,8 +268,8 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
             return READ_BYTES_FROM_FILE_SUCCESS;
         }
 
-        extentSize = (extents[0]->blockCount) * volumeHeader->blockSize;
-        numOfBytesReadFromThisBlock = std::min(extentSize - startingPosition - numberOfBytesRead, std::min(extentSize, maxBytesToRead - numberOfBytesRead));
+        extentSize = (extents[actualExtentIndex]->blockCount) * volumeHeader->blockSize;
+        numOfBytesReadFromThisBlock = std::min(fileRecord->catalogData.fileSize - numberOfBytesRead, std::min(extentSize, maxBytesToRead - numberOfBytesRead));
         numberOfBytesRead += numOfBytesReadFromThisBlock;
     }
 

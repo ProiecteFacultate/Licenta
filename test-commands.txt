@@ -17,15 +17,27 @@ ls Root/Dir_1/D1_Dir_1
 
 
 
-mkdir Root File_1 DIRECTORY_TYPE_FILE
+
+write Root/File_1 8092 TRUNCATE EOF
+read Root/File_1 0 8092
+write Root/File_1 14689 TRUNCATE EOF
+read Root/File_1 0 14689
+
 write Root/File_1 10 TRUNCATE EOF
-ABCDEFGHIJK
-read Root/File_1 0 5
+read Root/File_1 5000 3000
+
 
 
 mkdir Root File_1 DIRECTORY_TYPE_FILE
-mkdir Root File_2 DIRECTORY_TYPE_FILE
-rmdir Root/File_1
 
-rmdir Root/Dir_55
-mkdir Root Dir_55 DIRECTORY_TYPE_FILE
+write Root/File_1 10 TRUNCATE EOF
+AAAAAAAAAAAAAAAAAA
+EOF
+
+write Root/File_1 5 APPEND EOF
+BBBBBBBBBB
+EOF
+
+write Root/File_1 8092 APPEND EOF
+
+read Root/File_1 0 8107
