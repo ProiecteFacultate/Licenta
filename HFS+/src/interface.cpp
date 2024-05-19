@@ -235,6 +235,52 @@ void commandReadFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Cata
     }
 }
 
+void commandTruncateFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode,
+                         std::vector<std::string> commandTokens)
+{
+    if(commandTokens.size() < 3)
+    {
+        std::cout << "Insufficient arguments for 'truncate' command!\n";
+        return;
+    }
+    else if(commandTokens.size() > 3)
+    {
+        std::cout << "Too many arguments for 'truncate' command!\n";
+        return;
+    }
+
+    char* filePath = new char[100];
+    memset(filePath, 0, 100);
+    memcpy(filePath, commandTokens[1].c_str(), commandTokens[1].length());
+
+    if(commandTokens[2][0] == '-')
+    {
+        std::cout << "Can not truncate file to a negative size!\n";
+        return;
+    }
+
+    uint32_t newSize = atoi(commandTokens[2].c_str());
+
+    uint32_t truncateResult = truncate(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, filePath, newSize);
+
+    switch (truncateResult) {
+        case TRUNCATE_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL:
+            std::cout << "Given file do not exist or search fail!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
+            break;
+        case TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE:
+            std::cout << "Can not truncate to given file type!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
+            break;
+        case TRUNCATE_FILE_NEW_SIZE_GREATER_THAN_ACTUAL_SIZE:
+            std::cout << "New truncate size can't be greater than actual file size!\n";
+            break;
+        case TRUNCATE_FILE_FAILED_FOR_OTHER_REASON:
+            std::cout << "Failed to truncate file for unspecified reason!\n";
+        case TRUNCATE_FILE_SUCCESS:
+            std::cout << "Successfully truncated file!\n";
+            break;
+    }
+}
+
 void commandDeleteDirectory(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode,
                             std::vector<std::string> commandTokens)
 {

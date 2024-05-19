@@ -124,6 +124,8 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, HFSPlusVolumeHeader* vol
 
     uint32_t lastBlockOfLastExtent = extents[extents.size() - 1]->startBlock + extents[extents.size() - 1]->blockCount - 1; //aka last block of file
     uint32_t numOfBytesWrittenInLastBlock = fileRecord->catalogData.fileSize % volumeHeader->blockSize;
+    if(fileRecord->catalogData.fileSize % volumeHeader->blockSize == 0 && fileRecord->catalogData.fileSize != 0)
+        numOfBytesWrittenInLastBlock = volumeHeader->blockSize;
     uint32_t numOfFreeBytesRemainedInLastBlock = volumeHeader->blockSize - numOfBytesWrittenInLastBlock;
     char* blockBuffer = new char[volumeHeader->blockSize];
     uint32_t readResult = readDiskSectors(diskInfo, sectorsPerBlock, lastBlockOfLastExtent * sectorsPerBlock, blockBuffer, numOfSectorsRead);
@@ -178,7 +180,13 @@ uint32_t writeBytesToFileWithAppend(DiskInfo* diskInfo, HFSPlusVolumeHeader* vol
             {
                 //write the extent (writeDataToExtent method also marks the blocks as occupied in allocation file)
                 startPositionInBufferToWriteFrom = numOfFreeBytesRemainedInLastBlock + foundBlocks * volumeHeader->blockSize;
+                char* readBuffer = new char[4096];
+                uint32_t numberOfSectorsRead = 0;
+                uint32_t readResult = readDiskSectors(diskInfo, 1, 4, readBuffer, numberOfSectorsRead);
+
                 writeDataToExtentResult = writeDataToExtent(diskInfo, volumeHeader, extent, dataBuffer + startPositionInBufferToWriteFrom);
+
+                 readResult = readDiskSectors(diskInfo, 1, 4, readBuffer, numberOfSectorsRead);
 
                 if(writeDataToExtentResult == WRITE_DATA_TO_EXTENT_FAILED)
                 {
@@ -311,6 +319,21 @@ static uint32_t searchFreeExtentOfGivenNumberOfBlocks(DiskInfo* diskInfo, HFSPlu
 
     delete[] allocationFileBlocks;
     return SEARCH_FREE_EXTENT_NO_EXTENT_WITH_DESIRED_NUMBER_OF_BLOCKS;
+}
+
+uint32_t createExtentWithGivenStartBlockAndNumberOfBlocks(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t startBlock, uint32_t numberOfBlocksInExtent, HFSPlusExtentDescriptor* extent)
+{
+    extent->startBlock = startBlock;
+    extent->blockCount = numberOfBlocksInExtent;
+
+    for(uint32_t i = 0; i < numberOfBlocksInExtent; i++)
+    {
+        uint32_t changeBlockAllocationResult = changeBlockAllocationInAllocationFile(diskInfo, volumeHeader, startBlock + i, (uint8_t) 1);
+        if(changeBlockAllocationResult == CHANGE_BLOCK_ALLOCATION_FAILED) //in this case we will have trash blocks
+            return CREATE_EXTENT_WITH_GIVEN_BLOCKS_FAILED;
+    }
+
+    return CREATE_EXTENT_WITH_GIVEN_BLOCKS_SUCCESS;
 }
 
 uint32_t setExtentsForDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, CatalogDirectoryRecord* fileRecord,

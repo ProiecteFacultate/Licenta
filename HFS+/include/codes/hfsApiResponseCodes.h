@@ -30,4 +30,10 @@
 #define DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON                                                                         2
 #define DELETE_DIRECTORY_SUCCESS                                                                                         999
 
+#define TRUNCATE_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL                                                             0
+#define TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE                                                                   1
+#define TRUNCATE_FILE_NEW_SIZE_GREATER_THAN_ACTUAL_SIZE                                                                  2
+#define TRUNCATE_FILE_FAILED_FOR_OTHER_REASON                                                                            3
+#define TRUNCATE_FILE_SUCCESS                                                                                            999
+
 #endif

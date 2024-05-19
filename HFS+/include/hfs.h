@@ -22,6 +22,9 @@ static uint32_t writeDataToExtent(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
 
 static uint32_t searchFreeExtentOfGivenNumberOfBlocks(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t numberOfBlocksInExtent, HFSPlusExtentDescriptor* foundExtent);
 
+uint32_t createExtentWithGivenStartBlockAndNumberOfBlocks(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t startBlock, uint32_t numberOfBlocksInExtent,
+                                                                  HFSPlusExtentDescriptor* extent);
+
 uint32_t setExtentsForDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, CatalogDirectoryRecord* fileRecord,
                                       std::vector<HFSPlusExtentDescriptor*> extents, uint32_t nodeNumberOfRecord);
 

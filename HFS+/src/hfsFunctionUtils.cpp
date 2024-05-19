@@ -84,7 +84,7 @@ uint32_t changeBlockAllocationInAllocationFile(DiskInfo* diskInfo, HFSPlusVolume
 
     uint32_t byteIndexInBlock = (blockLocalIndexInDataBlocks / 8) % volumeHeader->blockSize;
     uint32_t bitIndex = blockLocalIndexInDataBlocks % 8;
-    uint32_t blockToUpdate = volumeHeader->allocationFile.extents[0].startBlock + blockLocalIndexInDataBlocks;
+    uint32_t blockToUpdate = volumeHeader->allocationFile.extents[0].startBlock + blockLocalIndexInDataBlocks / (volumeHeader->blockSize * 8);
 
     char* blockBuffer = new char[volumeHeader->blockSize];
     uint32_t readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, volumeHeader),

@@ -14,6 +14,8 @@
 #include "../include/catalog_file/catalogFileOperations.h"
 #include "../include/catalog_file/catalogFileUtils.h"
 #include "../include/catalog_file/bTreeCatalog.h"
+#include "../include/extents_file/bTreeCatalog.h"
+#include "../include/extents_file/extentsFileOperations.h"
 #include "../include/codes/hfsApiResponseCodes.h"
 #include "../include/hfsApi.h"
 
@@ -223,9 +225,6 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
     uint32_t startBlockToReadLocalIndex = startingPosition / volumeHeader->blockSize;
     uint32_t lastBlockToReadLocalIndex = (startingPosition + maxBytesToRead - 1) / volumeHeader->blockSize;
     numOfBlocksRemainedToRead = lastBlockToReadLocalIndex - startBlockToReadLocalIndex + 1;
-    if(maxBytesToRead % volumeHeader->blockSize == 0)
-        numOfBlocksRemainedToRead--;
-
     numOfBlocksToReadFromThisExtent = std::min(numOfBlocksRemainedToRead, numOfBlocksRemainedInThisExtent);
     uint32_t readResult = readDiskSectors(diskInfo, numOfBlocksToReadFromThisExtent * sectorsPerBlock,
                                           (extents[actualExtentIndex]->startBlock + startBlockInExtentIndex) * sectorsPerBlock, readBuffer, numOfSectorsRead);
@@ -275,6 +274,106 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
 
     delete fileRecord;
     return READ_BYTES_FROM_FILE_SUCCESS;
+}
+
+uint32_t truncate(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode,
+                  char* filePath, uint32_t newSize)
+{
+    uint32_t indexOfLastExtentToRemain = 0, blocksAlreadyCounted = 0, numberOfBlocksToRemainInLastExtent, startBlockOfLastExtent;
+//    if(extentsFileHeaderNode->headerRecord.freeNodes == extentsFileHeaderNode->headerRecord.totalNodes - 1) //root node is not yet instantiated
+//        return READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
+
+    CatalogDirectoryRecord* fileRecord = nullptr;
+    uint32_t nodeOfRecord;
+    uint32_t findCatalogDirectoryRecordResult = cf_findCatalogDirectoryRecordByFullPath(diskInfo, volumeHeader, catalogFileHeaderNode, filePath,
+                                                                                        &fileRecord, nodeOfRecord);
+
+    if(findCatalogDirectoryRecordResult == CF_SEARCH_RECORD_IN_GIVEN_DATA_KEY_DO_NOT_EXIST_IN_TREE)
+        return TRUNCATE_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
+    else if(findCatalogDirectoryRecordResult == CF_SEARCH_RECORD_IN_GIVEN_DATA_FAILED_FOR_OTHER_REASON)
+        return TRUNCATE_FILE_FAILED_FOR_OTHER_REASON;
+
+    if(fileRecord->catalogData.recordType != DIRECTORY_TYPE_FILE)
+    {
+        delete fileRecord;
+        return TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE;
+    }
+
+    if(newSize >= fileRecord->catalogData.fileSize)
+        return TRUNCATE_FILE_NEW_SIZE_GREATER_THAN_ACTUAL_SIZE;
+
+    std::vector<HFSPlusExtentDescriptor*> extentsDescriptors;
+    std::vector<ExtentsDirectoryRecord*> extentsRecords;
+    uint32_t getAllExtentsForRecordResult = getAllExtentsForGivenDirectoryRecord(diskInfo, volumeHeader, extentsFileHeaderNode, fileRecord, extentsDescriptors, extentsRecords);
+
+    if(getAllExtentsForRecordResult == GET_ALL_EXTENTS_FOR_DIRECTORY_RECORD_FAILED)
+        return TRUNCATE_FILE_FAILED_FOR_OTHER_REASON;
+
+    uint32_t numberOfBlocksToRemain = newSize / volumeHeader->blockSize + 1;
+    if(newSize % volumeHeader->blockSize == 0)
+        numberOfBlocksToRemain--;
+
+    for(uint32_t i = 0; i < extentsDescriptors.size(); i++)
+    {
+        if(blocksAlreadyCounted + extentsDescriptors[i]->blockCount >= numberOfBlocksToRemain)
+        {
+            indexOfLastExtentToRemain = i;
+            startBlockOfLastExtent = extentsDescriptors[i]->startBlock;
+            numberOfBlocksToRemainInLastExtent = numberOfBlocksToRemain - blocksAlreadyCounted;
+            if(indexOfLastExtentToRemain != 0)
+                indexOfLastExtentToRemain--;
+
+            break;
+        }
+
+        blocksAlreadyCounted += extentsDescriptors[i]->blockCount;
+    }
+
+    //delete blocks of extentsDescriptors in surplus AND LAST EXTENT EVEN IF IT WILL STILL CONTAIN SOME BLOCKS
+    for (uint32_t i = indexOfLastExtentToRemain; i < extentsDescriptors.size(); i++)
+    {
+        //if this fails we will have trash blocks
+        for (uint32_t j = 0; j < extentsDescriptors[i]->blockCount; j++)
+            changeBlockAllocationInAllocationFile(diskInfo, volumeHeader, extentsDescriptors[i]->startBlock + j, (uint8_t) 0);
+    }
+
+    //remove extentsDescriptors overflow (if the new number of extentsDescriptors <= 8, we don't need to do anything in fork)
+    if(extentsRecords.size() != 0)
+        for (uint32_t i = indexOfLastExtentToRemain - 8; i < extentsRecords.size(); i++)
+            eof_removeRecordFromTree(diskInfo, volumeHeader, extentsFileHeaderNode, extentsRecords[i]); //if this fails, we will have trash extentsDescriptors dir entries
+
+    //mark the surplus blocks in last record to remain as free
+    if(numberOfBlocksToRemainInLastExtent != 0)
+    {
+        HFSPlusExtentDescriptor* extent = new HFSPlusExtentDescriptor();
+        uint32_t createExtentResult = createExtentWithGivenStartBlockAndNumberOfBlocks(diskInfo, volumeHeader, startBlockOfLastExtent,
+                                                                                        numberOfBlocksToRemainInLastExtent, extent);
+
+        if(createExtentResult == CREATE_EXTENT_WITH_GIVEN_BLOCKS_FAILED) //if it fails we will lose last part of file so it will be compromised
+            return TRUNCATE_FILE_FAILED_FOR_OTHER_REASON;
+
+        std::vector<HFSPlusExtentDescriptor*> extentAsVector;
+        extentAsVector.push_back(extent);
+        uint32_t dummy;
+        uint32_t setExtentsResult = addExtentsToDirectoryRecord(diskInfo, volumeHeader, extentsFileHeaderNode, fileRecord, extentAsVector,
+                                                                nodeOfRecord, dummy);
+
+        if(setExtentsResult == ADD_EXTENTS_TO_DIRECTORY_RECORD_FAILED)
+            return TRUNCATE_FILE_FAILED_FOR_OTHER_REASON;
+    }
+
+    //now update the record file size and number of blocks
+    CatalogDirectoryRecord* updatedRecord = new CatalogDirectoryRecord();
+    memcpy(updatedRecord, fileRecord, sizeof(CatalogDirectoryRecord));
+    updatedRecord->catalogData.fileSize = newSize;
+    updatedRecord->catalogData.hfsPlusForkData.totalBlocks = numberOfBlocksToRemain;
+    updatedRecord->catalogData.totalNumOfExtents = indexOfLastExtentToRemain + 1; //the index is indexed from 0 so that's why we add 1
+    if(newSize == 0)
+        updatedRecord->catalogData.totalNumOfExtents = 0;
+
+    uint32_t updateRecordOnDiskResult = cf_updateRecordOnDisk(diskInfo, volumeHeader, fileRecord, updatedRecord, nodeOfRecord);
+
+    return (updateRecordOnDiskResult == CF_UPDATE_RECORD_ON_DISK_SUCCESS) ? TRUNCATE_FILE_SUCCESS : TRUNCATE_FILE_FAILED_FOR_OTHER_REASON;
 }
 
 uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode,

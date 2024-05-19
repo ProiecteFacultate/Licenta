@@ -50,6 +50,8 @@ int main() {
             commandWriteFile(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
         else if(tokens[0] == "read")
             commandReadFile(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
+        else if(tokens[0] == "truncate")
+            commandTruncateFile(diskInfo,  volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
         else if(tokens[0] == "rmdir")
             commandDeleteDirectory(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
         else
@@ -60,16 +62,16 @@ int main() {
                   << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() % 1000  << '\n';
     }
 
-    return 0;
+  //  return 0;
 
 
 
 
 
-
-    char* parentPath = new char[100];
-    memcpy(parentPath, "Root\0", 5);
-    char* newDirName = new char[100];
+//
+//    char* parentPath = new char[100];
+//    memcpy(parentPath, "Root\0", 5);
+//    char* newDirName = new char[100];
 
 //    for(int i = 10; i <= 99; i++)
 //    {
@@ -91,9 +93,9 @@ int main() {
 //
 //    std::cout << "Create " << newDirName << ": " << createDirectoryResult << '\n';
 //
-//    char* readBuffer = new char[4096];
-//    uint32_t numberOfSectorsRead = 0;
-//    uint32_t readResult = readDiskSectors(diskInfo, 1, 4, readBuffer, numberOfSectorsRead);
+    char* readBuffer = new char[4096];
+    uint32_t numberOfSectorsRead = 0;
+    uint32_t readResult = readDiskSectors(diskInfo, 1, 4, readBuffer, numberOfSectorsRead);
 //    BTNodeDescriptor* extentsHeaderNode = (BTNodeDescriptor*)&readBuffer[0];
 //    BTHeaderRec* extentsHeaderRecord = (BTHeaderRec*)&readBuffer[14];
 

@@ -11,6 +11,9 @@
 #define SEARCH_FREE_EXTENT_FAILED_FOR_OTHER_REASON                                                                       1
 #define SEARCH_FREE_EXTENT_SUCCESS                                                                                       999
 
+#define CREATE_EXTENT_WITH_GIVEN_BLOCKS_FAILED                                                                           0
+#define CREATE_EXTENT_WITH_GIVEN_BLOCKS_SUCCESS                                                                          999
+
 #define CHANGE_BLOCK_ALLOCATION_FAILED                                                                                   0
 #define CHANGE_BLOCK_ALLOCATION_SUCCESS                                                                                  999
 
