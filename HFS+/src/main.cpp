@@ -51,7 +51,9 @@ int main() {
         else if(tokens[0] == "read")
             commandReadFile(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
         else if(tokens[0] == "truncate")
-            commandTruncateFile(diskInfo,  volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
+            commandTruncateFile(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
+        else if(tokens[0] == "la")
+            commandShowDirectoryAttributes(diskInfo, volumeHeader, catalogFileHeaderNode, tokens);
         else if(tokens[0] == "rmdir")
             commandDeleteDirectory(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, tokens);
         else

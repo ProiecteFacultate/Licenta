@@ -36,4 +36,8 @@
 #define TRUNCATE_FILE_FAILED_FOR_OTHER_REASON                                                                            3
 #define TRUNCATE_FILE_SUCCESS                                                                                            999
 
+#define DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_FAILED_GIVEN_DIRECTORY_DO_NOT_EXIST_OR_SEARCH_ERROR                         0
+#define DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_FAILED_FOR_OTHER_REASON                                                     1
+#define DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_SUCCESS                                                                     999
+
 #endif

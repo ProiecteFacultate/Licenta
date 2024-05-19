@@ -79,3 +79,10 @@ std::vector<std::string> splitString(const std::string& str, char delimiter)
 
     return tokens;
 }
+
+uint32_t getCurrentTimeDateAndTimeFormatted()
+{
+    SYSTEMTIME time;
+    GetSystemTime(&time);
+    return ((time.wYear - 1900) << 25) | (time.wMonth << 21) | (time.wDay << 16) | ((time.wHour * 3600 + time.wMinute * 60 + time.wSecond) / 2);
+}

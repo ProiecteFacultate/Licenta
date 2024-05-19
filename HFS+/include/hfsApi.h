@@ -24,4 +24,7 @@ uint32_t truncate(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Catalog
 uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode,
                                char* directoryPath);
 
+uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode,
+                                           char* directoryPath, DirectoryDisplayableAttributes* attributes);
+
 #endif

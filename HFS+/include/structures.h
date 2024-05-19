@@ -172,4 +172,31 @@ typedef struct
     ExtentsFileCatalogDirectory catalogData;
 } __attribute__((packed)) ExtentsDirectoryRecord;
 
+//used to display directory info in interface
+typedef struct
+{
+    uint32_t FileSize;
+    uint32_t FileSizeOnDisk;
+    uint16_t CreatedYear;
+    uint16_t CreatedMonth;
+    uint16_t CreatedDay;
+    uint16_t CreatedHour;
+    uint16_t CreatedMinute;
+    uint16_t CreatedSecond;
+
+    uint16_t LastAccessedYear;
+    uint16_t LastAccessedMonth;
+    uint16_t LastAccessedDay;
+    uint16_t LastAccessedHour;
+    uint16_t LastAccessedMinute;
+    uint16_t LastAccessedSecond;
+    //change means a write or truncate
+    uint16_t LastChangeYear;
+    uint16_t LastChangeMonth;
+    uint16_t LastChangeDay;
+    uint16_t LastChangeHour;
+    uint16_t LastChangeMinute;
+    uint16_t LastChangeSecond;
+} __attribute__((packed)) DirectoryDisplayableAttributes;
+
 #endif

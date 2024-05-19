@@ -47,3 +47,5 @@ EOF
 read Root/File_1 0 8092
 
 truncate Root/File_1 100
+
+la Root/File_1

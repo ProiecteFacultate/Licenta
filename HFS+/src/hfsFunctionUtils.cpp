@@ -8,6 +8,7 @@
 #include "../include/utils.h"
 #include "../include/codes/hfsCodes.h"
 #include "../include/hfsFunctionUtils.h"
+#include "../include/catalog_file/catalogFileOperations.h"
 
 uint32_t getMaximumNumberOfRecordsPerCatalogFileNode()
 {
@@ -104,4 +105,31 @@ uint32_t changeBlockAllocationInAllocationFile(DiskInfo* diskInfo, HFSPlusVolume
 
     delete[] blockBuffer;
     return (writeResult == EC_NO_ERROR) ? CHANGE_BLOCK_ALLOCATION_SUCCESS : CHANGE_BLOCK_ALLOCATION_FAILED;
+}
+
+void updateCatalogDirectoryRecordCreatedDateAndTime(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* directoryRecord, uint32_t nodeOfRecord)
+{
+    CatalogDirectoryRecord* updatedRecord = new CatalogDirectoryRecord();
+    memcpy(updatedRecord, directoryRecord, sizeof(CatalogDirectoryRecord));
+    updatedRecord->catalogData.createDate = getCurrentTimeDateAndTimeFormatted();
+
+    cf_updateRecordOnDisk(diskInfo, volumeHeader, directoryRecord, updatedRecord, nodeOfRecord);
+}
+
+void updateCatalogDirectoryRecordLastAccessedDateAndTime(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* directoryRecord, uint32_t nodeOfRecord)
+{
+    CatalogDirectoryRecord* updatedRecord = new CatalogDirectoryRecord();
+    memcpy(updatedRecord, directoryRecord, sizeof(CatalogDirectoryRecord));
+    updatedRecord->catalogData.accessDate = getCurrentTimeDateAndTimeFormatted();
+
+    cf_updateRecordOnDisk(diskInfo, volumeHeader, directoryRecord, updatedRecord, nodeOfRecord);
+}
+
+void updateCatalogDirectoryRecordLastModifiedDateAndTime(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* directoryRecord, uint32_t nodeOfRecord)
+{
+    CatalogDirectoryRecord* updatedRecord = new CatalogDirectoryRecord();
+    memcpy(updatedRecord, directoryRecord, sizeof(CatalogDirectoryRecord));
+    updatedRecord->catalogData.accessDate = getCurrentTimeDateAndTimeFormatted();
+
+    cf_updateRecordOnDisk(diskInfo, volumeHeader, directoryRecord, updatedRecord, nodeOfRecord);
 }

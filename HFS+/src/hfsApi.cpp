@@ -51,6 +51,9 @@ uint32_t createDirectory(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
     CatalogDirectoryRecord* recordToInsert = cf_createDirectoryRecord(diskInfo, volumeHeader, actualCatalogDirectoryRecord, newDirectoryName,
                              newDirectoryType);
     uint32_t insertRecordInTreeResult = cf_insertRecordInTree(diskInfo, volumeHeader, catalogFileHeaderNode, recordToInsert);
+    updateCatalogDirectoryRecordCreatedDateAndTime(diskInfo, volumeHeader, actualCatalogDirectoryRecord, nodeOfNewRecord);
+    updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, actualCatalogDirectoryRecord, nodeOfNewRecord);
+    updateCatalogDirectoryRecordLastModifiedDateAndTime(diskInfo, volumeHeader, actualCatalogDirectoryRecord, nodeOfNewRecord);
 
     return (insertRecordInTreeResult == CF_INSERT_RECORD_IN_TREE_SUCCESS) ? DIRECTORY_CREATION_SUCCESS : DIRECTORY_CREATION_PARENT_FAILED_TO_INSERT_RECORD_IN_CATALOG_TREE;
 }
@@ -131,6 +134,8 @@ uint32_t write(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFil
             uint32_t updateRecordOnDiskResult = cf_updateRecordOnDisk(diskInfo, volumeHeader, fileRecord, updatedRecord,
                                                                       nodeOfRecord);
 
+            updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
+            updateCatalogDirectoryRecordLastModifiedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
             //if this is a fail we will have written and occupied blocks, but untracked by any record (trash blocks)
             return (updateRecordOnDiskResult == CF_UPDATE_RECORD_ON_DISK_SUCCESS) ? WRITE_BYTES_TO_FILE_SUCCESS : WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON;
         }
@@ -152,6 +157,8 @@ uint32_t write(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFil
             uint32_t updateRecordOnDiskResult = cf_updateRecordOnDisk(diskInfo, volumeHeader, fileRecord, updatedRecord,
                                                                       nodeOfRecord);
 
+            updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
+            updateCatalogDirectoryRecordLastModifiedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
             //if this is a fail we will have written and occupied blocks, but untracked by any record (trash blocks)
             return (updateRecordOnDiskResult == CF_UPDATE_RECORD_ON_DISK_SUCCESS) ? WRITE_BYTES_TO_FILE_SUCCESS : WRITE_BYTES_TO_FILE_FAILED_FOR_OTHER_REASON;
         }
@@ -245,6 +252,7 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
         actualExtentIndex++;
         if(actualExtentIndex == extents.size())
         {
+            updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfNewRecord);
             reasonForIncompleteRead = INCOMPLETE_BYTES_READ_DUE_TO_NO_FILE_NOT_LONG_ENOUGH;
             delete fileRecord;
             return READ_BYTES_FROM_FILE_SUCCESS;
@@ -262,6 +270,7 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
 
         if(readResult != EC_NO_ERROR)
         {
+            updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfNewRecord);
             reasonForIncompleteRead = INCOMPLETE_BYTES_READ_DUE_TO_UNKNOWN;
             delete fileRecord;
             return READ_BYTES_FROM_FILE_SUCCESS;
@@ -272,6 +281,7 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
         numberOfBytesRead += numOfBytesReadFromThisBlock;
     }
 
+    updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfNewRecord);
     delete fileRecord;
     return READ_BYTES_FROM_FILE_SUCCESS;
 }
@@ -373,6 +383,8 @@ uint32_t truncate(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Catalog
 
     uint32_t updateRecordOnDiskResult = cf_updateRecordOnDisk(diskInfo, volumeHeader, fileRecord, updatedRecord, nodeOfRecord);
 
+    updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
+    updateCatalogDirectoryRecordLastModifiedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
     return (updateRecordOnDiskResult == CF_UPDATE_RECORD_ON_DISK_SUCCESS) ? TRUNCATE_FILE_SUCCESS : TRUNCATE_FILE_FAILED_FOR_OTHER_REASON;
 }
 
@@ -394,4 +406,53 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHe
 
     uint32_t deleteDirectoryResult = deleteDirectoryAndChildren(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, directoryRecord);
     return (deleteDirectoryResult == DELETE_DIRECTORY_RECORD_AND_RELATED_DATA_SUCCESS) ? DELETE_DIRECTORY_SUCCESS : DELETE_DIRECTORY_FAILED_FOR_OTHER_REASON;
+}
+
+uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode,
+                                           char* directoryPath, DirectoryDisplayableAttributes* attributes)
+{
+//    if(extentsFileHeaderNode->headerRecord.freeNodes == extentsFileHeaderNode->headerRecord.totalNodes - 1) //root node is not yet instantiated
+//        return READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
+
+    CatalogDirectoryRecord *directoryRecord = nullptr;
+    uint32_t nodeOfRecord;
+    uint32_t findCatalogDirectoryRecordResult = cf_findCatalogDirectoryRecordByFullPath(diskInfo, volumeHeader,
+                                                                                        catalogFileHeaderNode, directoryPath,
+                                                                                        &directoryRecord, nodeOfRecord);
+
+    if (findCatalogDirectoryRecordResult == CF_SEARCH_RECORD_IN_GIVEN_DATA_KEY_DO_NOT_EXIST_IN_TREE)
+        return DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_FAILED_GIVEN_DIRECTORY_DO_NOT_EXIST_OR_SEARCH_ERROR;
+    else if (findCatalogDirectoryRecordResult == CF_SEARCH_RECORD_IN_GIVEN_DATA_FAILED_FOR_OTHER_REASON)
+        return DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_FAILED_FOR_OTHER_REASON;
+
+    uint32_t sizeOnDisk = directoryRecord->catalogData.hfsPlusForkData.totalBlocks * volumeHeader->blockSize;
+    uint32_t size = directoryRecord->catalogData.fileSize;
+
+    attributes->FileSizeOnDisk = sizeOnDisk;
+    attributes->FileSize = size;
+
+    attributes->CreatedYear = (directoryRecord->catalogData.createDate >> 25) + 1900;
+    attributes->CreatedMonth = (directoryRecord->catalogData.createDate >> 21) & 0x0000000F;
+    attributes->CreatedDay = (directoryRecord->catalogData.createDate >> 16) & 0x0000001F;
+    attributes->CreatedHour = (directoryRecord->catalogData.createDate & 0x0000FFFF) * 2 / 3600;
+    attributes->CreatedMinute = (directoryRecord->catalogData.createDate & 0x0000FFFF) * 2 % 3600 / 60;
+    attributes->CreatedSecond = (directoryRecord->catalogData.createDate & 0x0000FFFF) * 2 % 3600 % 60;
+
+    attributes->LastAccessedYear = (directoryRecord->catalogData.accessDate >> 25) + 1900;
+    attributes->LastAccessedMonth = (directoryRecord->catalogData.accessDate >> 21) & 0x0000000F;
+    attributes->LastAccessedDay = (directoryRecord->catalogData.accessDate >> 16) & 0x0000001F;
+    attributes->LastAccessedHour = (directoryRecord->catalogData.accessDate & 0x0000FFFF) * 2 / 3600;
+    attributes->LastAccessedMinute = (directoryRecord->catalogData.accessDate & 0x0000FFFF) * 2 % 3600 / 60;
+    attributes->LastAccessedSecond = (directoryRecord->catalogData.accessDate & 0x0000FFFF) * 2 % 3600 % 60;
+
+    attributes->LastChangeYear = (directoryRecord->catalogData.contentModDate >> 25) + 1900;
+    attributes->LastChangeMonth = (directoryRecord->catalogData.contentModDate >> 21) & 0x0000000F;
+    attributes->LastChangeDay = (directoryRecord->catalogData.contentModDate >> 16) & 0x0000001F;
+    attributes->LastChangeHour = (directoryRecord->catalogData.contentModDate & 0x0000FFFF) * 2 / 3600;
+    attributes->LastChangeMinute = (directoryRecord->catalogData.contentModDate & 0x0000FFFF) * 2 % 3600 / 60;
+    attributes->LastChangeSecond = (directoryRecord->catalogData.contentModDate & 0x0000FFFF) * 2 % 3600 % 60;
+
+    updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, directoryRecord, nodeOfRecord);
+
+    return DIRECTORY_GET_DISPLAYABLE_ATTRIBUTES_SUCCESS;
 }

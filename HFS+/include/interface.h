@@ -32,8 +32,15 @@ void commandTruncateFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
 void commandDeleteDirectory(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode,
                             std::vector<std::string> commandTokens);
 
+//Model 'la Root/File_1' - shows directory attributes
+void commandShowDirectoryAttributes(DiskInfo* diskInfo,  HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, std::vector<std::string> commandTokens);
+
 //////////////////////////////////
 
-static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, std::vector<std::string> commandTokens);
+static void commandListSubdirectoriesWithSize(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode,
+                                                 std::vector<std::string> commandTokens);
+
+static void commandListSubdirectoriesWithoutSize(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode,
+                                                 std::vector<std::string> commandTokens);
 
 #endif

@@ -19,4 +19,6 @@ uint32_t changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitVa
 
 std::vector<std::string> splitString(const std::string& str, char delimiter);
 
+uint32_t getCurrentTimeDateAndTimeFormatted();
+
 #endif
