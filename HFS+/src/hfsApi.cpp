@@ -51,6 +51,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
     CatalogDirectoryRecord* recordToInsert = cf_createDirectoryRecord(diskInfo, volumeHeader, actualCatalogDirectoryRecord, newDirectoryName,
                              newDirectoryType);
     uint32_t insertRecordInTreeResult = cf_insertRecordInTree(diskInfo, volumeHeader, catalogFileHeaderNode, recordToInsert);
+
     updateCatalogDirectoryRecordCreatedDateAndTime(diskInfo, volumeHeader, actualCatalogDirectoryRecord, nodeOfNewRecord);
     updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, actualCatalogDirectoryRecord, nodeOfNewRecord);
     updateCatalogDirectoryRecordLastModifiedDateAndTime(diskInfo, volumeHeader, actualCatalogDirectoryRecord, nodeOfNewRecord);
@@ -134,6 +135,9 @@ uint32_t write(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFil
             uint32_t updateRecordOnDiskResult = cf_updateRecordOnDisk(diskInfo, volumeHeader, fileRecord, updatedRecord,
                                                                       nodeOfRecord);
 
+            if(updateRecordOnDiskResult == CF_UPDATE_RECORD_ON_DISK_SUCCESS)
+                memcpy(fileRecord, updatedRecord, sizeof(CatalogDirectoryRecord));
+
             updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
             updateCatalogDirectoryRecordLastModifiedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
             //if this is a fail we will have written and occupied blocks, but untracked by any record (trash blocks)
@@ -156,6 +160,9 @@ uint32_t write(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFil
 
             uint32_t updateRecordOnDiskResult = cf_updateRecordOnDisk(diskInfo, volumeHeader, fileRecord, updatedRecord,
                                                                       nodeOfRecord);
+
+            if(updateRecordOnDiskResult == CF_UPDATE_RECORD_ON_DISK_SUCCESS)
+                memcpy(fileRecord, updatedRecord, sizeof(CatalogDirectoryRecord));
 
             updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
             updateCatalogDirectoryRecordLastModifiedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
@@ -330,7 +337,7 @@ uint32_t truncate(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Catalog
             indexOfLastExtentToRemain = i;
             startBlockOfLastExtent = extentsDescriptors[i]->startBlock;
             numberOfBlocksToRemainInLastExtent = numberOfBlocksToRemain - blocksAlreadyCounted;
-            if(indexOfLastExtentToRemain != 0)
+            if(numberOfBlocksToRemain == 0 && indexOfLastExtentToRemain != 0)
                 indexOfLastExtentToRemain--;
 
             break;
@@ -382,6 +389,9 @@ uint32_t truncate(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Catalog
         updatedRecord->catalogData.totalNumOfExtents = 0;
 
     uint32_t updateRecordOnDiskResult = cf_updateRecordOnDisk(diskInfo, volumeHeader, fileRecord, updatedRecord, nodeOfRecord);
+
+    if(updateRecordOnDiskResult == CF_UPDATE_RECORD_ON_DISK_SUCCESS)
+        memcpy(fileRecord, updatedRecord, sizeof(CatalogDirectoryRecord));
 
     updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
     updateCatalogDirectoryRecordLastModifiedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfRecord);
