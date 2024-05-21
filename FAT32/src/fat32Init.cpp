@@ -11,7 +11,7 @@
 #include "../include/structures.h"
 #include "../include/codes/fat32Codes.h"
 #include "../include/fat32Init.h"
-#include "../include/fat32Attributes.h"
+#include "../include/codes/fat32Attributes.h"
 
 void fat32Startup(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo, uint32_t sectorsNumber, uint32_t sectorSize)
 {
@@ -162,7 +162,7 @@ void initializeBootSectors(DiskInfo* diskInfo)
     rootDirectoryEntry->FileSize = 64; //root dir does not contain dot & dotdot entries, but we consider that they exist for symmetry with other clusters
     rootDirectoryEntry->FirstClusterLow = bootSectorData->RootDirCluster;
     rootDirectoryEntry->FirstClusterHigh = bootSectorData->RootDirCluster >> 16;
-    rootDirectoryEntry->Attributes = ATTR_FOLDER;
+    rootDirectoryEntry->Attributes = DIRECTORY_TYPE_FOLDER;
     char* rootFirstSectorData = new char[bootSectorData->BytesPerSector];
     memset(rootFirstSectorData, 0, bootSectorData->BytesPerSector);
     memcpy(rootFirstSectorData, rootDirectoryEntry, 32);

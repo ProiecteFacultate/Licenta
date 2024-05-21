@@ -166,6 +166,15 @@ build CMakeFiles/HFS_.dir/src/extents_file/extentsFileUtils.cpp.obj: CXX_COMPILE
   TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
   TARGET_PDB = HFS_.pdb
 
+build CMakeFiles/HFS_.dir/src/hfsTestApi.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfsTestApi.cpp || cmake_object_order_depends_target_HFS_
+  DEP_FILE = CMakeFiles\HFS_.dir\src\hfsTestApi.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\HFS_.dir
+  OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
+  TARGET_PDB = HFS_.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target HFS_
@@ -174,7 +183,7 @@ build CMakeFiles/HFS_.dir/src/extents_file/extentsFileUtils.cpp.obj: CXX_COMPILE
 #############################################
 # Link the executable HFS_.exe
 
-build HFS_.exe: CXX_EXECUTABLE_LINKER__HFS__Debug CMakeFiles/HFS_.dir/src/main.cpp.obj CMakeFiles/HFS_.dir/src/hsfInit.cpp.obj CMakeFiles/HFS_.dir/src/hfsFunctionUtils.cpp.obj CMakeFiles/HFS_.dir/src/utils.cpp.obj CMakeFiles/HFS_.dir/src/hfsApi.cpp.obj CMakeFiles/HFS_.dir/src/catalog_file/bTreeCatalog.cpp.obj CMakeFiles/HFS_.dir/src/catalog_file/catalogFileOperations.cpp.obj CMakeFiles/HFS_.dir/src/catalog_file/catalogFileUtils.cpp.obj CMakeFiles/HFS_.dir/src/hfs.cpp.obj CMakeFiles/HFS_.dir/src/interface.cpp.obj CMakeFiles/HFS_.dir/src/extents_file/bTreeCatalog.cpp.obj CMakeFiles/HFS_.dir/src/extents_file/extentsFileOperations.cpp.obj CMakeFiles/HFS_.dir/src/extents_file/extentsFileUtils.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
+build HFS_.exe: CXX_EXECUTABLE_LINKER__HFS__Debug CMakeFiles/HFS_.dir/src/main.cpp.obj CMakeFiles/HFS_.dir/src/hsfInit.cpp.obj CMakeFiles/HFS_.dir/src/hfsFunctionUtils.cpp.obj CMakeFiles/HFS_.dir/src/utils.cpp.obj CMakeFiles/HFS_.dir/src/hfsApi.cpp.obj CMakeFiles/HFS_.dir/src/catalog_file/bTreeCatalog.cpp.obj CMakeFiles/HFS_.dir/src/catalog_file/catalogFileOperations.cpp.obj CMakeFiles/HFS_.dir/src/catalog_file/catalogFileUtils.cpp.obj CMakeFiles/HFS_.dir/src/hfs.cpp.obj CMakeFiles/HFS_.dir/src/interface.cpp.obj CMakeFiles/HFS_.dir/src/extents_file/bTreeCatalog.cpp.obj CMakeFiles/HFS_.dir/src/extents_file/extentsFileOperations.cpp.obj CMakeFiles/HFS_.dir/src/extents_file/extentsFileUtils.cpp.obj CMakeFiles/HFS_.dir/src/hfsTestApi.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
   FLAGS = -g
   LINK_LIBRARIES = D:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\HFS_.dir
@@ -184,6 +193,158 @@ build HFS_.exe: CXX_EXECUTABLE_LINKER__HFS__Debug CMakeFiles/HFS_.dir/src/main.c
   TARGET_FILE = HFS_.exe
   TARGET_IMPLIB = libHFS_.dll.a
   TARGET_PDB = HFS_.pdb
+
+# =============================================================================
+# Object build statements for STATIC_LIBRARY target hfs_lib
+
+
+#############################################
+# Order-only phony target for hfs_lib
+
+build cmake_object_order_depends_target_hfs_lib: phony || CMakeFiles/hfs_lib.dir
+
+build CMakeFiles/hfs_lib.dir/src/main.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/main.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\main.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/hsfInit.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hsfInit.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\hsfInit.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/hfsFunctionUtils.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfsFunctionUtils.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\hfsFunctionUtils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/utils.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/utils.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\utils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/hfsApi.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfsApi.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\hfsApi.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/catalog_file/bTreeCatalog.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/catalog_file/bTreeCatalog.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\catalog_file\bTreeCatalog.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\catalog_file
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/catalog_file/catalogFileOperations.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/catalog_file/catalogFileOperations.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\catalog_file\catalogFileOperations.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\catalog_file
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/catalog_file/catalogFileUtils.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/catalog_file/catalogFileUtils.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\catalog_file\catalogFileUtils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\catalog_file
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/hfs.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfs.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\hfs.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/interface.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/interface.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\interface.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/extents_file/bTreeCatalog.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/extents_file/bTreeCatalog.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\extents_file\bTreeCatalog.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\extents_file
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/extents_file/extentsFileOperations.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/extents_file/extentsFileOperations.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\extents_file\extentsFileOperations.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\extents_file
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/extents_file/extentsFileUtils.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/extents_file/extentsFileUtils.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\extents_file\extentsFileUtils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\extents_file
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+build CMakeFiles/hfs_lib.dir/src/hfsTestApi.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfsTestApi.cpp || cmake_object_order_depends_target_hfs_lib
+  DEP_FILE = CMakeFiles\hfs_lib.dir\src\hfsTestApi.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_PDB = libhfs_lib.pdb
+
+
+# =============================================================================
+# Link build statements for STATIC_LIBRARY target hfs_lib
+
+
+#############################################
+# Link the static library libhfs_lib.a
+
+build libhfs_lib.a: CXX_STATIC_LIBRARY_LINKER__hfs_lib_Debug CMakeFiles/hfs_lib.dir/src/main.cpp.obj CMakeFiles/hfs_lib.dir/src/hsfInit.cpp.obj CMakeFiles/hfs_lib.dir/src/hfsFunctionUtils.cpp.obj CMakeFiles/hfs_lib.dir/src/utils.cpp.obj CMakeFiles/hfs_lib.dir/src/hfsApi.cpp.obj CMakeFiles/hfs_lib.dir/src/catalog_file/bTreeCatalog.cpp.obj CMakeFiles/hfs_lib.dir/src/catalog_file/catalogFileOperations.cpp.obj CMakeFiles/hfs_lib.dir/src/catalog_file/catalogFileUtils.cpp.obj CMakeFiles/hfs_lib.dir/src/hfs.cpp.obj CMakeFiles/hfs_lib.dir/src/interface.cpp.obj CMakeFiles/hfs_lib.dir/src/extents_file/bTreeCatalog.cpp.obj CMakeFiles/hfs_lib.dir/src/extents_file/extentsFileOperations.cpp.obj CMakeFiles/hfs_lib.dir/src/extents_file/extentsFileUtils.cpp.obj CMakeFiles/hfs_lib.dir/src/hfsTestApi.cpp.obj
+  LANGUAGE_COMPILE_FLAGS = -g
+  OBJECT_DIR = CMakeFiles\hfs_lib.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
+  TARGET_FILE = libhfs_lib.a
+  TARGET_PDB = libhfs_lib.pdb
 
 
 #############################################
@@ -213,6 +374,8 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 
 build HFS_: phony HFS_.exe
 
+build hfs_lib: phony libhfs_lib.a
+
 # =============================================================================
 # Folder targets.
 
@@ -221,7 +384,7 @@ build HFS_: phony HFS_.exe
 #############################################
 # Folder: D:/Facultate/Licenta/Implementare/HFS+/cmake-build-debug
 
-build all: phony HFS_.exe
+build all: phony HFS_.exe libhfs_lib.a
 
 # =============================================================================
 # Built-in targets

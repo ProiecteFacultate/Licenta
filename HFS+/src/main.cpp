@@ -14,6 +14,7 @@
 #include "../include/codes/hfsAttributes.h"
 #include "../include/hfsApi.h"
 #include "../include/interface.h"
+#include "../include/hfsTestApi.h"
 
 int main() {
     char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_100Mib\0";
@@ -67,9 +68,15 @@ int main() {
   //  return 0;
 
 
-
-
-
+    char* parentPath = new char[100];
+    memcpy(parentPath, "Root\0", 5);
+    char* newDirName = new char[100];
+    memcpy(newDirName, "File\0", 5);
+    int64_t mil;
+    hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPath, newDirName, 0, mil);
+    std::vector<CatalogDirectoryRecord*> subDirectories;
+    memcpy(parentPath, "Root\0", 5);
+    hfs_get_subdirectories(diskInfo, volumeHeader, catalogFileHeaderNode, parentPath, subDirectories, mil);
 //
 //    char* parentPath = new char[100];
 //    memcpy(parentPath, "Root\0", 5);
@@ -95,9 +102,9 @@ int main() {
 //
 //    std::cout << "Create " << newDirName << ": " << createDirectoryResult << '\n';
 //
-    char* readBuffer = new char[4096];
-    uint32_t numberOfSectorsRead = 0;
-    uint32_t readResult = readDiskSectors(diskInfo, 1, 4, readBuffer, numberOfSectorsRead);
+//    char* readBuffer = new char[8000000];
+//    uint32_t numberOfSectorsRead = 0;
+//    uint32_t readResult = readDiskSectors(diskInfo, 1, 4, readBuffer, numberOfSectorsRead);
 //    BTNodeDescriptor* extentsHeaderNode = (BTNodeDescriptor*)&readBuffer[0];
 //    BTHeaderRec* extentsHeaderRecord = (BTHeaderRec*)&readBuffer[14];
 

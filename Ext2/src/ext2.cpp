@@ -22,10 +22,10 @@ uint32_t createInode(DiskInfo* diskInfo, ext2_super_block* superBlock, ext2_inod
 {
     uint32_t searchInodeResult, inodeGlobalIndex;
 
-    if(fileType == FILE_TYPE_FOLDER)
+    if(fileType == DIRECTORY_TYPE_FOLDER)
         searchInodeResult = (isParentRoot ? searchFreeInodeForDirectoryHavingParentRoot(diskInfo, superBlock, inodeGlobalIndex)
                                           : searchFreeInodeForNestedDirectory(diskInfo, superBlock, parentInode, inodeGlobalIndex));
-    else if(fileType == FILE_TYPE_REGULAR_FILE)
+    else if(fileType == DIRECTORY_TYPE_FILE)
         searchInodeResult = searchFreeInodeForRegularFile(diskInfo, superBlock, parentInode, inodeGlobalIndex);
 
     if(searchInodeResult == SEARCH_FREE_INODE_NO_FREE_INODES)
@@ -472,7 +472,7 @@ uint32_t freeBlocksOfDirectoryAndChildren(DiskInfo* diskInfo, ext2_super_block* 
 {
     std::vector<std::pair<ext2_inode*, ext2_dir_entry*>> subDirectories;
 
-    if(inode->i_mode == FILE_TYPE_FOLDER)
+    if(inode->i_mode == DIRECTORY_TYPE_FOLDER)
     {
         uint32_t getSubdirectoriesResult = getSubDirectoriesByParentInode(diskInfo, superBlock, inode, subDirectories);
         if(getSubdirectoriesResult != GET_SUBDIRECTORIES_SUCCESS)
@@ -511,7 +511,7 @@ uint32_t deleteInodeOfDirectoryAndChildren(DiskInfo* diskInfo, ext2_super_block*
 {
     std::vector<std::pair<ext2_inode*, ext2_dir_entry*>> subDirectories;
 
-    if(inode->i_mode == FILE_TYPE_FOLDER)
+    if(inode->i_mode == DIRECTORY_TYPE_FOLDER)
     {
         uint32_t getSubdirectoriesResult = getSubDirectoriesByParentInode(diskInfo, superBlock, inode, subDirectories);
         if(getSubdirectoriesResult != GET_SUBDIRECTORIES_SUCCESS)

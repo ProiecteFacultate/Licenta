@@ -27,7 +27,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char*
     uint32_t parentAlreadyContainsDirectoryWithGivenName = searchInodeByDirectoryNameInParent(diskInfo, superBlock, actualInode,
                                                                                               newDirectoryName, new ext2_inode(), isParentRoot);
 
-    if(actualInode->i_mode != FILE_TYPE_FOLDER)
+    if(actualInode->i_mode != DIRECTORY_TYPE_FOLDER)
         return DIRECTORY_CREATION_PARENT_NOT_A_FOLDER;
 
     if(parentAlreadyContainsDirectoryWithGivenName == SEARCH_INODE_BY_DIRECTORY_NAME_IN_PARENT_SUCCESS)
@@ -50,9 +50,9 @@ uint32_t createDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, char*
 
     //now we look for blocks to preallocate
     uint32_t preallocateNumberOfBlocks;
-    if(newDirectoryType == FILE_TYPE_FOLDER)
+    if(newDirectoryType == DIRECTORY_TYPE_FOLDER)
         preallocateNumberOfBlocks = superBlock->s_prealloc_dir_blocks;
-    else if(newDirectoryType == FILE_TYPE_REGULAR_FILE)
+    else if(newDirectoryType == DIRECTORY_TYPE_FILE)
         preallocateNumberOfBlocks = superBlock->s_prealloc_blocks;
 
     std::vector<uint32_t> preallocateBlocks;
@@ -109,7 +109,7 @@ uint32_t getSubDirectoriesByParentPath(DiskInfo* diskInfo, ext2_super_block* sup
     if(searchParentInodeResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
         return GET_SUBDIRECTORIES_GIVEN_DIRECTORY_DO_NOT_EXIST;
 
-    if(givenDirectoryInode->i_mode != FILE_TYPE_FOLDER)
+    if(givenDirectoryInode->i_mode != DIRECTORY_TYPE_FOLDER)
         return GET_SUBDIRECTORIES_GIVEN_DIRECTORY_NOT_A_FOLDER;
 
     return getSubDirectoriesByParentInode(diskInfo, superBlock, givenDirectoryInode, subDirectories);
@@ -128,7 +128,7 @@ uint32_t write(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directory
     if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
         return WRITE_BYTES_TO_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
 
-    if(actualInode->i_mode != FILE_TYPE_REGULAR_FILE)
+    if(actualInode->i_mode != DIRECTORY_TYPE_FILE)
     {
         delete actualInode;
         return WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE;
@@ -181,7 +181,7 @@ uint32_t read(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryP
     if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
         return READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
 
-    if(actualInode->i_mode != FILE_TYPE_REGULAR_FILE)
+    if(actualInode->i_mode != DIRECTORY_TYPE_FILE)
     {
         delete actualInode;
         return READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE;
@@ -266,7 +266,7 @@ uint32_t truncateFile(DiskInfo* diskInfo, ext2_super_block* superBlock, char* di
     if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
         return TRUNCATE_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
 
-    if(actualInode->i_mode != FILE_TYPE_REGULAR_FILE)
+    if(actualInode->i_mode != DIRECTORY_TYPE_FILE)
     {
         delete actualInode;
         return TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE;
@@ -347,7 +347,7 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, ext2_super_block* superBlock,
     return (freeClustersOfDirectoryAndParentResult == FREE_ALL_DIRECTORY_AND_CHILDREN_BLOCKS_SUCCESS) ? DELETE_DIRECTORY_SUCCESS : DELETE_DIRECTORY_FAILED_TO_FREE_BLOCKS;
 }
 
-uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, DirectoryDisplayableAttributes* attributes)
+uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, Ext2DirectoryDisplayableAttributes* attributes)
 {
     char* parentPath = new char[strlen(directoryPath)];
     extractParentPathFromPath(directoryPath, parentPath);
@@ -401,7 +401,7 @@ uint32_t preallocateBlocks(DiskInfo* diskInfo, ext2_super_block* superBlock, cha
     if(findDirectoryEntryResult != SEARCH_INODE_BY_FULL_PATH_SUCCESS)
         return PREALLOCATE_BLOCKS_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
 
-    if(actualInode->i_mode != FILE_TYPE_REGULAR_FILE)
+    if(actualInode->i_mode != DIRECTORY_TYPE_FILE)
     {
         delete actualInode;
         return PREALLOCATE_BLOCKS_CAN_NOT_PREALLOCATE_TO_GIVEN_FILE_TYPE;

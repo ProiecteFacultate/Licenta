@@ -33,10 +33,10 @@ void commandCreateDirectory(DiskInfo* diskInfo, ext2_super_block* superBlock, st
     memcpy(newDirectoryName, commandTokens[2].c_str(), commandTokens[2].length());
 
     uint32_t directoryAttribute;
-    if(commandTokens[3] == "FILE_TYPE_FOLDER")
-        directoryAttribute = FILE_TYPE_FOLDER;
-    else if(commandTokens[3] == "FILE_TYPE_REGULAR_FILE")
-        directoryAttribute = FILE_TYPE_REGULAR_FILE;
+    if(commandTokens[3] == "DIRECTORY_TYPE_FOLDER")
+        directoryAttribute = DIRECTORY_TYPE_FOLDER;
+    else if(commandTokens[3] == "DIRECTORY_TYPE_FILE")
+        directoryAttribute = DIRECTORY_TYPE_FILE;
     else
     {
         std::cout << "'" << commandTokens[3] << "' is not a valid directory attribute!\n";
@@ -141,7 +141,7 @@ void commandWriteFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vec
     switch (writeFileResult)
     {
         case WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE:
-            std::cout << "Can not write to given file type!\n"; //it may be root, or a FILE_TYPE_FOLDER instead of a FILE_TYPE_REGULAR_FILE as needed
+            std::cout << "Can not write to given file type!\n"; //it may be root, or a DIRECTORY_TYPE_FOLDER instead of a DIRECTORY_TYPE_FILE as needed
             break;
         case WRITE_BYTES_TO_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL:
             std::cout << "Given file do not exist or search fail!\n";
@@ -209,7 +209,7 @@ void commandReadFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vect
     switch (readFileResult)
     {
         case READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE:
-            std::cout << "Can not read to given file!\n"; //it may be root, or an FILE_TYPE_FOLDER instead of a FILE_TYPE_REGULAR_FILE as needed
+            std::cout << "Can not read to given file!\n"; //it may be root, or an DIRECTORY_TYPE_FOLDER instead of a DIRECTORY_TYPE_FILE as needed
             break;
         case READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL:
             std::cout << "File " << originalFilePath << " do not exist!\n";
@@ -352,7 +352,7 @@ void commandShowDirectoryAttributes(DiskInfo* diskInfo, ext2_super_block* superB
     memset(originalParentPath, 0, 100);
     memcpy(originalParentPath, parentPath, commandTokens[1].length());
 
-    DirectoryDisplayableAttributes* attributes = new DirectoryDisplayableAttributes();
+    Ext2DirectoryDisplayableAttributes* attributes = new Ext2DirectoryDisplayableAttributes();
     uint32_t getDirectoryDisplayableAttributesResult = getDirectoryDisplayableAttributes(diskInfo, superBlock, parentPath, attributes);
 
     switch (getDirectoryDisplayableAttributesResult) {
@@ -577,7 +577,7 @@ void commandWriteFileTEST(DiskInfo* diskInfo, ext2_super_block* superBlock, std:
         switch (writeFileResult) {
             case WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE:
                 std::cout
-                        << "Can not write to given file type!\n"; //it may be root, or a FILE_TYPE_FOLDER instead of a FILE_TYPE_REGULAR_FILE as needed
+                        << "Can not write to given file type!\n"; //it may be root, or a DIRECTORY_TYPE_FOLDER instead of a DIRECTORY_TYPE_FILE as needed
                 break;
             case WRITE_BYTES_TO_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL:
                 std::cout << "Given file do not exist or search fail!\n";

@@ -86,6 +86,12 @@ typedef struct
     uint16_t LastWriteHour;
     uint16_t LastWriteMinute;
     uint16_t LastWriteSecond;
-} __attribute__((packed)) DirectoryDisplayableAttributes;
+} __attribute__((packed)) Fat32DirectoryDisplayableAttributes;
+
+typedef struct
+{
+    uint32_t FileSize;
+    uint32_t SizeOnDisk;
+} __attribute__((packed)) DirectorySizeDetails;
 
 #endif

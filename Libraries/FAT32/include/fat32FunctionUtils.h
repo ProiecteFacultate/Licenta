@@ -31,6 +31,7 @@ uint32_t getNextCluster(DiskInfo* diskInfo, BootSector* bootSector, uint32_t act
 void copyNewDirectoryTimeToDotDirectoryEntries(DirectoryEntry* newDirectoryEntry, DirectoryEntry* dotDirectoryEntry, DirectoryEntry* dotDotDirectoryEntry);
 
 //Being given the first cluster (of a directory), find the n-th cluster (if exists) of that directory. If the n-th cluster exists 'foundClusterNumber' will return its value
+//n is indexed from 0, so the first cluster of the directory is 0!
 //HIDDEN FEATURE otherwise will return the last value found, so the value of the last cluster of the directory
 uint32_t findNthClusterInChain(DiskInfo* diskInfo, BootSector* bootSector, uint32_t firstCluster, uint32_t n, uint32_t& foundClusterNumber);
 

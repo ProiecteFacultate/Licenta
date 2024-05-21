@@ -3,7 +3,7 @@
 #include "string.h"
 #include "iostream"
 
-#include "../include/fat32Attributes.h"
+#include "../include/codes/fat32Attributes.h"
 #include "../include/codes/fat32ApiResponseCodes.h"
 #include "../include/codes/fat32Codes.h"
 #include "../include/structures.h"
@@ -34,10 +34,10 @@ void commandCreateDirectory(DiskInfo* diskInfo, BootSector* bootSector, std::vec
     memcpy(newDirectoryName, commandTokens[2].c_str(), commandTokens[2].length());
 
     uint32_t directoryAttribute;
-    if(commandTokens[3] == "ATTR_FOLDER")
-        directoryAttribute = ATTR_FOLDER;
-    else if(commandTokens[3] == "ATTR_FILE")
-        directoryAttribute = ATTR_FILE;
+    if(commandTokens[3] == "DIRECTORY_TYPE_FOLDER")
+        directoryAttribute = DIRECTORY_TYPE_FOLDER;
+    else if(commandTokens[3] == "DIRECTORY_TYPE_FILE")
+        directoryAttribute = DIRECTORY_TYPE_FILE;
     else
     {
         std::cout << "'" << commandTokens[3] << "' is not a valid directory attribute!\n";
@@ -140,7 +140,7 @@ void commandWriteFile(DiskInfo* diskInfo, BootSector* bootSector, std::vector<st
     switch (writeFileResult)
     {
         case WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE:
-            std::cout << "Can not write to given file!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
+            std::cout << "Can not write to given file!\n"; //it may be root, or an DIRECTORY_TYPE_FOLDER instead of an DIRECTORY_TYPE_FILE as needed
             break;
         case WRITE_BYTES_TO_FILE_FAILED:
             std::cout << "Could not write any bytes to file!\n";
@@ -200,7 +200,7 @@ void commandReadFile(DiskInfo* diskInfo, BootSector* bootSector, std::vector<std
     switch (readFileResult)
     {
         case READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE:
-            std::cout << "Can not read to given file!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
+            std::cout << "Can not read to given file!\n"; //it may be root, or an DIRECTORY_TYPE_FOLDER instead of an DIRECTORY_TYPE_FILE as needed
             break;
         case READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST:
             std::cout << "File " << originalFilePath << " do not exist!\n";
@@ -259,10 +259,10 @@ void commandTruncateFile(DiskInfo* diskInfo, BootSector* bootSector, std::vector
 
     switch (truncateResult) {
         case TRUNCATE_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL:
-            std::cout << "Given file do not exist or search fail!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
+            std::cout << "Given file do not exist or search fail!\n"; //it may be root, or an DIRECTORY_TYPE_FOLDER instead of an DIRECTORY_TYPE_FILE as needed
             break;
         case TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE:
-            std::cout << "Can not read to given file!\n"; //it may be root, or an ATTR_FOLDER instead of an ATTR_FILE as needed
+            std::cout << "Can not read to given file!\n"; //it may be root, or an DIRECTORY_TYPE_FOLDER instead of an DIRECTORY_TYPE_FILE as needed
             break;
         case TRUNCATE_FILE_NEW_SIZE_GREATER_THAN_ACTUAL_SIZE:
             std::cout << "New truncate size can't be greater than actual file size!\n";
@@ -327,7 +327,7 @@ void commandShowDirectoryAttributes(DiskInfo* diskInfo, BootSector* bootSector, 
     memset(originalParentPath, 0, 100);
     memcpy(originalParentPath, parentPath, commandTokens[1].length());
     
-    DirectoryDisplayableAttributes* attributes = new DirectoryDisplayableAttributes();
+    Fat32DirectoryDisplayableAttributes* attributes = new Fat32DirectoryDisplayableAttributes();
     uint32_t getDirectoryDisplayableAttributesResult = getDirectoryDisplayableAttributes(diskInfo, bootSector, parentPath, attributes);
 
     switch (getDirectoryDisplayableAttributesResult) {

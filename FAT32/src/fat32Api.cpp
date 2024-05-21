@@ -12,7 +12,7 @@
 #include "../include/structures.h"
 #include "../include/codes/fat32Codes.h"
 #include "../include/codes/fat32ApiResponseCodes.h"
-#include "../include/fat32Attributes.h"
+#include "../include/codes/fat32Attributes.h"
 #include "../include/fat32.h"
 #include "../include/fat32FunctionUtils.h"
 #include "../include/fat32Api.h"
@@ -34,7 +34,7 @@ uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* direc
                                                                                              newDirectoryName,
                                                                                              new DirectoryEntry());
 
-    if(actualDirectoryEntry->Attributes != ATTR_FOLDER)
+    if(actualDirectoryEntry->Attributes != DIRECTORY_TYPE_FOLDER)
     {
         delete actualDirectoryEntry;
         return DIR_CREATION_PARENT_NOT_A_FOLDER;
@@ -89,7 +89,7 @@ uint32_t getSubDirectoriesByParentPath(DiskInfo* diskInfo, BootSector* bootSecto
     if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
         return GET_SUB_DIRECTORIES_FAILED;
 
-    if(actualDirectoryEntry->Attributes != ATTR_FOLDER)
+    if(actualDirectoryEntry->Attributes != DIRECTORY_TYPE_FOLDER)
     {
         delete actualDirectoryEntry;
         return GET_SUB_DIRECTORIES_GIVEN_DIRECTORY_CAN_NOT_CONTAIN_SUBDIRECTORIES;
@@ -110,7 +110,7 @@ uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, 
     if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
         return WRITE_BYTES_TO_FILE_FAILED;
 
-    if(actualDirectoryEntry->Attributes != ATTR_FILE)
+    if(actualDirectoryEntry->Attributes != DIRECTORY_TYPE_FILE)
     {
         delete actualDirectoryEntry;
         return WRITE_BYTES_TO_FILE_CAN_NOT_WRITE_GIVEN_FILE;
@@ -165,7 +165,7 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
     if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
         return READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST;
 
-    if(actualDirectoryEntry->Attributes != ATTR_FILE)
+    if(actualDirectoryEntry->Attributes != DIRECTORY_TYPE_FILE)
     {
         delete actualDirectoryEntry;
         return READ_BYTES_FROM_FILE_CAN_NOT_READ_GIVEN_FILE;
@@ -256,7 +256,7 @@ uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* director
     if(findDirectoryEntryResult != FIND_DIRECTORY_ENTRY_BY_PATH_SUCCESS)
         return TRUNCATE_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;
 
-    if(actualDirectoryEntry->Attributes != ATTR_FILE)
+    if(actualDirectoryEntry->Attributes != DIRECTORY_TYPE_FILE)
     {
         delete actualDirectoryEntry;
         return TRUNCATE_FILE_CAN_NOT_TRUNCATE_GIVEN_FILE_TYPE;
@@ -344,7 +344,7 @@ uint32_t getDirectoryFullSizeByPath(DiskInfo* diskInfo, BootSector* bootSector, 
     return getDirectoryDetailsByDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, size, sizeOnDisk);
 }
 
-uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, DirectoryDisplayableAttributes* attributes)
+uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, Fat32DirectoryDisplayableAttributes* attributes)
 {
     char* parentPath = new char[strlen(directoryPath)];
     extractParentPathFromPath(directoryPath, parentPath);

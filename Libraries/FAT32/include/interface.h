@@ -5,7 +5,7 @@
 #ifndef FAT32_INTERFACE_H
 #define FAT32_INTERFACE_H
 
-//Model: 'mkdir Root/Level_1 NewFile ATTR_FILE' - creates a directory on parent path, with name, and directory attribute
+//Model: 'mkdir Root/Level_1 NewFile DIRECTORY_TYPE_FILE' - creates a directory on parent path, with name, and directory attribute
 void commandCreateDirectory(DiskInfo* diskInfo, BootSector* bootSector, std::vector<std::string> commandTokens);
 
 //Model 1: 'ls Root/Level_1' - lists all direct children of given parent

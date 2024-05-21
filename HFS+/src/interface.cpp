@@ -3,6 +3,7 @@
 #include "string.h"
 #include "iostream"
 #include "math.h"
+#include "chrono"
 
 #include "../include/hfsApi.h"
 #include "../include/structures.h"
@@ -133,6 +134,9 @@ void commandWriteFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Cat
 
     uint32_t numberOfBytesWritten;
     uint32_t reasonForIncompleteWrite;
+
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
     uint32_t writeFileResult = write(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, filePath, text, maxBytesToWrite, numberOfBytesWritten,
                                      writeAttribute, reasonForIncompleteWrite);
 
@@ -157,6 +161,10 @@ void commandWriteFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Cat
                     std::cout << "The write was incomplete due to unspecified reasons\n";
             }
     }
+
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::cout << "\nCUSTOM WRITE time = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << " : "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() % 1000  << '\n';
 }
 
 void commandReadFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode,
@@ -344,7 +352,7 @@ void commandShowDirectoryAttributes(DiskInfo* diskInfo, HFSPlusVolumeHeader* vol
     memset(originalParentPath, 0, 100);
     memcpy(originalParentPath, parentPath, commandTokens[1].length());
 
-    DirectoryDisplayableAttributes* attributes = new DirectoryDisplayableAttributes();
+    HFSDirectoryDisplayableAttributes* attributes = new HFSDirectoryDisplayableAttributes();
     uint32_t getDirectoryDisplayableAttributesResult = getDirectoryDisplayableAttributes(diskInfo, volumeHeader, catalogFileHeaderNode, parentPath, attributes);
 
     switch (getDirectoryDisplayableAttributesResult) {

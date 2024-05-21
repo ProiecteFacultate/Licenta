@@ -11,7 +11,7 @@
 #include "../include/fat32.h"
 #include "../include/utils.h"
 #include "../include/codes/fat32Codes.h"
-#include "../include/fat32Attributes.h"
+#include "../include/codes/fat32Attributes.h"
 #include "../include/fat32FunctionUtils.h"
 
 uint32_t getClusterSize(BootSector* bootSector)
@@ -147,7 +147,7 @@ void createDirectoryEntry(char* directoryName, uint8_t directoryAttribute, uint3
 
 uint32_t updateSubDirectoriesDotDotEntries(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* givenDirectoryEntry, DirectoryEntry* newDotDotEntry)
 {
-    if(givenDirectoryEntry->Attributes == ATTR_FILE) //if it is a file it doesn't contain subdirectories
+    if(givenDirectoryEntry->Attributes == DIRECTORY_TYPE_FILE) //if it is a file it doesn't contain subdirectories
         return DIRECTORY_UPDATE_SUBDIRECTORIES_DOT_DOT_SUCCESS;
 
     uint32_t numOfSectorsRead = 0;

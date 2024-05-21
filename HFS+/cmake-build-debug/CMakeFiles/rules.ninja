@@ -31,6 +31,25 @@ rule CXX_EXECUTABLE_LINKER__HFS__Debug
 
 
 #############################################
+# Rule for compiling CXX files.
+
+rule CXX_COMPILER__hfs_lib_unscanned_Debug
+  depfile = $DEP_FILE
+  deps = gcc
+  command = ${LAUNCHER}${CODE_CHECK}"D:\Softs\CLion\CLion 2024.1\bin\mingw\bin\g++.exe" $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  description = Building CXX object $out
+
+
+#############################################
+# Rule for linking CXX static library.
+
+rule CXX_STATIC_LIBRARY_LINKER__hfs_lib_Debug
+  command = C:\windows\system32\cmd.exe /C "$PRE_LINK && "D:\Softs\CLion\CLion 2024.1\bin\cmake\win\x64\bin\cmake.exe" -E rm -f $TARGET_FILE && "D:\Softs\CLion\CLion 2024.1\bin\mingw\bin\ar.exe" qc $TARGET_FILE $LINK_FLAGS $in && "D:\Softs\CLion\CLion 2024.1\bin\mingw\bin\ranlib.exe" $TARGET_FILE && $POST_BUILD"
+  description = Linking CXX static library $TARGET_FILE
+  restat = $RESTAT
+
+
+#############################################
 # Rule for running custom commands.
 
 rule CUSTOM_COMMAND

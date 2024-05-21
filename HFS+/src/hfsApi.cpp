@@ -419,7 +419,7 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHe
 }
 
 uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode,
-                                           char* directoryPath, DirectoryDisplayableAttributes* attributes)
+                                           char* directoryPath, HFSDirectoryDisplayableAttributes* attributes)
 {
 //    if(extentsFileHeaderNode->headerRecord.freeNodes == extentsFileHeaderNode->headerRecord.totalNodes - 1) //root node is not yet instantiated
 //        return READ_BYTES_FROM_FILE_GIVEN_FILE_DO_NOT_EXIST_OR_SEARCH_FAIL;

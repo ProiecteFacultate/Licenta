@@ -119,6 +119,13 @@ build CMakeFiles/Ext2.dir/src/ext2BlocksAllocation.cpp.obj: CXX_COMPILER__Ext2_u
   OBJECT_DIR = CMakeFiles\Ext2.dir
   OBJECT_FILE_DIR = CMakeFiles\Ext2.dir\src
 
+build CMakeFiles/Ext2.dir/src/ext2TestApi.cpp.obj: CXX_COMPILER__Ext2_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/ext2TestApi.cpp || cmake_object_order_depends_target_Ext2
+  DEP_FILE = CMakeFiles\Ext2.dir\src\ext2TestApi.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\Ext2.dir
+  OBJECT_FILE_DIR = CMakeFiles\Ext2.dir\src
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Ext2
@@ -127,7 +134,7 @@ build CMakeFiles/Ext2.dir/src/ext2BlocksAllocation.cpp.obj: CXX_COMPILER__Ext2_u
 #############################################
 # Link the executable Ext2.exe
 
-build Ext2.exe: CXX_EXECUTABLE_LINKER__Ext2_Debug CMakeFiles/Ext2.dir/src/main.cpp.obj CMakeFiles/Ext2.dir/src/ext2Init.cpp.obj CMakeFiles/Ext2.dir/src/ext2FunctionUtils.cpp.obj CMakeFiles/Ext2.dir/src/ext2.cpp.obj CMakeFiles/Ext2.dir/src/ext2Api.cpp.obj CMakeFiles/Ext2.dir/src/ext2Heuristics.cpp.obj CMakeFiles/Ext2.dir/src/utils.cpp.obj CMakeFiles/Ext2.dir/src/ext2RootInit.cpp.obj CMakeFiles/Ext2.dir/src/interface.cpp.obj CMakeFiles/Ext2.dir/src/ext2BlocksAllocation.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
+build Ext2.exe: CXX_EXECUTABLE_LINKER__Ext2_Debug CMakeFiles/Ext2.dir/src/main.cpp.obj CMakeFiles/Ext2.dir/src/ext2Init.cpp.obj CMakeFiles/Ext2.dir/src/ext2FunctionUtils.cpp.obj CMakeFiles/Ext2.dir/src/ext2.cpp.obj CMakeFiles/Ext2.dir/src/ext2Api.cpp.obj CMakeFiles/Ext2.dir/src/ext2Heuristics.cpp.obj CMakeFiles/Ext2.dir/src/utils.cpp.obj CMakeFiles/Ext2.dir/src/ext2RootInit.cpp.obj CMakeFiles/Ext2.dir/src/interface.cpp.obj CMakeFiles/Ext2.dir/src/ext2BlocksAllocation.cpp.obj CMakeFiles/Ext2.dir/src/ext2TestApi.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
   FLAGS = -g
   LINK_LIBRARIES = D:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\Ext2.dir
@@ -136,6 +143,101 @@ build Ext2.exe: CXX_EXECUTABLE_LINKER__Ext2_Debug CMakeFiles/Ext2.dir/src/main.c
   TARGET_FILE = Ext2.exe
   TARGET_IMPLIB = libExt2.dll.a
   TARGET_PDB = Ext2.exe.dbg
+
+# =============================================================================
+# Object build statements for STATIC_LIBRARY target ext2_lib
+
+
+#############################################
+# Order-only phony target for ext2_lib
+
+build cmake_object_order_depends_target_ext2_lib: phony || CMakeFiles/ext2_lib.dir
+
+build CMakeFiles/ext2_lib.dir/src/ext2Init.cpp.obj: CXX_COMPILER__ext2_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/ext2Init.cpp || cmake_object_order_depends_target_ext2_lib
+  DEP_FILE = CMakeFiles\ext2_lib.dir\src\ext2Init.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\ext2_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\ext2_lib.dir\src
+
+build CMakeFiles/ext2_lib.dir/src/ext2FunctionUtils.cpp.obj: CXX_COMPILER__ext2_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/ext2FunctionUtils.cpp || cmake_object_order_depends_target_ext2_lib
+  DEP_FILE = CMakeFiles\ext2_lib.dir\src\ext2FunctionUtils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\ext2_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\ext2_lib.dir\src
+
+build CMakeFiles/ext2_lib.dir/src/ext2.cpp.obj: CXX_COMPILER__ext2_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/ext2.cpp || cmake_object_order_depends_target_ext2_lib
+  DEP_FILE = CMakeFiles\ext2_lib.dir\src\ext2.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\ext2_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\ext2_lib.dir\src
+
+build CMakeFiles/ext2_lib.dir/src/ext2Api.cpp.obj: CXX_COMPILER__ext2_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/ext2Api.cpp || cmake_object_order_depends_target_ext2_lib
+  DEP_FILE = CMakeFiles\ext2_lib.dir\src\ext2Api.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\ext2_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\ext2_lib.dir\src
+
+build CMakeFiles/ext2_lib.dir/src/ext2Heuristics.cpp.obj: CXX_COMPILER__ext2_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/ext2Heuristics.cpp || cmake_object_order_depends_target_ext2_lib
+  DEP_FILE = CMakeFiles\ext2_lib.dir\src\ext2Heuristics.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\ext2_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\ext2_lib.dir\src
+
+build CMakeFiles/ext2_lib.dir/src/utils.cpp.obj: CXX_COMPILER__ext2_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/utils.cpp || cmake_object_order_depends_target_ext2_lib
+  DEP_FILE = CMakeFiles\ext2_lib.dir\src\utils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\ext2_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\ext2_lib.dir\src
+
+build CMakeFiles/ext2_lib.dir/src/ext2RootInit.cpp.obj: CXX_COMPILER__ext2_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/ext2RootInit.cpp || cmake_object_order_depends_target_ext2_lib
+  DEP_FILE = CMakeFiles\ext2_lib.dir\src\ext2RootInit.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\ext2_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\ext2_lib.dir\src
+
+build CMakeFiles/ext2_lib.dir/src/interface.cpp.obj: CXX_COMPILER__ext2_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/interface.cpp || cmake_object_order_depends_target_ext2_lib
+  DEP_FILE = CMakeFiles\ext2_lib.dir\src\interface.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\ext2_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\ext2_lib.dir\src
+
+build CMakeFiles/ext2_lib.dir/src/ext2BlocksAllocation.cpp.obj: CXX_COMPILER__ext2_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/ext2BlocksAllocation.cpp || cmake_object_order_depends_target_ext2_lib
+  DEP_FILE = CMakeFiles\ext2_lib.dir\src\ext2BlocksAllocation.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\ext2_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\ext2_lib.dir\src
+
+build CMakeFiles/ext2_lib.dir/src/ext2TestApi.cpp.obj: CXX_COMPILER__ext2_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/Ext2/src/ext2TestApi.cpp || cmake_object_order_depends_target_ext2_lib
+  DEP_FILE = CMakeFiles\ext2_lib.dir\src\ext2TestApi.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\ext2_lib.dir
+  OBJECT_FILE_DIR = CMakeFiles\ext2_lib.dir\src
+
+
+# =============================================================================
+# Link build statements for STATIC_LIBRARY target ext2_lib
+
+
+#############################################
+# Link the static library libext2_lib.a
+
+build libext2_lib.a: CXX_STATIC_LIBRARY_LINKER__ext2_lib_Debug CMakeFiles/ext2_lib.dir/src/ext2Init.cpp.obj CMakeFiles/ext2_lib.dir/src/ext2FunctionUtils.cpp.obj CMakeFiles/ext2_lib.dir/src/ext2.cpp.obj CMakeFiles/ext2_lib.dir/src/ext2Api.cpp.obj CMakeFiles/ext2_lib.dir/src/ext2Heuristics.cpp.obj CMakeFiles/ext2_lib.dir/src/utils.cpp.obj CMakeFiles/ext2_lib.dir/src/ext2RootInit.cpp.obj CMakeFiles/ext2_lib.dir/src/interface.cpp.obj CMakeFiles/ext2_lib.dir/src/ext2BlocksAllocation.cpp.obj CMakeFiles/ext2_lib.dir/src/ext2TestApi.cpp.obj
+  LANGUAGE_COMPILE_FLAGS = -g
+  OBJECT_DIR = CMakeFiles\ext2_lib.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = libext2_lib.a
+  TARGET_PDB = ext2_lib.a.dbg
 
 
 #############################################
@@ -165,6 +267,8 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 
 build Ext2: phony Ext2.exe
 
+build ext2_lib: phony libext2_lib.a
+
 # =============================================================================
 # Folder targets.
 
@@ -173,7 +277,7 @@ build Ext2: phony Ext2.exe
 #############################################
 # Folder: D:/Facultate/Licenta/Implementare/Ext2/cmake-build-debug
 
-build all: phony Ext2.exe
+build all: phony Ext2.exe libext2_lib.a
 
 # =============================================================================
 # Built-in targets

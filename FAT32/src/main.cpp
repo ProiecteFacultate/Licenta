@@ -13,7 +13,7 @@
 #include "../include/fat32.h"
 #include "../include/fat32Api.h"
 #include "../include/structures.h"
-#include "../include/fat32Attributes.h"
+#include "../include/codes/fat32Attributes.h"
 #include "../include/utils.h"
 #include "../include/interface.h"
 

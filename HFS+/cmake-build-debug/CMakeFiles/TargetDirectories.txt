@@ -1,3 +1,4 @@
 D:/Facultate/Licenta/Implementare/HFS+/cmake-build-debug/CMakeFiles/HFS_.dir
+D:/Facultate/Licenta/Implementare/HFS+/cmake-build-debug/CMakeFiles/hfs_lib.dir
 D:/Facultate/Licenta/Implementare/HFS+/cmake-build-debug/CMakeFiles/edit_cache.dir
 D:/Facultate/Licenta/Implementare/HFS+/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -1,5 +1,5 @@
 "D:\Softs\CLion\CLion 2024.1\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=D:/Softs/CLion/CLion 2024.1/bin/ninja/win/x64/ninja.exe" -G Ninja -S D:\Facultate\Licenta\Implementare\Ext2 -B D:\Facultate\Licenta\Implementare\Ext2\cmake-build-debug
 -- Could NOT find PkgConfig (missing: PKG_CONFIG_EXECUTABLE) 
--- Configuring done (2.7s)
--- Generating done (0.1s)
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
 -- Build files have been written to: D:/Facultate/Licenta/Implementare/Ext2/cmake-build-debug

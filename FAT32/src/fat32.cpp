@@ -13,7 +13,7 @@
 #include "../include/fat32FunctionUtils.h"
 #include "../include/codes/fat32ApiResponseCodes.h"
 #include "../include/codes/fat32Codes.h"
-#include "../include/fat32Attributes.h"
+#include "../include/codes/fat32Attributes.h"
 #include "../include/fat32.h"
 
 
@@ -589,7 +589,7 @@ uint32_t freeClustersOfDirectoryAndChildren(DiskInfo* diskInfo, BootSector* boot
 {
     std::vector<DirectoryEntry*> subDirectories;
 
-    if(directoryEntry->Attributes == ATTR_FOLDER)
+    if(directoryEntry->Attributes == DIRECTORY_TYPE_FOLDER)
     {
         uint32_t getSubdirectoriesResult = getSubDirectoriesByParentDirectoryEntry(diskInfo, bootSector, directoryEntry, subDirectories);
         if(getSubdirectoriesResult != GET_SUB_DIRECTORIES_SUCCESS)
@@ -729,7 +729,7 @@ uint32_t getDirectoryDetailsByDirectoryEntry(DiskInfo* diskInfo, BootSector* boo
 {
     std::vector<DirectoryEntry*> subDirectories;
 
-    if(directoryEntry->Attributes == ATTR_FOLDER)
+    if(directoryEntry->Attributes == DIRECTORY_TYPE_FOLDER)
     {
         uint32_t getSubdirectoriesResult = getSubDirectoriesByParentDirectoryEntry(diskInfo, bootSector, directoryEntry, subDirectories);
         if(getSubdirectoriesResult != GET_SUB_DIRECTORIES_SUCCESS)

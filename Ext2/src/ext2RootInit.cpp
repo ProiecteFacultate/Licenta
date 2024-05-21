@@ -76,7 +76,7 @@ void createRootInode(ext2_super_block* superBlock, ext2_inode* newInode)
 
     memset(newInode, 0, sizeof(ext2_inode));
 
-    newInode->i_mode = FILE_TYPE_FOLDER;
+    newInode->i_mode = DIRECTORY_TYPE_FOLDER;
     newInode->i_size = 0;
     //high 7 bits represent how many years since 1900, next 4 for month, next 5 for day and the low 16 represent the second in that day with a granularity of 2 (see in fat)
     newInode->i_atime = ((time.wYear - 1900) << 25) | (time.wMonth << 21) | (time.wDay << 16) | ((time.wHour * 3600 + time.wMinute * 60 + time.wSecond) / 2);

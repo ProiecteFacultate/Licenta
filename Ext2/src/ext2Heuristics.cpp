@@ -283,6 +283,6 @@ static uint32_t calculateGroupDebt(DiskInfo* diskInfo, ext2_super_block* superBl
         }
 
         actualInode = (ext2_inode*)&blockBuffer_2[(inodeIndex * sizeof(ext2_inode)) % superBlock->s_log_block_size];
-        (actualInode->i_mode == FILE_TYPE_FOLDER) ? debt++ : debt--;
+        (actualInode->i_mode == DIRECTORY_TYPE_FOLDER) ? debt++ : debt--;
     }
 }

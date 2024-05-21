@@ -17,7 +17,7 @@
 uint32_t createDirectory(DiskInfo* diskInfo, BootSector* bootSector, char* directoryParentPath, char* newDirectoryName, uint32_t newDirectoryAttribute);
 
 //Being given a directory path, return all its subdirectories (folders and files)
-uint32_t getSubDirectories(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry*>& subDirectories);
+uint32_t getSubDirectoriesByParentPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, std::vector<DirectoryEntry*>& subDirectories);
 
 //Being given a directory path, a buffer with data, and a max number of bytes, writes up to the max number of bytes.
 //CAUTION if it writes less than max bytes, it will still return success. This could occur for example when there is insufficient space on disk
@@ -38,6 +38,6 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, BootSector* bootSector, char*
 //If it is a file, then its returns its size & size on disk; if it is a folder, it adds its size to all its direct and indirect children
 uint32_t getDirectoryFullSizeByPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, uint32_t& size, uint32_t& sizeOnDisk);
 
-uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, DirectoryDisplayableAttributes* attributes);
+uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, Fat32DirectoryDisplayableAttributes* attributes);
 
 #endif
