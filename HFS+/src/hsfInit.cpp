@@ -11,19 +11,20 @@
 #include "../include/codes/hfsAttributes.h"
 #include "../include/hfsFunctionUtils.h"
 
-void hfsStartup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
+void hfsStartup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize, uint32_t blockSize, bool printSteps)
 {
     if(checkDiskInitialization(diskDirectory) == false)
-        initializeDisk(diskDirectory, diskInfo, sectorsNumber, sectorSize);
+        initializeDisk(diskDirectory, diskInfo, sectorsNumber, sectorSize, printSteps);
     else
         *diskInfo = getDisk(diskDirectory);
 
     bool hfsAlreadyInitialized = true;
     if(checkHfsFileSystemInitialization(*diskInfo) == false)
     {
-        initializeVolumeHeader(*diskInfo);
+        initializeVolumeHeader(*diskInfo, blockSize);
         hfsAlreadyInitialized = false;
-        std::cout << "Volume header initialized\n";
+        if(printSteps == true)
+            std::cout << "Volume header initialized\n";
     }
 
     HFSPlusVolumeHeader* volumeHeader = readVolumeHeader(*diskInfo);
@@ -33,7 +34,8 @@ void hfsStartup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber
         initializeAllocationFile(*diskInfo, volumeHeader);
         initializeExtentsOverflowFile(*diskInfo, volumeHeader);
         initializeCatalogFile(*diskInfo, volumeHeader);
-        std::cout << "Groups initialized\n";
+        if(printSteps == true)
+            std::cout << "Groups initialized\n";
     }
 }
 
@@ -55,7 +57,7 @@ HFSPlusVolumeHeader* readVolumeHeader(DiskInfo* diskInfo)
 
 ExtentsFileHeaderNode* readExtentsOverflowFileHeaderNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader)
 {
-    uint32_t numberOfSectorsRead, nodeSize = getExtentsOverflowFileNodeSize();
+    uint32_t numberOfSectorsRead, nodeSize = getExtentsOverflowFileNodeSize(volumeHeader);
     uint32_t numOfSectorsOccupied = (diskInfo->diskParameters.sectorSizeBytes <= nodeSize) ? nodeSize / diskInfo->diskParameters.sectorSizeBytes : 1;
     char* readBuffer = new char[numOfSectorsOccupied * diskInfo->diskParameters.sectorSizeBytes];
     uint32_t firstSector = getFirstSectorForGivenBlock(diskInfo, volumeHeader, volumeHeader->extentsFile.extents[0].startBlock);
@@ -70,7 +72,7 @@ ExtentsFileHeaderNode* readExtentsOverflowFileHeaderNode(DiskInfo* diskInfo, HFS
 
 CatalogFileHeaderNode* readCatalogFileHeaderNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader)
 {
-    uint32_t numberOfSectorsRead, nodeSize = getCatalogFileNodeSize();
+    uint32_t numberOfSectorsRead, nodeSize = getCatalogFileNodeSize(volumeHeader);
     uint32_t numOfSectorsOccupied = (diskInfo->diskParameters.sectorSizeBytes <= nodeSize) ? nodeSize / diskInfo->diskParameters.sectorSizeBytes : 1;
     char* readBuffer = new char[numOfSectorsOccupied * diskInfo->diskParameters.sectorSizeBytes];
     uint32_t firstSector = getFirstSectorForGivenBlock(diskInfo, volumeHeader, volumeHeader->catalogFile.extents[0].startBlock);
@@ -90,12 +92,13 @@ static bool checkDiskInitialization(char* diskDirectory)
     return !(getDisk(diskDirectory) == nullptr);
 }
 
-static void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
+static void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize, bool printSteps)
 {
     *diskInfo = initializeDisk(diskDirectory, sectorsNumber, sectorSize);
     uint32_t batchSize = 1000;
     fillDiskInitialMemory(*diskInfo, batchSize);
-    std::cout << "Disk initialized\n";
+    if(printSteps == true)
+        std::cout << "Disk initialized\n";
 }
 
 static bool checkHfsFileSystemInitialization(DiskInfo* diskInfo)
@@ -137,22 +140,22 @@ static bool checkHfsFileSystemInitialization(DiskInfo* diskInfo)
 
 ///////////////////////////////
 
-static void initializeVolumeHeader(DiskInfo* diskInfo)
+static void initializeVolumeHeader(DiskInfo* diskInfo, uint32_t blockSize)
 {
     //initialize volume header
     HFSPlusVolumeHeader* hfsVolumeHeader = new HFSPlusVolumeHeader();
     memset(hfsVolumeHeader, 0, sizeof(HFSPlusVolumeHeader));
 
     uint64_t totalBytesOnDisk = (uint64_t) diskInfo->diskParameters.sectorsNumber * (uint64_t) diskInfo->diskParameters.sectorSizeBytes; //the first 1024 are also part of block(s)
-    uint32_t blockSize = 1024, clumpBlocks = 8;
+    uint32_t clumpBlocks = 8;
 
     hfsVolumeHeader->signature = 11080;
     hfsVolumeHeader->version = 4;
     hfsVolumeHeader->attributes = 8;
     hfsVolumeHeader->lastMountedVersion = 942551344; //'8.10'
     hfsVolumeHeader->journalInfoBlock = 0;
-    hfsVolumeHeader->createDate = 999; //TODO
-    hfsVolumeHeader->modifyDate = 999; //TODO
+    hfsVolumeHeader->createDate = 999;
+    hfsVolumeHeader->modifyDate = 999;
     hfsVolumeHeader->backupDate  = 999;
     hfsVolumeHeader->checkedDate = 999;
     hfsVolumeHeader->fileCount = 0;
@@ -175,11 +178,11 @@ static void initializeVolumeHeader(DiskInfo* diskInfo)
     hfsVolumeHeader->allocationFile = *allocationFileForkData;
 
     HFSPlusForkData* extentsOverflowFileForkData = new HFSPlusForkData();
-    initializeExtentsOverflowFileForkData(extentsOverflowFileForkData, hfsVolumeHeader->blockSize, totalNodesPerBTree, 1024, allocationFileForkData);
+    initializeExtentsOverflowFileForkData(extentsOverflowFileForkData, hfsVolumeHeader->blockSize, totalNodesPerBTree, allocationFileForkData);
     hfsVolumeHeader->extentsFile = * extentsOverflowFileForkData;
 
     HFSPlusForkData* catalogFileForkData = new HFSPlusForkData();
-    initializeCatalogFileForkData(catalogFileForkData, hfsVolumeHeader->blockSize, totalNodesPerBTree, 4096, extentsOverflowFileForkData);
+    initializeCatalogFileForkData(catalogFileForkData, hfsVolumeHeader->blockSize, totalNodesPerBTree, extentsOverflowFileForkData);
     hfsVolumeHeader->catalogFile = *catalogFileForkData;
 
     //now write the volume header on disk
@@ -187,13 +190,13 @@ static void initializeVolumeHeader(DiskInfo* diskInfo)
     char* blockBuffer = new char[blockSize];
     memset(blockBuffer, 0, blockSize);
 
-    if(diskInfo->diskParameters.sectorSizeBytes <= blockSize) //if blockSize is 512 or 1024 we write from the beginning of block
+    if(blockSize <= 1024)  //if blockSize is 512 or 1024 we write from the beginning of block
         memcpy(blockBuffer, hfsVolumeHeader, sizeof(HFSPlusVolumeHeader));
     else
         memcpy(blockBuffer + 1024, hfsVolumeHeader, sizeof(HFSPlusVolumeHeader));
 
     uint32_t sector = getFirstSectorForGivenBlock(diskInfo, hfsVolumeHeader, getFirstBlockForVolumeHeader(blockSize));
-    int writeResult = writeDiskSectors(diskInfo, 1, sector, blockBuffer, numberOfSectorsWritten);
+    int writeResult = writeDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, hfsVolumeHeader), sector, blockBuffer, numberOfSectorsWritten);
     while(writeResult != EC_NO_ERROR && retryWriteCount > 0)
     {
         writeResult = writeDiskSectors(diskInfo, 1, sector, blockBuffer, numberOfSectorsWritten);
@@ -221,8 +224,10 @@ static void initializeAllocationFileForkData(DiskInfo* diskInfo, HFSPlusForkData
     forkData->extents[0].startBlock = getFirstBlockForVolumeHeader(blockSize) + 1;
 }
 
-static void initializeExtentsOverflowFileForkData(HFSPlusForkData* forkData, uint32_t blockSize, uint32_t totalNodes, uint32_t nodeSize, HFSPlusForkData * allocationFileForkData)
+static void initializeExtentsOverflowFileForkData(HFSPlusForkData* forkData, uint32_t blockSize, uint32_t totalNodes, HFSPlusForkData * allocationFileForkData)
 {
+
+    uint32_t nodeSize = blockSize; //if it is 1024 then standard. else as a block
     forkData->totalBlocks = totalNodes * (nodeSize / blockSize);
     forkData->logicalSize = forkData->totalBlocks * blockSize;
     forkData->clumpSize = (nodeSize / blockSize); //we read one node at a time
@@ -230,8 +235,14 @@ static void initializeExtentsOverflowFileForkData(HFSPlusForkData* forkData, uin
     forkData->extents[0].startBlock = getFirstBlockForExtentsOverflowFile(allocationFileForkData);
 }
 
-static void initializeCatalogFileForkData(HFSPlusForkData* forkData, uint32_t blockSize, uint32_t totalNodes, uint32_t nodeSize, HFSPlusForkData * extentsOverflowFileForkData)
+static void initializeCatalogFileForkData(HFSPlusForkData* forkData, uint32_t blockSize, uint32_t totalNodes, HFSPlusForkData * extentsOverflowFileForkData)
 {
+    uint32_t nodeSize;
+    if(blockSize >= 4096)
+        nodeSize = blockSize;
+    else
+        nodeSize = 4096;
+
     forkData->totalBlocks = totalNodes * (nodeSize / blockSize);
     forkData->logicalSize = forkData->totalBlocks * blockSize;
     forkData->clumpSize = (nodeSize / blockSize); //we read one node at a time
@@ -279,7 +290,7 @@ static void initializeAllocationFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
 
 static void initializeExtentsOverflowFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader)
 {
-    uint32_t nodeSize = getExtentsOverflowFileNodeSize();
+    uint32_t nodeSize = getExtentsOverflowFileNodeSize(volumeHeader);
 
     BTNodeDescriptor* headerNodeDescriptor = new BTNodeDescriptor();
     headerNodeDescriptor->fLink = 0;
@@ -333,7 +344,7 @@ static void initializeExtentsOverflowFile(DiskInfo* diskInfo, HFSPlusVolumeHeade
 
 static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader)
 {
-    uint32_t nodeSize = getCatalogFileNodeSize();
+    uint32_t nodeSize = getCatalogFileNodeSize(volumeHeader);
 
     //create and write on disk the header node
     BTNodeDescriptor* headerNodeDescriptor = new BTNodeDescriptor();

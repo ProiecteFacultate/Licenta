@@ -54,12 +54,13 @@ uint32_t cf_searchDirectoryRecordByDirectoryNameBeingGivenParentDirectoryRecord(
 {
     if(parentDirectoryRecord == nullptr) //if we are looking for root, which is not an actual directory
     {
+        nodeNumberForRecord = 0;
         memset(searchedDirectoryRecord, 0, sizeof(CatalogDirectoryRecord));
         return CF_SEARCH_DIRECTORY_RECORD_BY_DIRECTORY_NAME_BEING_GIVEN_PARENT_RECORD_SUCCESS;
     }
 
     uint32_t actualNodeNumber = catalogFileHeaderNode->headerRecord.rootNode;
-    char* nodeBuffer = new char[getCatalogFileNodeSize()];
+    char* nodeBuffer = new char[getCatalogFileNodeSize(volumeHeader)];
 
     uint32_t readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeBuffer, actualNodeNumber);
     if(readNodeFromDiskResult == CF_READ_NODE_FROM_DISK_FAILED)
@@ -95,7 +96,7 @@ void cf_updateCatalogHeaderNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* v
     uint32_t numberOfSectorsWritten, retryWriteCount = 2;
     uint32_t numOfSectorsToWrite = cf_getNumberOfBlocksPerNode(volumeHeader) * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
     uint32_t firstSectorForCatalogFile = volumeHeader->catalogFile.extents[0].startBlock * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
-    char* nodeBuffer = new char[getCatalogFileNodeSize()];
+    char* nodeBuffer = new char[getCatalogFileNodeSize(volumeHeader)];
     memcpy(nodeBuffer, updatedCatalogFileHeaderNode, sizeof(CatalogFileHeaderNode));
 
     uint32_t writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForCatalogFile, nodeBuffer, numberOfSectorsWritten);
@@ -134,7 +135,7 @@ void cf_updateNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
 uint32_t cf_updateRecordOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogDirectoryRecord* directoryRecord,
                             CatalogDirectoryRecord* updatedDirectoryRecord, uint32_t nodeNumberOfRecord)
 {
-    char* nodeData = new char[getCatalogFileNodeSize()];
+    char* nodeData = new char[getCatalogFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumberOfRecord);
 
     if(readNodeFromDiskResult == CF_READ_NODE_FROM_DISK_FAILED)
@@ -143,7 +144,7 @@ uint32_t cf_updateRecordOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHe
         return CF_UPDATE_RECORD_ON_DISK_FAILED;
     }
 
-    BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[sizeof(BTNodeDescriptor)];
+    BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
 
     for(uint32_t i = 0; i < nodeDescriptor->numRecords; i++)
     {

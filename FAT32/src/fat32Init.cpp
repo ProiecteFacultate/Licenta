@@ -13,19 +13,21 @@
 #include "../include/fat32Init.h"
 #include "../include/codes/fat32Attributes.h"
 
-void fat32Startup(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo, uint32_t sectorsNumber, uint32_t sectorSize)
+void fat32Startup(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo, uint32_t sectorsNumber, uint32_t sectorSize, uint32_t sectorsPerCluster,
+                  bool printSteps)
 {
     if(checkDiskInitialization(diskDirectory) == false)
-        initializeDisk(diskDirectory, diskInfo, sectorsNumber, sectorSize);
+        initializeDisk(diskDirectory, diskInfo, sectorsNumber, sectorSize, printSteps);
     else
         *diskInfo = getDisk(diskDirectory);
 
     bool fat32AlreadyInitialized = true;
     if(checkFat32FileSystemInitialization(*diskInfo) == false)
     {
-        initializeBootSectors(*diskInfo);
+        initializeBootSectors(*diskInfo, sectorsPerCluster);
         fat32AlreadyInitialized = false;
-        std::cout << "Boot sectors initialized\n";
+        if(printSteps == true)
+            std::cout << "Boot sectors initialized\n";
     }
 
     *bootSector = readBootSector(*diskInfo);
@@ -34,7 +36,8 @@ void fat32Startup(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSec
     if(fat32AlreadyInitialized == false)
     {
         initializeFat(*diskInfo, *bootSector);
-        std::cout << "File allocation table initialized\n";
+        if(printSteps == true)
+            std::cout << "File allocation table initialized\n";
     }
 }
 
@@ -43,12 +46,13 @@ static bool checkDiskInitialization(char* diskDirectory)
     return !(getDisk(diskDirectory) == nullptr);
 }
 
-static void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
+static void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize, bool printSteps)
 {
     *diskInfo = initializeDisk(diskDirectory, sectorsNumber, sectorSize);
     uint32_t batchSize = 1000;
     fillDiskInitialMemory(*diskInfo, batchSize);
-    std::cout << "Disk initialized\n";
+    if(printSteps == true)
+        std::cout << "Disk initialized\n";
 }
 
 bool checkFat32FileSystemInitialization(DiskInfo* diskInfo)
@@ -76,7 +80,7 @@ bool checkFat32FileSystemInitialization(DiskInfo* diskInfo)
     return bootSignature == 43605;   //0xAA55
 }
 
-void initializeBootSectors(DiskInfo* diskInfo)
+void initializeBootSectors(DiskInfo* diskInfo, uint32_t sectorsPerCluster)
 {
     BootSector* bootSectorData = new BootSector();
 
@@ -85,7 +89,7 @@ void initializeBootSectors(DiskInfo* diskInfo)
     memcpy(bootSectorData->BootJumpInstruction, bootJumpInstruction, 3);
     memcpy(bootSectorData->OemIdentifier, "MSWIN4.1", 8);
     bootSectorData->BytesPerSector = 512;
-    bootSectorData->SectorsPerCluster = 4;   //TODO CHANGE
+    bootSectorData->SectorsPerCluster = sectorsPerCluster;
     bootSectorData->ReservedSectors = 32;
     bootSectorData->FatCount = 2;
     bootSectorData->RootDirEntryCount = 0;
@@ -98,9 +102,11 @@ void initializeBootSectors(DiskInfo* diskInfo)
     bootSectorData->LargeSectorCount = 0;
 
     //EBPB
-    bootSectorData->SectorsPerFat = 36;
+    uint32_t numOfClustersRepresentedPerSector = bootSectorData->BytesPerSector / 4;
+    uint32_t pseudoNumberOfClusters = diskInfo->diskParameters.sectorsNumber / bootSectorData->SectorsPerCluster;
+    bootSectorData->SectorsPerFat = pseudoNumberOfClusters / numOfClustersRepresentedPerSector + 1;
     bootSectorData->Flags = 20224; //40xF00
-    bootSectorData->FatVersion =0;
+    bootSectorData->FatVersion = 0;
     bootSectorData->RootDirCluster = 2;
     bootSectorData->FsInfoSector = 1;
     bootSectorData->BackupBootSector = 6;

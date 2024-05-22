@@ -1,11 +1,13 @@
 #include <iostream>
 
-
-#include "include/tests.h"
+#include "include/fat32Tests.h"
+#include "include/ext2Tests.h"
+#include "include/hfsTests.h"
+#include "include/commonTests.h"
 
 int main()
 {
-    shouldCreateABigFile();
+    hfs_test_2();
 
     return 0;
 }

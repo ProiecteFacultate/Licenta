@@ -7,4 +7,8 @@
 #define TRUNCATE        0
 #define APPEND          1
 
+#define FAT32           1
+#define EXT2            2
+#define HFS             3
+
 #endif

@@ -9,9 +9,15 @@
 #include "../include/hfsStructures.h"
 #include "../include/utils.h"
 
-uint32_t getExtentsOverflowFileNodeSize() { return 1024; }
+uint32_t getExtentsOverflowFileNodeSize(HFSPlusVolumeHeader* volumeHeader) { return volumeHeader->blockSize; } //1024 standard
 
-uint32_t getCatalogFileNodeSize() { return 4096; }
+uint32_t getCatalogFileNodeSize(HFSPlusVolumeHeader* volumeHeader)
+{
+    if(volumeHeader->blockSize >= 4096)
+        return volumeHeader->blockSize;
+
+    return 4096;
+} //4096 standard
 
 uint32_t hfs_getBitFromByte(uint8_t byte, uint32_t bitIndexInByte)
 {

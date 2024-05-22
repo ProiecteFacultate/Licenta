@@ -63,8 +63,29 @@ build CMakeFiles/TestingProgram.dir/src/utils.cpp.obj: CXX_COMPILER__TestingProg
   OBJECT_DIR = CMakeFiles\TestingProgram.dir
   OBJECT_FILE_DIR = CMakeFiles\TestingProgram.dir\src
 
-build CMakeFiles/TestingProgram.dir/src/tests.cpp.obj: CXX_COMPILER__TestingProgram_unscanned_Debug D$:/Facultate/Licenta/Implementare/TestingProgram/src/tests.cpp || cmake_object_order_depends_target_TestingProgram
-  DEP_FILE = CMakeFiles\TestingProgram.dir\src\tests.cpp.obj.d
+build CMakeFiles/TestingProgram.dir/src/commonTests.cpp.obj: CXX_COMPILER__TestingProgram_unscanned_Debug D$:/Facultate/Licenta/Implementare/TestingProgram/src/commonTests.cpp || cmake_object_order_depends_target_TestingProgram
+  DEP_FILE = CMakeFiles\TestingProgram.dir\src\commonTests.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/FAT32/include -ID:/Facultate/Licenta/Implementare/Libraries/Ext2/include -ID:/Facultate/Licenta/Implementare/Libraries/HFS/include -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\TestingProgram.dir
+  OBJECT_FILE_DIR = CMakeFiles\TestingProgram.dir\src
+
+build CMakeFiles/TestingProgram.dir/src/fat32Tests.cpp.obj: CXX_COMPILER__TestingProgram_unscanned_Debug D$:/Facultate/Licenta/Implementare/TestingProgram/src/fat32Tests.cpp || cmake_object_order_depends_target_TestingProgram
+  DEP_FILE = CMakeFiles\TestingProgram.dir\src\fat32Tests.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/FAT32/include -ID:/Facultate/Licenta/Implementare/Libraries/Ext2/include -ID:/Facultate/Licenta/Implementare/Libraries/HFS/include -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\TestingProgram.dir
+  OBJECT_FILE_DIR = CMakeFiles\TestingProgram.dir\src
+
+build CMakeFiles/TestingProgram.dir/src/ext2Tests.cpp.obj: CXX_COMPILER__TestingProgram_unscanned_Debug D$:/Facultate/Licenta/Implementare/TestingProgram/src/ext2Tests.cpp || cmake_object_order_depends_target_TestingProgram
+  DEP_FILE = CMakeFiles\TestingProgram.dir\src\ext2Tests.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/FAT32/include -ID:/Facultate/Licenta/Implementare/Libraries/Ext2/include -ID:/Facultate/Licenta/Implementare/Libraries/HFS/include -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\TestingProgram.dir
+  OBJECT_FILE_DIR = CMakeFiles\TestingProgram.dir\src
+
+build CMakeFiles/TestingProgram.dir/src/hfsTests.cpp.obj: CXX_COMPILER__TestingProgram_unscanned_Debug D$:/Facultate/Licenta/Implementare/TestingProgram/src/hfsTests.cpp || cmake_object_order_depends_target_TestingProgram
+  DEP_FILE = CMakeFiles\TestingProgram.dir\src\hfsTests.cpp.obj.d
   FLAGS = -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/FAT32/include -ID:/Facultate/Licenta/Implementare/Libraries/Ext2/include -ID:/Facultate/Licenta/Implementare/Libraries/HFS/include -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\TestingProgram.dir
@@ -78,7 +99,7 @@ build CMakeFiles/TestingProgram.dir/src/tests.cpp.obj: CXX_COMPILER__TestingProg
 #############################################
 # Link the executable TestingProgram.exe
 
-build TestingProgram.exe: CXX_EXECUTABLE_LINKER__TestingProgram_Debug CMakeFiles/TestingProgram.dir/main.cpp.obj CMakeFiles/TestingProgram.dir/src/utils.cpp.obj CMakeFiles/TestingProgram.dir/src/tests.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/FAT32/lib/libfat32_lib.a D$:/Facultate/Licenta/Implementare/Libraries/Ext2/lib/libext2_lib.a D$:/Facultate/Licenta/Implementare/Libraries/HFS/lib/libhfs_lib.a D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
+build TestingProgram.exe: CXX_EXECUTABLE_LINKER__TestingProgram_Debug CMakeFiles/TestingProgram.dir/main.cpp.obj CMakeFiles/TestingProgram.dir/src/utils.cpp.obj CMakeFiles/TestingProgram.dir/src/commonTests.cpp.obj CMakeFiles/TestingProgram.dir/src/fat32Tests.cpp.obj CMakeFiles/TestingProgram.dir/src/ext2Tests.cpp.obj CMakeFiles/TestingProgram.dir/src/hfsTests.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/FAT32/lib/libfat32_lib.a D$:/Facultate/Licenta/Implementare/Libraries/Ext2/lib/libext2_lib.a D$:/Facultate/Licenta/Implementare/Libraries/HFS/lib/libhfs_lib.a D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
   FLAGS = -g
   LINK_LIBRARIES = D:/Facultate/Licenta/Implementare/Libraries/FAT32/lib/libfat32_lib.a  D:/Facultate/Licenta/Implementare/Libraries/Ext2/lib/libext2_lib.a  D:/Facultate/Licenta/Implementare/Libraries/HFS/lib/libhfs_lib.a  D:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\TestingProgram.dir

@@ -8,9 +8,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 add_executable(TestingProgram main.cpp
         include/utils.h
         src/utils.cpp
-        include/tests.h
-        src/tests.cpp
-        include/attributes.h)
+        include/commonTests.h
+        src/commonTests.cpp
+        include/attributes.h
+        include/fat32Tests.h
+        src/fat32Tests.cpp
+        include/ext2Tests.h
+        src/ext2Tests.cpp
+        include/hfsTests.h
+        src/hfsTests.cpp)
 
 include(FindPkgConfig)
 

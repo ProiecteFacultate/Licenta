@@ -7,8 +7,8 @@
 #ifndef HFS__UTILS_H
 #define HFS__UTILS_H
 
-uint32_t getExtentsOverflowFileNodeSize();
-uint32_t getCatalogFileNodeSize();
+uint32_t getExtentsOverflowFileNodeSize(HFSPlusVolumeHeader* volumeHeader);
+uint32_t getCatalogFileNodeSize(HFSPlusVolumeHeader* volumeHeader);
 
 uint32_t hfs_getBitFromByte(uint8_t byte, uint32_t bitIndexInByte);
 

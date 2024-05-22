@@ -4,7 +4,7 @@
 #ifndef HFS__HFSINIT_H
 #define HFS__HFSINIT_H
 
-void hfsStartup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize);
+void hfsStartup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize, uint32_t blockSize, bool printSteps);
 
 HFSPlusVolumeHeader* readVolumeHeader(DiskInfo* diskInfo);
 
@@ -15,17 +15,17 @@ CatalogFileHeaderNode* readCatalogFileHeaderNode(DiskInfo* diskInfo, HFSPlusVolu
 //////////
 
 static bool checkDiskInitialization(char* diskDirectory);
-static void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize);
+static void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize, bool printSteps);
 
 static bool checkHfsFileSystemInitialization(DiskInfo* diskInfo);
 
 /////////////
 //initialize forks data
 
-static void initializeVolumeHeader(DiskInfo* diskInfo);
+static void initializeVolumeHeader(DiskInfo* diskInfo, uint32_t blockSize);
 static void initializeAllocationFileForkData(DiskInfo* diskInfo, HFSPlusForkData* forkData, uint32_t blockSize);
-static void initializeExtentsOverflowFileForkData(HFSPlusForkData* forkData, uint32_t blockSize, uint32_t totalNodes, uint32_t nodeSize, HFSPlusForkData * allocationFileForkData);
-static void initializeCatalogFileForkData(HFSPlusForkData* forkData, uint32_t blockSize, uint32_t totalNodes, uint32_t nodeSize, HFSPlusForkData * extentsOverflowFileForkData);
+static void initializeExtentsOverflowFileForkData(HFSPlusForkData* forkData, uint32_t blockSize, uint32_t totalNodes, HFSPlusForkData * allocationFileForkData);
+static void initializeCatalogFileForkData(HFSPlusForkData* forkData, uint32_t blockSize, uint32_t totalNodes, HFSPlusForkData * extentsOverflowFileForkData);
 
 ///////////////
 //init the structure files

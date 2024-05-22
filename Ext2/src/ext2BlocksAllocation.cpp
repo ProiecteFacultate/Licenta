@@ -598,8 +598,13 @@ static uint32_t searchAndOccupyFreeDataBlockInGivenGroup(DiskInfo* diskInfo, ext
 
     //checks the block after the given previousBlock
 
+    uint32_t preferredBlockLocalIndexInDataBlockList;
     uint32_t preferredLocation = previousBlockLocalIndex + 1;
-    uint32_t preferredBlockLocalIndexInDataBlockList = getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(superBlock, preferredLocation);
+    if(preferredLocation % superBlock->s_blocks_per_group != 0) //in case we are at the beginning of a new group, we don't make the next operation because underflow
+        preferredBlockLocalIndexInDataBlockList = getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(superBlock, preferredLocation);
+    else
+        previousBlockLocalIndex = BIG_VALUE; //so we don't enter the next if
+
     if(previousBlockLocalIndex != BIG_VALUE &&
             ext2_getBitFromByte(blockBuffer[preferredBlockLocalIndexInDataBlockList / 8],
                                 preferredBlockLocalIndexInDataBlockList % 8) == 0)

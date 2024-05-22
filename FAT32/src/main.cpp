@@ -16,60 +16,71 @@
 #include "../include/codes/fat32Attributes.h"
 #include "../include/utils.h"
 #include "../include/interface.h"
+#include "../include/fat32TestApi.h"
 
 int main() {
-    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_512Kib";
+    char* diskDirectory = "D:\\Facultate\\Licenta\\HardDisks\\HardDisk_100Mib";
     DiskInfo* diskInfo = nullptr;
     BootSector* bootSector = nullptr;
     FsInfo* fsInfo = nullptr;
 
-    fat32Startup(diskDirectory, &diskInfo, &bootSector, &fsInfo, 1024, 512);
+    fat32Startup(diskDirectory, &diskInfo, &bootSector, &fsInfo, 204800, 512, 8,true);
 
     std::string command;
-    std::cout << "Waiting commands\n";
+//    std::cout << "Waiting commands\n";
 
-//    char* filePath = new char[100];
-//    memset(filePath, 0, 100);
-//    memcpy(filePath, "Root/File_1", 11);
+//    while(true)
+//    {
+//        std::cout << '\n';
+//        std::getline(std::cin, command);
 //
-//    uint32_t numberOfBytesRead;
-//    uint32_t reasonForIncompleteRead;
-//    char* readBuffer = new char[100000];
-//    memset(readBuffer, 0, 100000);
-//    read(diskInfo, bootSector, filePath, readBuffer, 0, 100000,numberOfBytesRead, reasonForIncompleteRead);
-//    std::cout << "Bytes read: " << numberOfBytesRead << '\n';
-//    std::cout.write(readBuffer, numberOfBytesRead);
+//        if(command == "exit")
+//        {
+//            std::cout << "Process terminated with exit";
+//            break;
+//        }
+//
+//        std::vector<std::string> tokens = fat32_splitString(command, ' ');
+//
+//        if(tokens[0] == "mkdir")
+//            commandCreateDirectory(diskInfo, bootSector, tokens);
+//        else if(tokens[0] == "ls")
+//            commandListSubdirectories(diskInfo, bootSector, tokens);
+//        else if(tokens[0] == "write")
+//            commandWriteFile(diskInfo, bootSector, tokens);
+//        else if(tokens[0] == "read")
+//            commandReadFile(diskInfo, bootSector, tokens);
+//        else if(tokens[0] == "truncate")
+//            commandTruncateFile(diskInfo, bootSector, tokens);
+//        else if(tokens[0] == "rmdir")
+//            commandDeleteDirectory(diskInfo, bootSector, tokens);
+//        else if(tokens[0] == "la")
+//            commandShowDirectoryAttributes(diskInfo, bootSector, tokens);
+//        else
+//            std::cout << "Unknown command \n";
+//    }
 
-    while(true)
-    {
-        std::cout << '\n';
-        std::getline(std::cin, command);
+    char* parentPath = new char[50];
+    memcpy(parentPath, "Root\0", 50);
+    char* fileName = new char[50];
+    memcpy(fileName, "File_1\0", 50);
+    char* fullFilePath = new char[50];
+    memcpy(fullFilePath, "Root/File_1\0", 50);
+    int64_t timeElapsedMilliseconds;
+    uint32_t numberOfBytesWritten, reasonForIncompleteWrite;
+    uint64_t bufferSize = 80000000;
+    char* buffer = new char[bufferSize];
 
-        if(command == "exit")
-        {
-            std::cout << "Process terminated with exit";
-            break;
-        }
+    uint32_t result = fat32_create_directory(diskInfo, bootSector, parentPath, fileName,
+                                    DIRECTORY_TYPE_FILE, timeElapsedMilliseconds);
+    result = fat32_write_file(diskInfo, bootSector, fullFilePath, buffer, bufferSize, WRITE_WITH_TRUNCATE,
+                              numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
-        std::vector<std::string> tokens = fat32_splitString(command, ' ');
-
-        if(tokens[0] == "mkdir")
-            commandCreateDirectory(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "ls")
-            commandListSubdirectories(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "write")
-            commandWriteFile(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "read")
-            commandReadFile(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "truncate")
-            commandTruncateFile(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "rmdir")
-            commandDeleteDirectory(diskInfo, bootSector, tokens);
-        else if(tokens[0] == "la")
-            commandShowDirectoryAttributes(diskInfo, bootSector, tokens);
-        else
-            std::cout << "Unknown command \n";
-    }
+    uint64_t totalSeconds = timeElapsedMilliseconds / 1000;
+    uint64_t millisecondsDisplayed = timeElapsedMilliseconds % 1000;
+    uint64_t secondsDisplayed = totalSeconds % 60;
+    uint64_t minutesDisplayed = totalSeconds / 60;
+    std::cout << result << " --- Time --- Minutes: " << minutesDisplayed << " --- Seconds: " << secondsDisplayed << " --- Milliseconds: " << millisecondsDisplayed <<  '\n';
 
     return 0;
 }

@@ -18,7 +18,7 @@ void eof_updateExtentsHeaderNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* 
     uint32_t numberOfSectorsWritten, retryWriteCount = 2;
     uint32_t numOfSectorsToWrite = eof_getNumberOfBlocksPerNode(volumeHeader) * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
     uint32_t firstSectorForExtentsFile = volumeHeader->extentsFile.extents[0].startBlock * getNumberOfSectorsPerBlock(diskInfo, volumeHeader);
-    char* nodeBuffer = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeBuffer = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     memcpy(nodeBuffer, updatedExtentsFileHeaderNode, sizeof(ExtentsFileHeaderNode));
 
     uint32_t writeResult = writeDiskSectors(diskInfo, numOfSectorsToWrite, firstSectorForExtentsFile, nodeBuffer, numberOfSectorsWritten);
@@ -57,7 +57,7 @@ void eof_updateNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
 uint32_t eof_updateRecordOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsDirectoryRecord* directoryRecord,
                             ExtentsDirectoryRecord* updatedDirectoryRecord, uint32_t nodeNumberOfRecord)
 {
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumberOfRecord);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)

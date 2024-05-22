@@ -83,7 +83,7 @@ CatalogDirectoryRecord* cf_createDirectoryRecord(DiskInfo* diskInfo, HFSPlusVolu
 
 uint32_t cf_getNumberOfBlocksPerNode(HFSPlusVolumeHeader* volumeHeader)
 {
-    return getCatalogFileNodeSize() / volumeHeader->blockSize;
+    return getCatalogFileNodeSize(volumeHeader) / volumeHeader->blockSize;
 }
 
 uint32_t cf_getNumberOfSectorsPerNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader)

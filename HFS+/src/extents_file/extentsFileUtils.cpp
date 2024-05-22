@@ -56,7 +56,7 @@ ExtentsDirectoryRecord* eof_createDirectoryRecord(DiskInfo* diskInfo, HFSPlusVol
 
 uint32_t eof_getNumberOfBlocksPerNode(HFSPlusVolumeHeader* volumeHeader)
 {
-    return getExtentsOverflowFileNodeSize() / volumeHeader->blockSize;
+    return getExtentsOverflowFileNodeSize(volumeHeader) / volumeHeader->blockSize;
 }
 
 uint32_t eof_getNumberOfSectorsPerNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader)

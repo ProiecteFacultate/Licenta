@@ -37,7 +37,7 @@ uint32_t eof_searchRecordForGivenNodeDataAndSearchedKey(DiskInfo* diskInfo, HFSP
     if(nodeDescriptor->isLeaf == NODE_IS_LEAF) //if we haven't found the key and this is a leaf node it means the key doesn't exist in tree
         return EOF_SEARCH_RECORD_IN_GIVEN_DATA_KEY_DO_NOT_EXIST_IN_TREE;
 
-    ChildNodeInfo* nextNodeInfo = (ChildNodeInfo*)&nodeData[getExtentsOverflowFileNodeSize() - (recordIndex + 1) * sizeof(ChildNodeInfo)];
+    ChildNodeInfo* nextNodeInfo = (ChildNodeInfo*)&nodeData[getExtentsOverflowFileNodeSize(volumeHeader) - (recordIndex + 1) * sizeof(ChildNodeInfo)];
 
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nextNodeInfo->nodeNumber);
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -55,7 +55,7 @@ uint32_t eof_insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeH
 
     if(extentsFileHeaderNode->headerRecord.freeNodes == extentsFileHeaderNode->headerRecord.totalNodes - 1) //root node do not exist yet
     {
-        char* rootNodeData = new char[getExtentsOverflowFileNodeSize()];
+        char* rootNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
         uint32_t createNodeOnDiskResult = eof_createNodeOnDisk(diskInfo, volumeHeader, extentsFileHeaderNode, rootNodeData, newNodeNumber, NODE_IS_LEAF);
         delete[] rootNodeData;
 
@@ -70,7 +70,7 @@ uint32_t eof_insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeH
     else //root node already exists (tree is not empty)
     {
         //read root
-        char* rootNodeData = new char[getExtentsOverflowFileNodeSize()];
+        char* rootNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
         uint32_t readRootNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, rootNodeData, extentsFileHeaderNode->headerRecord.rootNode);
 
         if(readRootNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -81,10 +81,10 @@ uint32_t eof_insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeH
 
         BTNodeDescriptor* rootNodeDescriptor = (BTNodeDescriptor*)&rootNodeData[0];
 
-        if(rootNodeDescriptor->numRecords == getMaximumNumberOfRecordsPerExtentsFileNode())
+        if(rootNodeDescriptor->numRecords == getMaximumNumberOfRecordsPerExtentsFileNode(volumeHeader))
         {
             //create new node which will be the new root
-            char* newNodeData = new char[getExtentsOverflowFileNodeSize()];
+            char* newNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
             uint32_t createNodeOnDiskResult = eof_createNodeOnDisk(diskInfo, volumeHeader, extentsFileHeaderNode, newNodeData, newNodeNumber, NODE_IS_NOT_LEAF);
 
             delete[] rootNodeData;
@@ -129,7 +129,7 @@ uint32_t eof_insertRecordInTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeH
             if(eof_compareKeys(&newNodeFirstRecord->catalogKey, &recordToInsert->catalogKey) < 0)
                 i++;
 
-            uint32_t byteIndexOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (i + 1) * sizeof(ChildNodeInfo);
+            uint32_t byteIndexOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (i + 1) * sizeof(ChildNodeInfo);
             ChildNodeInfo* childNodeInfo = (ChildNodeInfo*)&newNodeData[byteIndexOfChildNodeInfo];
 
             uint32_t insertNonNullResult = eof_insertNonFull(diskInfo, volumeHeader, extentsFileHeaderNode, childNodeInfo->nodeNumber, recordToInsert);
@@ -172,7 +172,7 @@ uint32_t eof_traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHead
                          std::vector<ExtentsDirectoryRecord*>& recordsVector)
 {
     //read node to traverse its subtree from disk
-    char* nodeToTraverseItsSubtreeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeToTraverseItsSubtreeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeToTraverseItsSubtreeData, nodeNumberOfNodeToTraverseItsSubtree);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -197,7 +197,7 @@ uint32_t eof_traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHead
 
         if(nodeToTraverseItsSubtreeDescriptor->isLeaf == NODE_IS_NOT_LEAF)
         {
-            uint32_t indexOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
+            uint32_t indexOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 1) * sizeof(ChildNodeInfo);
             ChildNodeInfo* childNodeInfo = (ChildNodeInfo*)&nodeToTraverseItsSubtreeData[indexOfChildNodeInfo];
             uint32_t traverseResult = eof_traverseSubtree(diskInfo, volumeHeader, childNodeInfo->nodeNumber, fileId, recordsVector);
 
@@ -212,7 +212,7 @@ uint32_t eof_traverseSubtree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHead
 
     if(nodeToTraverseItsSubtreeDescriptor->isLeaf == NODE_IS_NOT_LEAF)
     {
-        uint32_t indexOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
+        uint32_t indexOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 1) * sizeof(ChildNodeInfo);
         ChildNodeInfo* childNodeInfo = (ChildNodeInfo*)&nodeToTraverseItsSubtreeData[indexOfChildNodeInfo];
         uint32_t traverseResult = eof_traverseSubtree(diskInfo, volumeHeader, childNodeInfo->nodeNumber, fileId, recordsVector);
 
@@ -233,7 +233,7 @@ uint32_t eof_removeRecordFromTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
         return EOF_REMOVE_RECORD_FROM_TREE_FAILED;
 
     //read root after changes
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, extentsFileHeaderNode->headerRecord.rootNode);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -258,7 +258,7 @@ uint32_t eof_removeRecordFromTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
         }
         else
         {
-            uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - sizeof(ChildNodeInfo);
+            uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - sizeof(ChildNodeInfo);
             ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
             delete[] nodeData;
 
@@ -279,9 +279,9 @@ uint32_t eof_removeRecordFromTree(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
 static uint32_t eof_splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, uint32_t nodeNumberToMoveOneRecordTo,
                            uint32_t nodeNumberToSplit, int32_t indexToMoveTheRecordTo)
 {
-    uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerCatalogFileNode() / 2 + 1; //t (maximum is always odd so it will actually be the great half for 5 will be 3)
+    uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerCatalogFileNode(volumeHeader) / 2 + 1; //t (maximum is always odd so it will actually be the great half for 5 will be 3)
     //read the 2 existing nodes from disk
-    char* nodeToMoveOneRecordToData = new char[getExtentsOverflowFileNodeSize()]; //s
+    char* nodeToMoveOneRecordToData = new char[getExtentsOverflowFileNodeSize(volumeHeader)]; //s
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeToMoveOneRecordToData, nodeNumberToMoveOneRecordTo);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -292,7 +292,7 @@ static uint32_t eof_splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHe
 
     BTNodeDescriptor* nodeToMoveOneRecordToNodeDescriptor = (BTNodeDescriptor*)&nodeToMoveOneRecordToData[0];
 
-    char* nodeToSplitData = new char[getExtentsOverflowFileNodeSize()]; //y
+    char* nodeToSplitData = new char[getExtentsOverflowFileNodeSize(volumeHeader)]; //y
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeToSplitData, nodeNumberToSplit);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -304,7 +304,7 @@ static uint32_t eof_splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHe
     BTNodeDescriptor* nodeToSplitNodeDescriptor = (BTNodeDescriptor*)&nodeToSplitData[0];
 
     //create a new node
-    char* newNodeData = new char[getExtentsOverflowFileNodeSize()]; // z
+    char* newNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)]; // z
     uint32_t newNodeNumber;
 
     uint32_t createNodeOnDiskResult = eof_createNodeOnDisk(diskInfo, volumeHeader, extentsFileHeaderNode, newNodeData, newNodeNumber, nodeToSplitNodeDescriptor->isLeaf);
@@ -334,7 +334,7 @@ static uint32_t eof_splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHe
     if(nodeToSplitNodeDescriptor->isLeaf == NODE_IS_NOT_LEAF)
     {
         for (int32_t j = 0; j < halfOfTheMaxNumberOfRecordsPerNode; j++) {
-            uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (j + halfOfTheMaxNumberOfRecordsPerNode + 1) * sizeof(ChildNodeInfo);
+            uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (j + halfOfTheMaxNumberOfRecordsPerNode + 1) * sizeof(ChildNodeInfo);
             ChildNodeInfo *childNodeInfoToInsert = (ChildNodeInfo*) &nodeToSplitData[startingByteOfChildNodeInfo];
             uint32_t insertChildNodeInfoInNodeResult = eof_insertChildNodeInfoInNode(diskInfo, volumeHeader, childNodeInfoToInsert, newNodeNumber, j);
 
@@ -353,7 +353,7 @@ static uint32_t eof_splitChild(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHe
     //move existing children of nodeNumberToMoveOneRecordTo to right to make space for the new child
     for(int32_t j = nodeToMoveOneRecordToNodeDescriptor->numRecords; j >= indexToMoveTheRecordTo + 1; j--)
     {
-        uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (j + 1) * sizeof(ChildNodeInfo);
+        uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (j + 1) * sizeof(ChildNodeInfo);
         ChildNodeInfo *childNodeInfoToInsert = (ChildNodeInfo*) &nodeToMoveOneRecordToData[startingByteOfChildNodeInfo];
         uint32_t insertChildNodeInfoResult = eof_insertChildNodeInfoInNode(diskInfo, volumeHeader, childNodeInfoToInsert, nodeNumberToMoveOneRecordTo, j + 1);
 
@@ -403,7 +403,7 @@ static uint32_t eof_insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
                               ExtentsDirectoryRecord* recordToInsert)
 {
     //read node to insert record into from disk
-    char* nodeToInsertRecordIntoData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeToInsertRecordIntoData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeToInsertRecordIntoData, nodeNumberToInsertRecordInto);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -458,10 +458,10 @@ static uint32_t eof_insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
         }
 
         //read the found child node from disk
-        uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 2) * sizeof(ChildNodeInfo);
+        uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 2) * sizeof(ChildNodeInfo);
         ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeToInsertRecordIntoData[startingByteOfChildNodeInfo];
 
-        char* foundChildNodeData = new char[getExtentsOverflowFileNodeSize()];
+        char* foundChildNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
         readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, foundChildNodeData, childNodeInfo->nodeNumber);
 
         if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -473,7 +473,7 @@ static uint32_t eof_insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
         BTNodeDescriptor* foundChildNodeDescriptor = (BTNodeDescriptor*)&foundChildNodeData[0];
 
         //see if the found child is full
-        if(foundChildNodeDescriptor->numRecords == getMaximumNumberOfRecordsPerExtentsFileNode())
+        if(foundChildNodeDescriptor->numRecords == getMaximumNumberOfRecordsPerExtentsFileNode(volumeHeader))
         {
             //if the child is full then split it
             uint32_t splitChildResult = eof_splitChild(diskInfo, volumeHeader, extentsFileHeaderNode, nodeNumberToInsertRecordInto,
@@ -502,7 +502,7 @@ static uint32_t eof_insertNonFull(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
                 index++;
         }
 
-        startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 2) * sizeof(ChildNodeInfo);
+        startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 2) * sizeof(ChildNodeInfo);
         childNodeInfo = (ChildNodeInfo*) &nodeToInsertRecordIntoData[startingByteOfChildNodeInfo];
         uint32_t insertNonNullResult = eof_insertNonFull(diskInfo, volumeHeader, extentsFileHeaderNode, childNodeInfo->nodeNumber, recordToInsert);
 
@@ -518,7 +518,7 @@ static uint32_t eof_findKey(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
 {
     indexOfRecordInNode = 0;
     //read root of subtree
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readRootNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readRootNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -552,7 +552,7 @@ static uint32_t eof_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
         return EOF_REMOVE_FAILED;
 
     //the key to be removed is present in this node
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -582,13 +582,13 @@ static uint32_t eof_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
     else
     {
         //skip the part where key is leaf and don't exist because this can't happen in our case
-        uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerCatalogFileNode() / 2 + 1;
+        uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerCatalogFileNode(volumeHeader) / 2 + 1;
         bool flag = (index == nodeDescriptor->numRecords);
 
         //read C[idx]
-        uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
+        uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 1) * sizeof(ChildNodeInfo);
         ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
-        char* childNodeData = new char[getExtentsOverflowFileNodeSize()];
+        char* childNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
         readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
         if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -613,7 +613,7 @@ static uint32_t eof_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
         if(flag && index > nodeDescriptor->numRecords)
         {
             //read C[idx - 1]
-            startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - index * sizeof(ChildNodeInfo);
+            startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - index * sizeof(ChildNodeInfo);
             childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
             readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
@@ -640,7 +640,7 @@ static uint32_t eof_remove(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader
 
 static uint32_t eof_removeFromLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index)
 {
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -683,9 +683,9 @@ static uint32_t eof_removeFromLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
 
 static uint32_t eof_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, uint32_t nodeNumber, uint32_t index)
 {
-    uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerCatalogFileNode() / 2 + 1; //t (maximum is always odd so it will actually be the great half for 5 will be 3)
+    uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerCatalogFileNode(volumeHeader) / 2 + 1; //t (maximum is always odd so it will actually be the great half for 5 will be 3)
 
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -699,9 +699,9 @@ static uint32_t eof_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* v
     ExtentsDirectoryRecord* recordToRemove = (ExtentsDirectoryRecord*)&nodeData[firstByteOfRecord];
 
     //read C[idx]
-    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
+    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 1) * sizeof(ChildNodeInfo);
     ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
-    char* childNodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* childNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -714,7 +714,7 @@ static uint32_t eof_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* v
     memcpy(childNodeDescriptor_1, childNodeData, sizeof(BTNodeDescriptor));
 
     //read C[idx + 1]
-    startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 2) * sizeof(ChildNodeInfo);
+    startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 2) * sizeof(ChildNodeInfo);
     childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
@@ -777,7 +777,7 @@ static uint32_t eof_removeFromNonLeaf(DiskInfo* diskInfo, HFSPlusVolumeHeader* v
 
 static uint32_t eof_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index, ExtentsDirectoryRecord* predRecord)
 {
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -787,9 +787,9 @@ static uint32_t eof_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
     }
 
     //keep moving to rightmost node until reach a leaf
-    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
+    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 1) * sizeof(ChildNodeInfo);
     ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
-    char* childNodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* childNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -801,7 +801,7 @@ static uint32_t eof_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
 
     while(childNodeDescriptor->isLeaf == NODE_IS_NOT_LEAF)
     {
-        startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (childNodeDescriptor->numRecords + 1) * sizeof(ChildNodeInfo);
+        startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (childNodeDescriptor->numRecords + 1) * sizeof(ChildNodeInfo);
         childNodeInfo = (ChildNodeInfo*) &childNodeData[startingByteOfChildNodeInfo];
         readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
@@ -824,7 +824,7 @@ static uint32_t eof_getPred(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
 
 static uint32_t eof_getSucc(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index, ExtentsDirectoryRecord* succRecord)
 {
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -834,9 +834,9 @@ static uint32_t eof_getSucc(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
     }
 
     //keep moving to leftmost node until reach a leaf
-    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 2) * sizeof(ChildNodeInfo);
+    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 2) * sizeof(ChildNodeInfo);
     ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
-    char* childNodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* childNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -869,9 +869,9 @@ static uint32_t eof_getSucc(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeade
 
 static uint32_t eof_fill(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, uint32_t nodeNumber, uint32_t index)
 {
-    uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerCatalogFileNode() / 2 + 1; //t (maximum is always odd so it will actually be the great half for 5 will be 3)
+    uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerCatalogFileNode(volumeHeader) / 2 + 1; //t (maximum is always odd so it will actually be the great half for 5 will be 3)
 
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -883,9 +883,9 @@ static uint32_t eof_fill(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
     BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
 
     //read C[idx-1]
-    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - index * sizeof(ChildNodeInfo);
+    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - index * sizeof(ChildNodeInfo);
     ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
-    char* childNodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* childNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -897,7 +897,7 @@ static uint32_t eof_fill(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
     memcpy(childNodeDescriptor_1, childNodeData, sizeof(BTNodeDescriptor));
 
     //read C[idx+1]
-    startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 2) * sizeof(ChildNodeInfo);
+    startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 2) * sizeof(ChildNodeInfo);
     childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
@@ -940,7 +940,7 @@ static uint32_t eof_fill(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
 
 static uint32_t eof_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index)
 {
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -950,9 +950,9 @@ static uint32_t eof_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
     }
 
     //get child (c[idx])
-    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
+    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 1) * sizeof(ChildNodeInfo);
     ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
-    char* childNodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* childNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -963,9 +963,9 @@ static uint32_t eof_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
     BTNodeDescriptor* childNodeDescriptor = (BTNodeDescriptor*)&childNodeData[0];
 
     //get sibling (c[idx - 1])
-    startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - index * sizeof(ChildNodeInfo);
+    startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - index * sizeof(ChildNodeInfo);
     ChildNodeInfo *siblingNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
-    char* siblingNodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* siblingNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, siblingNodeData, siblingNodeInfo->nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -995,7 +995,7 @@ static uint32_t eof_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
     {
         for(int32_t i = childNodeDescriptor->numRecords; i >= 0; --i)
         {
-            startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (i + 1) * sizeof(ChildNodeInfo);
+            startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (i + 1) * sizeof(ChildNodeInfo);
             ChildNodeInfo *childNodeInfoToInsert = (ChildNodeInfo*) &childNodeData[startingByteOfChildNodeInfo];
             uint32_t insertChildNodeInfoResult = eof_insertChildNodeInfoInNode(diskInfo, volumeHeader, childNodeInfoToInsert, childNodeInfo->nodeNumber, i + 1);
 
@@ -1021,7 +1021,7 @@ static uint32_t eof_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
     // Moving sibling's last child as C[idx]'s first child
     if(childNodeDescriptor->isLeaf == NODE_IS_NOT_LEAF)
     {
-        startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (siblingNodeDescriptor->numRecords + 1) * sizeof(ChildNodeInfo);
+        startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (siblingNodeDescriptor->numRecords + 1) * sizeof(ChildNodeInfo);
         ChildNodeInfo *childNodeInfoToInsert = (ChildNodeInfo*) &siblingNodeData[startingByteOfChildNodeInfo];
         uint32_t insertChildNodeInfoResult = eof_insertChildNodeInfoInNode(diskInfo, volumeHeader, childNodeInfoToInsert, childNodeInfo->nodeNumber, 0);
 
@@ -1065,7 +1065,7 @@ static uint32_t eof_borrowFromPrev(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
 
 static uint32_t eof_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, uint32_t nodeNumber, uint32_t index)
 {
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -1075,9 +1075,9 @@ static uint32_t eof_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
     }
 
     //get child (c[idx])
-    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
+    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 1) * sizeof(ChildNodeInfo);
     ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
-    char* childNodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* childNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -1088,9 +1088,9 @@ static uint32_t eof_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
     BTNodeDescriptor* childNodeDescriptor = (BTNodeDescriptor*)&childNodeData[0];
 
     //get sibling (c[idx + 1])
-    startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 2) * sizeof(ChildNodeInfo);
+    startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 2) * sizeof(ChildNodeInfo);
     ChildNodeInfo *siblingNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
-    char* siblingNodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* siblingNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, siblingNodeData, siblingNodeInfo->nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -1115,7 +1115,7 @@ static uint32_t eof_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
     //sibling's first child is inserted as the last child into C[idx]
     if(childNodeDescriptor->isLeaf == NODE_IS_NOT_LEAF)
     {
-        startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - sizeof(ChildNodeInfo);
+        startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - sizeof(ChildNodeInfo);
         ChildNodeInfo *childNodeInfoToInsert = (ChildNodeInfo*) &siblingNodeData[startingByteOfChildNodeInfo];
         uint32_t insertChildNodeInfoResult = eof_insertChildNodeInfoInNode(diskInfo, volumeHeader, childNodeInfoToInsert, childNodeInfo->nodeNumber,
                                                                           childNodeDescriptor->numRecords + 1);
@@ -1156,7 +1156,7 @@ static uint32_t eof_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
     {
         for(uint32_t i = 1; i <= siblingNodeDescriptor->numRecords; ++i)
         {
-            startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (i + 1) * sizeof(ChildNodeInfo);
+            startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (i + 1) * sizeof(ChildNodeInfo);
             ChildNodeInfo *childNodeInfoToInsert = (ChildNodeInfo*) &siblingNodeData[startingByteOfChildNodeInfo];
             uint32_t insertChildNodeInfoResult = eof_insertChildNodeInfoInNode(diskInfo, volumeHeader, childNodeInfoToInsert, siblingNodeInfo->nodeNumber,
                                                                               i - 1);
@@ -1200,9 +1200,9 @@ static uint32_t eof_borrowFromNext(DiskInfo* diskInfo, HFSPlusVolumeHeader* volu
 
 static uint32_t eof_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsFileHeaderNode* extentsFileHeaderNode, uint32_t nodeNumber, uint32_t index)
 {
-    uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerExtentsFileNode() / 2 + 1; //t (maximum is always odd so it will actually be the great half for 5 will be 3)
+    uint32_t halfOfTheMaxNumberOfRecordsPerNode = getMaximumNumberOfRecordsPerExtentsFileNode(volumeHeader) / 2 + 1; //t (maximum is always odd so it will actually be the great half for 5 will be 3)
 
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -1213,9 +1213,9 @@ static uint32_t eof_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
     BTNodeDescriptor* nodeDescriptor = (BTNodeDescriptor*)&nodeData[0];
 
     //get child (c[idx])
-    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 1) * sizeof(ChildNodeInfo);
+    uint32_t startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 1) * sizeof(ChildNodeInfo);
     ChildNodeInfo *childNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
-    char* childNodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* childNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, childNodeData, childNodeInfo->nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -1226,9 +1226,9 @@ static uint32_t eof_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
     BTNodeDescriptor* childNodeDescriptor = (BTNodeDescriptor*)&childNodeData[0];
 
     //get sibling (c[idx + 1])
-    startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (index + 2) * sizeof(ChildNodeInfo);
+    startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (index + 2) * sizeof(ChildNodeInfo);
     ChildNodeInfo *siblingNodeInfo = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
-    char* siblingNodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* siblingNodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, siblingNodeData, siblingNodeInfo->nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -1271,7 +1271,7 @@ static uint32_t eof_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
     {
         for(uint32_t i = 0; i <= siblingNodeDescriptor->numRecords; ++i)
         {
-            startingByteOfChildNodeInfo = getCatalogFileNodeSize() - (i + 1) * sizeof(ChildNodeInfo);
+            startingByteOfChildNodeInfo = getCatalogFileNodeSize(volumeHeader) - (i + 1) * sizeof(ChildNodeInfo);
             ChildNodeInfo *childNodeInfoToInsert = (ChildNodeInfo*) &siblingNodeData[startingByteOfChildNodeInfo];
             uint32_t insertChildNodeInfoResult = eof_insertChildNodeInfoInNode(diskInfo, volumeHeader, childNodeInfoToInsert, childNodeInfo->nodeNumber,
                                                                               i + halfOfTheMaxNumberOfRecordsPerNode);
@@ -1300,7 +1300,7 @@ static uint32_t eof_merge(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader,
     //moving the child pointers after (idx+1) in the current node one step before
     for(uint32_t i = index + 2; i <= nodeDescriptor->numRecords; ++i)
     {
-        startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize() - (i + 1) * sizeof(ChildNodeInfo);
+        startingByteOfChildNodeInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (i + 1) * sizeof(ChildNodeInfo);
         ChildNodeInfo *childNodeInfoToInsert = (ChildNodeInfo*) &nodeData[startingByteOfChildNodeInfo];
         uint32_t insertChildNodeInfoResult = eof_insertChildNodeInfoInNode(diskInfo, volumeHeader, childNodeInfoToInsert, nodeNumber, i - 1);
 
@@ -1394,7 +1394,7 @@ uint32_t eof_createNodeOnDisk(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHea
 uint32_t eof_insertRecordInNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ExtentsDirectoryRecord* recordToInsert, uint32_t nodeNumber, uint32_t recordIndexInNode,
                             bool shouldIncreaseNumOfRecordsInNodeDescriptor)
 {
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -1419,7 +1419,7 @@ uint32_t eof_insertRecordInNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeH
 uint32_t eof_insertChildNodeInfoInNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, ChildNodeInfo* childNodeInfoToInsert, uint32_t nodeNumber,
                                    uint32_t childNodeInfoIndexInNode)
 {
-    char* nodeData = new char[getExtentsOverflowFileNodeSize()];
+    char* nodeData = new char[getExtentsOverflowFileNodeSize(volumeHeader)];
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nodeNumber);
 
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
@@ -1428,7 +1428,7 @@ uint32_t eof_insertChildNodeInfoInNode(DiskInfo* diskInfo, HFSPlusVolumeHeader* 
         return EOF_INSERT_CHILD_NODE_INFO_IN_NODE_FAILED;
     }
 
-    uint32_t byteIndexInNodeToInsertChildInfo = getExtentsOverflowFileNodeSize() - (childNodeInfoIndexInNode + 1) * sizeof(ChildNodeInfo);
+    uint32_t byteIndexInNodeToInsertChildInfo = getExtentsOverflowFileNodeSize(volumeHeader) - (childNodeInfoIndexInNode + 1) * sizeof(ChildNodeInfo);
     memcpy(nodeData + byteIndexInNodeToInsertChildInfo, childNodeInfoToInsert, sizeof(ChildNodeInfo));
 
     eof_updateNodeOnDisk(diskInfo, volumeHeader, nodeData, nodeNumber);

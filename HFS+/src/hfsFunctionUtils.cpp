@@ -10,9 +10,9 @@
 #include "../include/hfsFunctionUtils.h"
 #include "../include/catalog_file/catalogFileOperations.h"
 
-uint32_t getMaximumNumberOfRecordsPerCatalogFileNode()
+uint32_t getMaximumNumberOfRecordsPerCatalogFileNode(HFSPlusVolumeHeader* volumeHeader)
 {
-    uint32_t catalogFileNodeSize = getCatalogFileNodeSize();
+    uint32_t catalogFileNodeSize = getCatalogFileNodeSize(volumeHeader);
     int records = 1;
 
     while(true)
@@ -29,9 +29,9 @@ uint32_t getMaximumNumberOfRecordsPerCatalogFileNode()
     return records - 1;
 }
 
-uint32_t getMaximumNumberOfRecordsPerExtentsFileNode()
+uint32_t getMaximumNumberOfRecordsPerExtentsFileNode(HFSPlusVolumeHeader* volumeHeader)
 {
-    uint32_t extentsFileNodeSize = getExtentsOverflowFileNodeSize();
+    uint32_t extentsFileNodeSize = getExtentsOverflowFileNodeSize(volumeHeader);
     int records = 1;
 
     while(true)

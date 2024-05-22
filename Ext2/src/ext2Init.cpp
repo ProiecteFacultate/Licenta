@@ -15,19 +15,20 @@
 #include "../include/ext2RootInit.h"
 #include "../include/ext2Init.h"
 
-void ext2Startup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
+void ext2Startup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize, uint32_t blockSize, bool printSteps)
 {
     if(checkDiskInitialization(diskDirectory) == false)
-        initializeDisk(diskDirectory, diskInfo, sectorsNumber, sectorSize);
+        initializeDisk(diskDirectory, diskInfo, sectorsNumber, sectorSize, printSteps);
     else
         *diskInfo = getDisk(diskDirectory);
 
     bool ext2AlreadyInitialized = true;
     if(checkExt2FileSystemInitialization(*diskInfo) == false)
     {
-        initializeFirstSuperBlockInFirstGroup(*diskInfo);
+        initializeFirstSuperBlockInFirstGroup(*diskInfo, blockSize);
         ext2AlreadyInitialized = false;
-        std::cout << "First super block initialized\n";
+        if(printSteps == true)
+            std::cout << "First super block initialized\n";
     }
 
     ext2_super_block* firstSuperBlock = readFirstSuperBlock(*diskInfo);
@@ -36,7 +37,8 @@ void ext2Startup(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumbe
     {
         initializeGroups(*diskInfo, firstSuperBlock);
         initializeRootDirectory(*diskInfo, firstSuperBlock);
-        std::cout << "Groups initialized\n";
+        if(printSteps == true)
+            std::cout << "Groups initialized\n";
     }
 }
 
@@ -74,12 +76,13 @@ static bool checkDiskInitialization(char* diskDirectory)
     return !(getDisk(diskDirectory) == nullptr);
 }
 
-static void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
+static void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize, bool printSteps)
 {
     *diskInfo = initializeDisk(diskDirectory, sectorsNumber, sectorSize);
     uint32_t batchSize = 1000;
     fillDiskInitialMemory(*diskInfo, batchSize);
-    std::cout << "Disk initialized\n";
+    if(printSteps == true)
+        std::cout << "Disk initialized\n";
 }
 
 static bool checkExt2FileSystemInitialization(DiskInfo* diskInfo)
@@ -129,14 +132,13 @@ static bool checkExt2FileSystemInitialization(DiskInfo* diskInfo)
     return bootSignature == 61267;   //0xEF53
 }
 
-static void initializeFirstSuperBlockInFirstGroup(DiskInfo* diskInfo)
+static void initializeFirstSuperBlockInFirstGroup(DiskInfo* diskInfo, uint32_t blockSize)
 {
     ext2_super_block* ext2SuperBlock = new ext2_super_block();
     memset(ext2SuperBlock, 0, sizeof(ext2_super_block)); //always 1024
 
     uint64_t totalBytesOnDisk = (uint64_t) diskInfo->diskParameters.sectorsNumber * (uint64_t) diskInfo->diskParameters.sectorSizeBytes - 1024; //first 1024 are for boot sector(s)
-    uint32_t blocksSize = 1024;
-    uint32_t totalNumberOfBlocks = totalBytesOnDisk / blocksSize;
+    uint32_t totalNumberOfBlocks = totalBytesOnDisk / blockSize;
     uint32_t blocksPerGroup = 8192;
     uint32_t numOfGroups = totalNumberOfBlocks / blocksPerGroup + 1;
     if(totalNumberOfBlocks % blocksPerGroup == 0)
@@ -148,12 +150,12 @@ static void initializeFirstSuperBlockInFirstGroup(DiskInfo* diskInfo)
     ext2SuperBlock->s_free_blocks_count = totalBytesOnDisk;
     ext2SuperBlock->s_free_inodes_count = ext2SuperBlock->s_inodes_count;
     ext2SuperBlock->s_first_data_block = 1; //the super block of the first group is this first useful block (ignore data in the name, it is wrong)
-    ext2SuperBlock->s_log_block_size = blocksSize;
-    ext2SuperBlock->s_log_frag_size = blocksSize; //we don't have fragmentation
+    ext2SuperBlock->s_log_block_size = blockSize;
+    ext2SuperBlock->s_log_frag_size = blockSize; //we don't have fragmentation
     ext2SuperBlock->s_blocks_per_group = blocksPerGroup;
     ext2SuperBlock->s_frags_per_group = 999;
     //we do this in order to completely fill the last block in the inode tables for each group, excepting the last group
-    uint32_t inodesPerBlock = blocksSize / sizeof(ext2_inode);
+    uint32_t inodesPerBlock = blockSize / sizeof(ext2_inode);
     uint32_t inodesPerGroup = ext2SuperBlock->s_inodes_count / numOfGroups;
     inodesPerGroup += inodesPerBlock - inodesPerGroup % inodesPerBlock;
     ext2SuperBlock->s_inodes_per_group = inodesPerGroup;
