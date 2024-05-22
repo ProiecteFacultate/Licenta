@@ -8,7 +8,7 @@
 #include "../include/diskCodes.h"
 #include "../include/utils.h"
 #include "../include/fat32FunctionUtils.h"
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 #include "../include/codes/fat32Codes.h"
 #include "../include/fat32Init.h"
 #include "../include/codes/fat32Attributes.h"
@@ -16,7 +16,7 @@
 void fat32Startup(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo, uint32_t sectorsNumber, uint32_t sectorSize)
 {
     if(checkDiskInitialization(diskDirectory) == false)
-        initializeDisk(diskDirectory, diskInfo, 1024, 512);
+        initializeDisk(diskDirectory, diskInfo, sectorsNumber, sectorSize);
     else
         *diskInfo = getDisk(diskDirectory);
 
@@ -38,12 +38,12 @@ void fat32Startup(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSec
     }
 }
 
-bool checkDiskInitialization(char* diskDirectory)
+static bool checkDiskInitialization(char* diskDirectory)
 {
     return !(getDisk(diskDirectory) == nullptr);
 }
 
-void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
+static void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize)
 {
     *diskInfo = initializeDisk(diskDirectory, sectorsNumber, sectorSize);
     uint32_t batchSize = 1000;

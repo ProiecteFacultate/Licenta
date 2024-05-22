@@ -12,7 +12,7 @@
 #include "../include/fat32Init.h"
 #include "../include/fat32.h"
 #include "../include/fat32Api.h"
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 #include "../include/codes/fat32Attributes.h"
 #include "../include/utils.h"
 #include "../include/interface.h"
@@ -51,7 +51,7 @@ int main() {
             break;
         }
 
-        std::vector<std::string> tokens = splitString(command, ' ');
+        std::vector<std::string> tokens = fat32_splitString(command, ' ');
 
         if(tokens[0] == "mkdir")
             commandCreateDirectory(diskInfo, bootSector, tokens);

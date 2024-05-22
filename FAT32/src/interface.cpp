@@ -6,7 +6,7 @@
 #include "../include/codes/fat32Attributes.h"
 #include "../include/codes/fat32ApiResponseCodes.h"
 #include "../include/codes/fat32Codes.h"
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 #include "../include/fat32Api.h"
 #include "../include/fat32.h"
 #include "../include/fat32FunctionUtils.h"

@@ -52,9 +52,23 @@ build cmake_object_order_depends_target_TestingProgram: phony || CMakeFiles/Test
 build CMakeFiles/TestingProgram.dir/main.cpp.obj: CXX_COMPILER__TestingProgram_unscanned_Debug D$:/Facultate/Licenta/Implementare/TestingProgram/main.cpp || cmake_object_order_depends_target_TestingProgram
   DEP_FILE = CMakeFiles\TestingProgram.dir\main.cpp.obj.d
   FLAGS = -g -fdiagnostics-color=always
-  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include -ID:/Facultate/Licenta/Implementare/Libraries/FAT32/include -ID:/Facultate/Licenta/Implementare/Libraries/Ext2/include -ID:/Facultate/Licenta/Implementare/Libraries/HFS/include
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/FAT32/include -ID:/Facultate/Licenta/Implementare/Libraries/Ext2/include -ID:/Facultate/Licenta/Implementare/Libraries/HFS/include -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\TestingProgram.dir
   OBJECT_FILE_DIR = CMakeFiles\TestingProgram.dir
+
+build CMakeFiles/TestingProgram.dir/src/utils.cpp.obj: CXX_COMPILER__TestingProgram_unscanned_Debug D$:/Facultate/Licenta/Implementare/TestingProgram/src/utils.cpp || cmake_object_order_depends_target_TestingProgram
+  DEP_FILE = CMakeFiles\TestingProgram.dir\src\utils.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/FAT32/include -ID:/Facultate/Licenta/Implementare/Libraries/Ext2/include -ID:/Facultate/Licenta/Implementare/Libraries/HFS/include -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\TestingProgram.dir
+  OBJECT_FILE_DIR = CMakeFiles\TestingProgram.dir\src
+
+build CMakeFiles/TestingProgram.dir/src/tests.cpp.obj: CXX_COMPILER__TestingProgram_unscanned_Debug D$:/Facultate/Licenta/Implementare/TestingProgram/src/tests.cpp || cmake_object_order_depends_target_TestingProgram
+  DEP_FILE = CMakeFiles\TestingProgram.dir\src\tests.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/FAT32/include -ID:/Facultate/Licenta/Implementare/Libraries/Ext2/include -ID:/Facultate/Licenta/Implementare/Libraries/HFS/include -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
+  OBJECT_DIR = CMakeFiles\TestingProgram.dir
+  OBJECT_FILE_DIR = CMakeFiles\TestingProgram.dir\src
 
 
 # =============================================================================
@@ -64,9 +78,9 @@ build CMakeFiles/TestingProgram.dir/main.cpp.obj: CXX_COMPILER__TestingProgram_u
 #############################################
 # Link the executable TestingProgram.exe
 
-build TestingProgram.exe: CXX_EXECUTABLE_LINKER__TestingProgram_Debug CMakeFiles/TestingProgram.dir/main.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a D$:/Facultate/Licenta/Implementare/Libraries/FAT32/lib/libfat32_lib.a D$:/Facultate/Licenta/Implementare/Libraries/Ext2/lib/libext2_lib.a D$:/Facultate/Licenta/Implementare/Libraries/HFS/lib/libhfs_lib.a
+build TestingProgram.exe: CXX_EXECUTABLE_LINKER__TestingProgram_Debug CMakeFiles/TestingProgram.dir/main.cpp.obj CMakeFiles/TestingProgram.dir/src/utils.cpp.obj CMakeFiles/TestingProgram.dir/src/tests.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/FAT32/lib/libfat32_lib.a D$:/Facultate/Licenta/Implementare/Libraries/Ext2/lib/libext2_lib.a D$:/Facultate/Licenta/Implementare/Libraries/HFS/lib/libhfs_lib.a D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
   FLAGS = -g
-  LINK_LIBRARIES = D:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a  D:/Facultate/Licenta/Implementare/Libraries/FAT32/lib/libfat32_lib.a  D:/Facultate/Licenta/Implementare/Libraries/Ext2/lib/libext2_lib.a  D:/Facultate/Licenta/Implementare/Libraries/HFS/lib/libhfs_lib.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  LINK_LIBRARIES = D:/Facultate/Licenta/Implementare/Libraries/FAT32/lib/libfat32_lib.a  D:/Facultate/Licenta/Implementare/Libraries/Ext2/lib/libext2_lib.a  D:/Facultate/Licenta/Implementare/Libraries/HFS/lib/libhfs_lib.a  D:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\TestingProgram.dir
   POST_BUILD = cd .
   PRE_LINK = cd .

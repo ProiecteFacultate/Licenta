@@ -5,7 +5,7 @@
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
-#include "../include/structures.h"
+#include "../include/hfsStructures.h"
 #include "../include/hfsInit.h"
 #include "../include/utils.h"
 #include "../include/codes/hfsAttributes.h"
@@ -260,7 +260,7 @@ static void initializeAllocationFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* vo
     uint32_t numOfBitsRemainedToOccupy = numOfBlocksOccupiedByStructures % 8;
     uint8_t byte = 0;
     for(uint32_t bitIndex = 0; bitIndex < numOfBitsRemainedToOccupy; bitIndex++)
-        byte = changeBitValue(byte, bitIndex, 1);
+        byte = hfs_changeBitValue(byte, bitIndex, 1);
 
     buffer[numOfBytesToOccupyInBitmap - 1] = byte;
 
@@ -312,7 +312,7 @@ static void initializeExtentsOverflowFile(DiskInfo* diskInfo, HFSPlusVolumeHeade
     //copy header record in memory
     memcpy(nodeBuffer + 14, headerRecord, sizeof(BTHeaderRec));
     //mark first node in tree as occupied (in map record)
-    uint8_t byteValueForOccupiedFirstNode = changeBitValue(0, 0, 1);
+    uint8_t byteValueForOccupiedFirstNode = hfs_changeBitValue(0, 0, 1);
     uint32_t mapRecordIndex = sizeof(BTNodeDescriptor) + sizeof(BTHeaderRec) + 128;
     nodeBuffer[mapRecordIndex] = byteValueForOccupiedFirstNode;
 
@@ -367,7 +367,7 @@ static void initializeCatalogFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volum
     //copy header record in memory
     memcpy(nodeBuffer + 14, headerRecord, sizeof(BTHeaderRec));
     //mark first node and second in tree as occupied (in map record)
-    uint8_t byteValueForHeaderNode = changeBitValue(0, 0, 1); //header node
+    uint8_t byteValueForHeaderNode = hfs_changeBitValue(0, 0, 1); //header node
     uint32_t mapRecordIndex = sizeof(BTNodeDescriptor) + sizeof(BTHeaderRec) + 128;
     nodeBuffer[mapRecordIndex] = byteValueForHeaderNode;
 

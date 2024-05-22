@@ -5,7 +5,7 @@
 #include <ctype.h>
 
 #include "../include/diskUtils.h"
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 #include "../include/fat32Init.h"
 
 #ifndef FAT32_FAT32FUNCTIONUTILS_H

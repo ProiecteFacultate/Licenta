@@ -6,7 +6,7 @@
 #include "chrono"
 
 #include "../include/hfsApi.h"
-#include "../include/structures.h"
+#include "../include/hfsStructures.h"
 #include "../include/codes/hfsAttributes.h"
 #include "../include/codes/hfsApiResponseCodes.h"
 #include "../include/codes/hfsCodes.h"

@@ -6,7 +6,7 @@
 #include "vector"
 
 #include "../include/diskUtils.h"
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 #include "../include/fat32Init.h"
 
 #ifndef FAT32_UTILS_H
@@ -20,12 +20,12 @@ bool compareDirectoryNames(char* expected, const char* actual);
 
 void formatDirectoryName(const char* directoryName, char* formattedName);
 
-void extractParentPathFromPath(const char* fullPath, char* parentPath);
+void fat32_extractParentPathFromPath(const char* fullPath, char* parentPath);
 
-std::vector<std::string> splitString(const std::string& str, char delimiter);
+std::vector<std::string> fat32_splitString(const std::string& str, char delimiter);
 
-uint16_t getCurrentDateFormatted();
+uint16_t fat32_getCurrentDateFormatted();
 
-uint16_t getCurrentTimeFormatted();
+uint16_t fat32_getCurrentTimeFormatted();
 
 #endif

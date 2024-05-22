@@ -55,8 +55,6 @@ build CMakeFiles/HFS_.dir/src/main.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/hsfInit.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hsfInit.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\hsfInit.cpp.obj.d
@@ -64,8 +62,6 @@ build CMakeFiles/HFS_.dir/src/hsfInit.cpp.obj: CXX_COMPILER__HFS__unscanned_Debu
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/hfsFunctionUtils.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfsFunctionUtils.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\hfsFunctionUtils.cpp.obj.d
@@ -73,8 +69,6 @@ build CMakeFiles/HFS_.dir/src/hfsFunctionUtils.cpp.obj: CXX_COMPILER__HFS__unsca
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/utils.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/utils.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\utils.cpp.obj.d
@@ -82,8 +76,6 @@ build CMakeFiles/HFS_.dir/src/utils.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug 
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/hfsApi.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfsApi.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\hfsApi.cpp.obj.d
@@ -91,8 +83,6 @@ build CMakeFiles/HFS_.dir/src/hfsApi.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/catalog_file/bTreeCatalog.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/catalog_file/bTreeCatalog.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\catalog_file\bTreeCatalog.cpp.obj.d
@@ -100,8 +90,6 @@ build CMakeFiles/HFS_.dir/src/catalog_file/bTreeCatalog.cpp.obj: CXX_COMPILER__H
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src\catalog_file
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/catalog_file/catalogFileOperations.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/catalog_file/catalogFileOperations.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\catalog_file\catalogFileOperations.cpp.obj.d
@@ -109,8 +97,6 @@ build CMakeFiles/HFS_.dir/src/catalog_file/catalogFileOperations.cpp.obj: CXX_CO
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src\catalog_file
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/catalog_file/catalogFileUtils.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/catalog_file/catalogFileUtils.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\catalog_file\catalogFileUtils.cpp.obj.d
@@ -118,8 +104,6 @@ build CMakeFiles/HFS_.dir/src/catalog_file/catalogFileUtils.cpp.obj: CXX_COMPILE
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src\catalog_file
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/hfs.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfs.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\hfs.cpp.obj.d
@@ -127,8 +111,6 @@ build CMakeFiles/HFS_.dir/src/hfs.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/interface.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/interface.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\interface.cpp.obj.d
@@ -136,8 +118,6 @@ build CMakeFiles/HFS_.dir/src/interface.cpp.obj: CXX_COMPILER__HFS__unscanned_De
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/extents_file/bTreeCatalog.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/extents_file/bTreeCatalog.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\extents_file\bTreeCatalog.cpp.obj.d
@@ -145,8 +125,6 @@ build CMakeFiles/HFS_.dir/src/extents_file/bTreeCatalog.cpp.obj: CXX_COMPILER__H
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src\extents_file
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/extents_file/extentsFileOperations.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/extents_file/extentsFileOperations.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\extents_file\extentsFileOperations.cpp.obj.d
@@ -154,8 +132,6 @@ build CMakeFiles/HFS_.dir/src/extents_file/extentsFileOperations.cpp.obj: CXX_CO
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src\extents_file
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/extents_file/extentsFileUtils.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/extents_file/extentsFileUtils.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\extents_file\extentsFileUtils.cpp.obj.d
@@ -163,8 +139,6 @@ build CMakeFiles/HFS_.dir/src/extents_file/extentsFileUtils.cpp.obj: CXX_COMPILE
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src\extents_file
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 build CMakeFiles/HFS_.dir/src/hfsTestApi.cpp.obj: CXX_COMPILER__HFS__unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfsTestApi.cpp || cmake_object_order_depends_target_HFS_
   DEP_FILE = CMakeFiles\HFS_.dir\src\hfsTestApi.cpp.obj.d
@@ -172,8 +146,6 @@ build CMakeFiles/HFS_.dir/src/hfsTestApi.cpp.obj: CXX_COMPILER__HFS__unscanned_D
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\HFS_.dir
   OBJECT_FILE_DIR = CMakeFiles\HFS_.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
-  TARGET_PDB = HFS_.pdb
 
 
 # =============================================================================
@@ -189,10 +161,9 @@ build HFS_.exe: CXX_EXECUTABLE_LINKER__HFS__Debug CMakeFiles/HFS_.dir/src/main.c
   OBJECT_DIR = CMakeFiles\HFS_.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
-  TARGET_COMPILE_PDB = CMakeFiles\HFS_.dir\
   TARGET_FILE = HFS_.exe
   TARGET_IMPLIB = libHFS_.dll.a
-  TARGET_PDB = HFS_.pdb
+  TARGET_PDB = HFS_.exe.dbg
 
 # =============================================================================
 # Object build statements for STATIC_LIBRARY target hfs_lib
@@ -209,8 +180,6 @@ build CMakeFiles/hfs_lib.dir/src/main.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_D
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/hsfInit.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hsfInit.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\hsfInit.cpp.obj.d
@@ -218,8 +187,6 @@ build CMakeFiles/hfs_lib.dir/src/hsfInit.cpp.obj: CXX_COMPILER__hfs_lib_unscanne
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/hfsFunctionUtils.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfsFunctionUtils.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\hfsFunctionUtils.cpp.obj.d
@@ -227,8 +194,6 @@ build CMakeFiles/hfs_lib.dir/src/hfsFunctionUtils.cpp.obj: CXX_COMPILER__hfs_lib
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/utils.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/utils.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\utils.cpp.obj.d
@@ -236,8 +201,6 @@ build CMakeFiles/hfs_lib.dir/src/utils.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/hfsApi.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfsApi.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\hfsApi.cpp.obj.d
@@ -245,8 +208,6 @@ build CMakeFiles/hfs_lib.dir/src/hfsApi.cpp.obj: CXX_COMPILER__hfs_lib_unscanned
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/catalog_file/bTreeCatalog.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/catalog_file/bTreeCatalog.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\catalog_file\bTreeCatalog.cpp.obj.d
@@ -254,8 +215,6 @@ build CMakeFiles/hfs_lib.dir/src/catalog_file/bTreeCatalog.cpp.obj: CXX_COMPILER
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\catalog_file
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/catalog_file/catalogFileOperations.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/catalog_file/catalogFileOperations.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\catalog_file\catalogFileOperations.cpp.obj.d
@@ -263,8 +222,6 @@ build CMakeFiles/hfs_lib.dir/src/catalog_file/catalogFileOperations.cpp.obj: CXX
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\catalog_file
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/catalog_file/catalogFileUtils.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/catalog_file/catalogFileUtils.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\catalog_file\catalogFileUtils.cpp.obj.d
@@ -272,8 +229,6 @@ build CMakeFiles/hfs_lib.dir/src/catalog_file/catalogFileUtils.cpp.obj: CXX_COMP
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\catalog_file
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/hfs.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfs.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\hfs.cpp.obj.d
@@ -281,8 +236,6 @@ build CMakeFiles/hfs_lib.dir/src/hfs.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_De
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/interface.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/interface.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\interface.cpp.obj.d
@@ -290,8 +243,6 @@ build CMakeFiles/hfs_lib.dir/src/interface.cpp.obj: CXX_COMPILER__hfs_lib_unscan
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/extents_file/bTreeCatalog.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/extents_file/bTreeCatalog.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\extents_file\bTreeCatalog.cpp.obj.d
@@ -299,8 +250,6 @@ build CMakeFiles/hfs_lib.dir/src/extents_file/bTreeCatalog.cpp.obj: CXX_COMPILER
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\extents_file
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/extents_file/extentsFileOperations.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/extents_file/extentsFileOperations.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\extents_file\extentsFileOperations.cpp.obj.d
@@ -308,8 +257,6 @@ build CMakeFiles/hfs_lib.dir/src/extents_file/extentsFileOperations.cpp.obj: CXX
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\extents_file
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/extents_file/extentsFileUtils.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/extents_file/extentsFileUtils.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\extents_file\extentsFileUtils.cpp.obj.d
@@ -317,8 +264,6 @@ build CMakeFiles/hfs_lib.dir/src/extents_file/extentsFileUtils.cpp.obj: CXX_COMP
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src\extents_file
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 build CMakeFiles/hfs_lib.dir/src/hfsTestApi.cpp.obj: CXX_COMPILER__hfs_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/HFS+/src/hfsTestApi.cpp || cmake_object_order_depends_target_hfs_lib
   DEP_FILE = CMakeFiles\hfs_lib.dir\src\hfsTestApi.cpp.obj.d
@@ -326,8 +271,6 @@ build CMakeFiles/hfs_lib.dir/src/hfsTestApi.cpp.obj: CXX_COMPILER__hfs_lib_unsca
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\hfs_lib.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
-  TARGET_PDB = libhfs_lib.pdb
 
 
 # =============================================================================
@@ -342,9 +285,8 @@ build libhfs_lib.a: CXX_STATIC_LIBRARY_LINKER__hfs_lib_Debug CMakeFiles/hfs_lib.
   OBJECT_DIR = CMakeFiles\hfs_lib.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
-  TARGET_COMPILE_PDB = CMakeFiles\hfs_lib.dir\hfs_lib.pdb
   TARGET_FILE = libhfs_lib.a
-  TARGET_PDB = libhfs_lib.pdb
+  TARGET_PDB = hfs_lib.a.dbg
 
 
 #############################################
@@ -393,14 +335,14 @@ build all: phony HFS_.exe libhfs_lib.a
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja: RERUN_CMAKE | CMakeCache.txt CMakeFiles/3.28.1/CMakeCCompiler.cmake CMakeFiles/3.28.1/CMakeCXXCompiler.cmake CMakeFiles/3.28.1/CMakeRCCompiler.cmake CMakeFiles/3.28.1/CMakeSystem.cmake D$:/Facultate/Licenta/Implementare/HFS+/CMakeLists.txt D$:/Facultate/Licenta/Implementare/HFS+/cmake/FindDiskEmulation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCCompiler.cmake.in D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCCompilerABI.c D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCXXCompiler.cmake.in D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCXXInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCommonLanguageInclude.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCompilerIdDetection.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCompileFeatures.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineRCCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeFindBinUtils.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeGenericSystem.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeInitializeConfigs.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeLanguageInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeParseImplicitIncludeInfo.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeParseImplicitLinkInfo.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeParseLibraryArchitecture.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeRCCompiler.cmake.in D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeRCInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeSystem.cmake.in D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeSystemSpecificInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeSystemSpecificInitialize.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeTestCCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeTestCompilerCommon.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeTestRCCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/ADSP-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/ARMCC-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/ARMClang-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/AppleClang-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Borland-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Bruce-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/CMakeCommonCompilerMacros.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Clang-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Clang-DetermineCompilerInternal.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Comeau-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Compaq-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Compaq-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Cray-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/CrayClang-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Embarcadero-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Fujitsu-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/FujitsuClang-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GHS-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-C.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-CXX.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-FindBinUtils.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/HP-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/HP-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IAR-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IBMCPP-C-DetermineVersionInternal.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IBMClang-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IBMClang-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Intel-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IntelLLVM-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/LCC-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/LCC-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/MSVC-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/NVHPC-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/NVIDIA-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/OrangeC-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/PGI-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/PathScale-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/SCO-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/SDCC-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/SunPro-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/SunPro-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/TI-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Tasking-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/TinyCC-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/VisualAge-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/VisualAge-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Watcom-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/XL-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/XL-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/XLClang-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/XLClang-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/zOS-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/zOS-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPackageMessage.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPkgConfig.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Internal/FeatureTesting.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-Determine-CXX.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-C-ABI.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-C.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-CXX-ABI.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-CXX.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-Initialize.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-windres.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/WindowsPaths.cmake
+build build.ninja: RERUN_CMAKE | CMakeCache.txt CMakeFiles/3.28.1/CMakeCCompiler.cmake CMakeFiles/3.28.1/CMakeCXXCompiler.cmake CMakeFiles/3.28.1/CMakeRCCompiler.cmake CMakeFiles/3.28.1/CMakeSystem.cmake D$:/Facultate/Licenta/Implementare/HFS+/CMakeLists.txt D$:/Facultate/Licenta/Implementare/HFS+/cmake/FindDiskEmulation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCXXInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCommonLanguageInclude.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeGenericSystem.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeInitializeConfigs.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeLanguageInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeRCInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeSystemSpecificInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeSystemSpecificInitialize.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/CMakeCommonCompilerMacros.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-C.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-CXX.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPackageMessage.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPkgConfig.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-C-ABI.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-C.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-CXX-ABI.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-CXX.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-Initialize.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-windres.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/WindowsPaths.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build CMakeCache.txt CMakeFiles/3.28.1/CMakeCCompiler.cmake CMakeFiles/3.28.1/CMakeCXXCompiler.cmake CMakeFiles/3.28.1/CMakeRCCompiler.cmake CMakeFiles/3.28.1/CMakeSystem.cmake D$:/Facultate/Licenta/Implementare/HFS+/CMakeLists.txt D$:/Facultate/Licenta/Implementare/HFS+/cmake/FindDiskEmulation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCCompiler.cmake.in D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCCompilerABI.c D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCXXCompiler.cmake.in D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCXXInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCommonLanguageInclude.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCompilerIdDetection.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCompileFeatures.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineRCCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeFindBinUtils.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeGenericSystem.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeInitializeConfigs.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeLanguageInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeParseImplicitIncludeInfo.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeParseImplicitLinkInfo.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeParseLibraryArchitecture.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeRCCompiler.cmake.in D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeRCInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeSystem.cmake.in D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeSystemSpecificInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeSystemSpecificInitialize.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeTestCCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeTestCompilerCommon.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeTestRCCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/ADSP-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/ARMCC-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/ARMClang-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/AppleClang-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Borland-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Bruce-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/CMakeCommonCompilerMacros.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Clang-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Clang-DetermineCompilerInternal.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Comeau-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Compaq-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Compaq-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Cray-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/CrayClang-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Embarcadero-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Fujitsu-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/FujitsuClang-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GHS-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-C.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-CXX.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-FindBinUtils.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/HP-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/HP-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IAR-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IBMCPP-C-DetermineVersionInternal.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IBMClang-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IBMClang-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Intel-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/IntelLLVM-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/LCC-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/LCC-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/MSVC-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/NVHPC-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/NVIDIA-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/OrangeC-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/PGI-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/PathScale-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/SCO-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/SDCC-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/SunPro-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/SunPro-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/TI-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Tasking-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/TinyCC-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/VisualAge-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/VisualAge-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/Watcom-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/XL-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/XL-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/XLClang-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/XLClang-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/zOS-C-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/zOS-CXX-DetermineCompiler.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPackageMessage.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPkgConfig.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Internal/FeatureTesting.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-Determine-CXX.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-C-ABI.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-C.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-CXX-ABI.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-CXX.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-Initialize.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-windres.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/WindowsPaths.cmake: phony
+build CMakeCache.txt CMakeFiles/3.28.1/CMakeCCompiler.cmake CMakeFiles/3.28.1/CMakeCXXCompiler.cmake CMakeFiles/3.28.1/CMakeRCCompiler.cmake CMakeFiles/3.28.1/CMakeSystem.cmake D$:/Facultate/Licenta/Implementare/HFS+/CMakeLists.txt D$:/Facultate/Licenta/Implementare/HFS+/cmake/FindDiskEmulation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCXXInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeCommonLanguageInclude.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeGenericSystem.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeInitializeConfigs.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeLanguageInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeRCInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeSystemSpecificInformation.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/CMakeSystemSpecificInitialize.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/CMakeCommonCompilerMacros.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-C.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU-CXX.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Compiler/GNU.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPackageMessage.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/FindPkgConfig.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-C-ABI.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-C.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-CXX-ABI.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU-CXX.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-GNU.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-Initialize.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows-windres.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/Windows.cmake D$:/Softs/CLion/CLion$ 2024.1/bin/cmake/win/x64/share/cmake-3.28/Modules/Platform/WindowsPaths.cmake: phony
 
 
 #############################################

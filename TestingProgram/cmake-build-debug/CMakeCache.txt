@@ -249,6 +249,12 @@ DISKEMULATION_INCLUDE_DIR:PATH=D:/Facultate/Licenta/Implementare/Libraries/DiskE
 DISKEMULATION_LIBRARY:FILEPATH=D:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
 
 //Path to a file.
+EXT2_INCLUDE_DIR:PATH=D:/Facultate/Licenta/Implementare/Libraries/Ext2/include
+
+//Path to a library.
+EXTt2_LIBRARY:FILEPATH=D:/Facultate/Licenta/Implementare/Libraries/Ext2/lib/libext2_lib.a
+
+//Path to a file.
 Ext2_INCLUDE_DIR:PATH=D:/Facultate/Licenta/Implementare/Libraries/Ext2/include
 
 //Path to a library.
@@ -259,9 +265,6 @@ FAT32_INCLUDE_DIR:PATH=D:/Facultate/Licenta/Implementare/Libraries/FAT32/include
 
 //Path to a library.
 FAT32_LIBRARY:FILEPATH=D:/Facultate/Licenta/Implementare/Libraries/FAT32/lib/libfat32_lib.a
-
-//Path to a file.
-HFS+_INCLUDE_DIR:PATH=D:/Facultate/Licenta/Implementare/Libraries/HFS/include
 
 //Path to a file.
 HFS_INCLUDE_DIR:PATH=D:/Facultate/Licenta/Implementare/Libraries/HFS/include

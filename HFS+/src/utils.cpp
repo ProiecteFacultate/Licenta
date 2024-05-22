@@ -6,14 +6,14 @@
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
-#include "../include/structures.h"
+#include "../include/hfsStructures.h"
 #include "../include/utils.h"
 
 uint32_t getExtentsOverflowFileNodeSize() { return 1024; }
 
 uint32_t getCatalogFileNodeSize() { return 4096; }
 
-uint32_t getBitFromByte(uint8_t byte, uint32_t bitIndexInByte)
+uint32_t hfs_getBitFromByte(uint8_t byte, uint32_t bitIndexInByte)
 {
     switch (bitIndexInByte) {
         case 0:
@@ -35,7 +35,7 @@ uint32_t getBitFromByte(uint8_t byte, uint32_t bitIndexInByte)
     }
 }
 
-uint32_t changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitValue)
+uint32_t hfs_changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitValue)
 {
     switch (bitIndexInByte) {
         case 0:
@@ -59,7 +59,7 @@ uint32_t changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitVa
 
 ////////////////////Utils that are not directly related with HFS
 
-std::vector<std::string> splitString(const std::string& str, char delimiter)
+std::vector<std::string> hfs_splitString(const std::string& str, char delimiter)
 {
     std::vector<std::string> tokens;
     std::string token;
@@ -80,7 +80,7 @@ std::vector<std::string> splitString(const std::string& str, char delimiter)
     return tokens;
 }
 
-uint32_t getCurrentTimeDateAndTimeFormatted()
+uint32_t hfs_getCurrentTimeDateAndTimeFormatted()
 {
     SYSTEMTIME time;
     GetSystemTime(&time);

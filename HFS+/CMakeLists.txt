@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 add_executable(HFS_ src/main.cpp
-        include/structures.h
+        include/hfsStructures.h
         include/hfsInit.h
         src/hsfInit.cpp
         include/hfsFunctionUtils.h
@@ -49,7 +49,7 @@ target_link_libraries(${PROJECT_NAME} ${DISKEMULATION_LIBRARY})
 
 #to export this as a library
 set(SOURCE_FILES src/main.cpp
-        include/structures.h
+        include/hfsStructures.h
         include/hfsInit.h
         src/hsfInit.cpp
         include/hfsFunctionUtils.h

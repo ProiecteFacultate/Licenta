@@ -4,7 +4,7 @@
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
-#include "../include/structures.h"
+#include "../include/ext2Structures.h"
 #include "../include/ext2.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/utils.h"
@@ -389,7 +389,7 @@ uint32_t getNumberOfOccupiedInodesInGroup(DiskInfo* diskInfo, ext2_super_block* 
         return GET_NUMBER_OF_OCCUPIED_INODE_IN_BLOCK_FAILED;
     }
 
-    while(getBitFromByte(blockBuffer[numberOfOccupiedInodes / 8], numberOfOccupiedInodes % 8) == 1)
+    while(ext2_getBitFromByte(blockBuffer[numberOfOccupiedInodes / 8], numberOfOccupiedInodes % 8) == 1)
         numberOfOccupiedInodes++;
 
     delete[] blockBuffer;
@@ -484,7 +484,7 @@ uint32_t updateValueInInodeBitmap(DiskInfo* diskInfo, ext2_super_block* superBlo
     }
 
     uint32_t inodeLocalIndex = inodeGlobalIndex % superBlock->s_inodes_per_group;
-    uint8_t newByteValue = changeBitValue(blockBuffer[inodeLocalIndex / 8], inodeLocalIndex % 8, newValue);
+    uint8_t newByteValue = ext2_changeBitValue(blockBuffer[inodeLocalIndex / 8], inodeLocalIndex % 8, newValue);
     memset(blockBuffer + inodeLocalIndex / 8, newByteValue, 1);
 
     uint32_t numOfSectorsWritten;
@@ -515,7 +515,7 @@ uint32_t updateValueInDataBlockBitmap(DiskInfo* diskInfo, ext2_super_block* supe
     uint32_t firstDataBlockForGivenGroup = getFirstDataBlockForGivenGroup(superBlock, groupOfBlock);
  //   uint32_t dataBlockLocalIndex = dataBlockGlobalIndex % getNumberOfBlocksForGivenGroup(superBlock, 0) - firstDataBlockForGivenGroup; //local index in list of data blocks: 0,1,2..
     uint32_t dataBlockLocalIndex = dataBlockGlobalIndex - firstDataBlockForGivenGroup;
-    uint8_t newByteValue = changeBitValue(blockBuffer[dataBlockLocalIndex / 8], dataBlockLocalIndex % 8, newValue);
+    uint8_t newByteValue = ext2_changeBitValue(blockBuffer[dataBlockLocalIndex / 8], dataBlockLocalIndex % 8, newValue);
     memset(blockBuffer + dataBlockLocalIndex / 8, newByteValue, 1);
 
     uint32_t numOfSectorsWritten;
@@ -639,7 +639,7 @@ void updateInodeLastAccessedDataAndTime(DiskInfo* diskInfo, ext2_super_block* su
         return;
     }
 
-    updatedInode->i_atime = getCurrentTimeDateAndTimeFormatted();
+    updatedInode->i_atime = ext2_getCurrentTimeDateAndTimeFormatted();
     updateInode(diskInfo, superBlock, inode, updatedInode);
     delete updatedInode;
 }
@@ -658,7 +658,7 @@ void updateInodeLastChangeDataAndTime(DiskInfo* diskInfo, ext2_super_block* supe
         return;
     }
 
-    updatedInode->i_mtime = getCurrentTimeDateAndTimeFormatted();
+    updatedInode->i_mtime = ext2_getCurrentTimeDateAndTimeFormatted();
     updateInode(diskInfo, superBlock, inode, updatedInode);
     delete updatedInode;
 }

@@ -5,7 +5,7 @@
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
-#include "../include/structures.h"
+#include "../include/ext2Structures.h"
 #include "../include/ext2FunctionUtils.h"
 #include "../include/ext2Heuristics.h"
 #include "../include/codes/ext2Attributes.h"
@@ -95,7 +95,7 @@ uint32_t searchAndOccupyMultipleBlocksInGivenGroup(DiskInfo* diskInfo, ext2_supe
     {
         bool allBitsZero = true;
         for(bitIndex = startingBitIndex; bitIndex < startingBitIndex + numOfBlocks; bitIndex++)
-            if(getBitFromByte(blockBuffer[bitIndex / 8], bitIndex % 8) == 1)
+            if(ext2_getBitFromByte(blockBuffer[bitIndex / 8], bitIndex % 8) == 1)
             {
                 allBitsZero = false;
                 break;

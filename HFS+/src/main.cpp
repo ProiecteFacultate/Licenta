@@ -6,7 +6,7 @@
 #include "../include/disk.h"
 #include "../include/diskUtils.h"
 #include "../include/diskCodes.h"
-#include "../include/structures.h"
+#include "../include/hfsStructures.h"
 #include "../include/hfsInit.h"
 #include "../include/utils.h"
 #include "../include/hfsFunctionUtils.h"
@@ -39,7 +39,7 @@ int main() {
             break;
         }
 
-        std::vector<std::string> tokens = splitString(command, ' ');
+        std::vector<std::string> tokens = hfs_splitString(command, ' ');
 
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 

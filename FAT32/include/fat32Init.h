@@ -4,7 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 
 #ifndef FAT32INIT_FAT32INIT_H
 #define FAT32INIT_FAT32INIT_H
@@ -14,8 +14,8 @@
 //set these values to anything
 void fat32Startup(char* diskDirectory, DiskInfo** diskInfo, BootSector** bootSector, FsInfo** fsInfo, uint32_t sectorsNumber, uint32_t sectorSize);
 
-bool checkDiskInitialization(char* diskDirectory);
-void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize);
+static bool checkDiskInitialization(char* diskDirectory);
+static void initializeDisk(char* diskDirectory, DiskInfo** diskInfo, uint32_t sectorsNumber, uint32_t sectorSize);
 
 bool checkFat32FileSystemInitialization(DiskInfo* diskInfo);
 

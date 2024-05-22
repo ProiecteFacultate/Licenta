@@ -2,7 +2,7 @@
 #include "string"
 
 #include "diskUtils.h"
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 
 #ifndef FAT32_FAT32TESTAPI_H
 #define FAT32_FAT32TESTAPI_H

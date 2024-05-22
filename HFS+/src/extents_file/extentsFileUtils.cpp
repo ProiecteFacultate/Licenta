@@ -1,7 +1,7 @@
 #include "string.h"
 
 #include "../include/disk.h"
-#include "../../include/structures.h"
+#include "../../include/hfsStructures.h"
 #include "../../include/utils.h"
 #include "../../include/hfs.h"
 #include "../../include/hfsFunctionUtils.h"
@@ -11,14 +11,14 @@
 int32_t eof_compareKeys(ExtentsFileCatalogKey * key1, ExtentsFileCatalogKey * key2)
 {
 
-    if(key1->fileId > key2->fileId)
+    if((int) key1->fileId > (int) key2->fileId)
         return EOF_KEY_1_HIGHER;
-    else if(key1->fileId < key2->fileId)
+    else if((int) key1->fileId < (int) key2->fileId)
         return EOF_KEY_2_HIGHER;
 
-    if(key1->extentOverflowIndex > key2->extentOverflowIndex)
+    if((int) key1->extentOverflowIndex > (int) key2->extentOverflowIndex)
         return EOF_KEY_1_HIGHER;
-    else if(key1->extentOverflowIndex < key2->extentOverflowIndex)
+    else if((int) key1->extentOverflowIndex < (int) key2->extentOverflowIndex)
         return EOF_KEY_2_HIGHER;
 
     return EOF_KEYS_EQUAL;
@@ -32,7 +32,7 @@ ExtentsFileHeaderNode* eof_updateNodeOccupiedInHeaderNodeMapRecord(ExtentsFileHe
     uint32_t byteIndexForNodeNumber = nodeNumber / 8;
     uint32_t bitIndexForNodeNumber = nodeNumber % 8;
 
-    uint8_t newByteValueForNodes = changeBitValue(byteIndexForNodeNumber, bitIndexForNodeNumber, newValue);
+    uint8_t newByteValueForNodes = hfs_changeBitValue(byteIndexForNodeNumber, bitIndexForNodeNumber, newValue);
     updatedExtentsFileHeaderNode->mapRecordAndOffsets[byteIndexForNodeNumber] = newByteValueForNodes;
 
     return updatedExtentsFileHeaderNode;

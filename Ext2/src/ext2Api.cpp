@@ -4,7 +4,7 @@
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
-#include "../include/structures.h"
+#include "../include/ext2Structures.h"
 #include "../include/ext2FunctionUtils.h"
 #include "../include/ext2BlocksAllocation.h"
 #include "../include/codes/ext2Attributes.h"
@@ -313,7 +313,7 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, ext2_super_block* superBlock,
         return DELETE_DIRECTORY_CAN_NOT_DELETE_ROOT;
 
     char* parentPath = new char[strlen(directoryPath)];
-    extractParentPathFromPath(directoryPath, parentPath);
+    ext2_extractParentPathFromPath(directoryPath, parentPath);
 
     bool isParentRoot;
     ext2_inode *actualInode = nullptr;
@@ -350,7 +350,7 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, ext2_super_block* superBlock,
 uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, ext2_super_block* superBlock, char* directoryPath, Ext2DirectoryDisplayableAttributes* attributes)
 {
     char* parentPath = new char[strlen(directoryPath)];
-    extractParentPathFromPath(directoryPath, parentPath);
+    ext2_extractParentPathFromPath(directoryPath, parentPath);
 
     bool isParentRoot;
     ext2_inode *actualInode = nullptr;

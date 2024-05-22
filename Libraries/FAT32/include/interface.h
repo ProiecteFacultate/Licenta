@@ -1,6 +1,6 @@
 #include "vector"
 #include "string"
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 
 #ifndef FAT32_INTERFACE_H
 #define FAT32_INTERFACE_H

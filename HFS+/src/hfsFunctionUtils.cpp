@@ -4,7 +4,7 @@
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
-#include "../include/structures.h"
+#include "../include/hfsStructures.h"
 #include "../include/utils.h"
 #include "../include/codes/hfsCodes.h"
 #include "../include/hfsFunctionUtils.h"
@@ -97,7 +97,7 @@ uint32_t changeBlockAllocationInAllocationFile(DiskInfo* diskInfo, HFSPlusVolume
         return CHANGE_BLOCK_ALLOCATION_FAILED;
     }
 
-    uint8_t newByteValue = changeBitValue(blockBuffer[byteIndexInBlock], bitIndex, newValue);
+    uint8_t newByteValue = hfs_changeBitValue(blockBuffer[byteIndexInBlock], bitIndex, newValue);
     blockBuffer[byteIndexInBlock] = newByteValue;
 
     uint32_t writeResult = writeDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, volumeHeader),
@@ -111,7 +111,7 @@ void updateCatalogDirectoryRecordCreatedDateAndTime(DiskInfo* diskInfo, HFSPlusV
 {
     CatalogDirectoryRecord* updatedRecord = new CatalogDirectoryRecord();
     memcpy(updatedRecord, directoryRecord, sizeof(CatalogDirectoryRecord));
-    updatedRecord->catalogData.createDate = getCurrentTimeDateAndTimeFormatted();
+    updatedRecord->catalogData.createDate = hfs_getCurrentTimeDateAndTimeFormatted();
 
     cf_updateRecordOnDisk(diskInfo, volumeHeader, directoryRecord, updatedRecord, nodeOfRecord);
 }
@@ -120,7 +120,7 @@ void updateCatalogDirectoryRecordLastAccessedDateAndTime(DiskInfo* diskInfo, HFS
 {
     CatalogDirectoryRecord* updatedRecord = new CatalogDirectoryRecord();
     memcpy(updatedRecord, directoryRecord, sizeof(CatalogDirectoryRecord));
-    updatedRecord->catalogData.accessDate = getCurrentTimeDateAndTimeFormatted();
+    updatedRecord->catalogData.accessDate = hfs_getCurrentTimeDateAndTimeFormatted();
 
     cf_updateRecordOnDisk(diskInfo, volumeHeader, directoryRecord, updatedRecord, nodeOfRecord);
 }
@@ -129,7 +129,7 @@ void updateCatalogDirectoryRecordLastModifiedDateAndTime(DiskInfo* diskInfo, HFS
 {
     CatalogDirectoryRecord* updatedRecord = new CatalogDirectoryRecord();
     memcpy(updatedRecord, directoryRecord, sizeof(CatalogDirectoryRecord));
-    updatedRecord->catalogData.accessDate = getCurrentTimeDateAndTimeFormatted();
+    updatedRecord->catalogData.accessDate = hfs_getCurrentTimeDateAndTimeFormatted();
 
     cf_updateRecordOnDisk(diskInfo, volumeHeader, directoryRecord, updatedRecord, nodeOfRecord);
 }

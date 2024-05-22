@@ -2,7 +2,7 @@
 #include "string"
 
 #include "diskUtils.h"
-#include "../include/structures.h"
+#include "../include/hfsStructures.h"
 
 #ifndef HFS__HFSTESTAPI_H
 #define HFS__HFSTESTAPI_H

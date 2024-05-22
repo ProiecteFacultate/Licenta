@@ -2,7 +2,7 @@
 #include "chrono"
 
 #include "../include/fat32Api.h"
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 #include "../include/fat32FunctionUtils.h"
 #include "../include/fat32.h"
 #include "../include/codes/fat32ApiResponseCodes.h"

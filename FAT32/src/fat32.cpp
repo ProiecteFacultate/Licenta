@@ -9,7 +9,7 @@
 #include "../include/diskCodes.h"
 #include "../include/fat32Init.h"
 #include "../include/utils.h"
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 #include "../include/fat32FunctionUtils.h"
 #include "../include/codes/fat32ApiResponseCodes.h"
 #include "../include/codes/fat32Codes.h"
@@ -231,7 +231,7 @@ uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, BootSector* bootSector, D
         return DIR_ENTRY_ADD_FAILED;
 
     parentDirectoryEntry->FileSize += 32; //we also want to update the parent directory entry file size
-    parentDirectoryEntry->LastAccessedDate = getCurrentDateFormatted();
+    parentDirectoryEntry->LastAccessedDate = fat32_getCurrentDateFormatted();
     //we can use parentDirectoryEntry for both with no problem
     uint32_t updateParentDirectoryEntryResult = updateDirectoryEntry(diskInfo, bootSector, parentDirectoryEntry, parentDirectoryEntry);
 
@@ -676,7 +676,7 @@ uint32_t deleteDirectoryEntryFromParent(DiskInfo* diskInfo, BootSector* bootSect
             DirectoryEntry* newParentDirectoryEntry = new DirectoryEntry();
             memcpy(newParentDirectoryEntry, parentDirectoryEntry, 32);
             newParentDirectoryEntry->FileSize -= 32;
-            newParentDirectoryEntry->LastAccessedDate = getCurrentDateFormatted();
+            newParentDirectoryEntry->LastAccessedDate = fat32_getCurrentDateFormatted();
             uint32_t updateParentDirectoryEntryResult = updateDirectoryEntry(diskInfo, bootSector, parentDirectoryEntry, newParentDirectoryEntry);
 
             if(updateParentDirectoryEntryResult == DIRECTORY_ENTRY_UPDATE_FAILED)

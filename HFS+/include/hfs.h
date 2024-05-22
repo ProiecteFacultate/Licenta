@@ -1,5 +1,5 @@
 #include "disk.h"
-#include "structures.h"
+#include "hfsStructures.h"
 
 #ifndef HFS__HFS_H
 #define HFS__HFS_H

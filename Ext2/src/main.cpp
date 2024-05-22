@@ -34,7 +34,7 @@ int main() {
             break;
         }
 
-        std::vector<std::string> tokens = splitString(command, ' ');
+        std::vector<std::string> tokens = ext2_splitString(command, ' ');
 
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 

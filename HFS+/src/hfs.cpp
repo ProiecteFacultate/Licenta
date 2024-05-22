@@ -5,7 +5,7 @@
 
 #include "disk.h"
 #include "diskCodes.h"
-#include "../include/structures.h"
+#include "../include/hfsStructures.h"
 #include "../include/utils.h"
 #include "../include/hfsFunctionUtils.h"
 #include "../include/codes/hfsCodes.h"
@@ -297,7 +297,7 @@ static uint32_t searchFreeExtentOfGivenNumberOfBlocks(DiskInfo* diskInfo, HFSPlu
             }
         }
 
-        if(getBitFromByte(allocationFileBlocks[byteIndexInBuffer], bitIndexInByte) == 0)
+        if(hfs_getBitFromByte(allocationFileBlocks[byteIndexInBuffer], bitIndexInByte) == 0)
         {
             if(foundExtent->startBlock == 0)
             {

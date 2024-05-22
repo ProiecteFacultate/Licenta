@@ -10,15 +10,15 @@
 uint32_t getExtentsOverflowFileNodeSize();
 uint32_t getCatalogFileNodeSize();
 
-uint32_t getBitFromByte(uint8_t byte, uint32_t bitIndexInByte);
+uint32_t hfs_getBitFromByte(uint8_t byte, uint32_t bitIndexInByte);
 
 //CAUTION new bit value is given as a byte, but it should be either 0 or 1
-uint32_t changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitValue);
+uint32_t hfs_changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitValue);
 
 /////////////////////////
 
-std::vector<std::string> splitString(const std::string& str, char delimiter);
+std::vector<std::string> hfs_splitString(const std::string& str, char delimiter);
 
-uint32_t getCurrentTimeDateAndTimeFormatted();
+uint32_t hfs_getCurrentTimeDateAndTimeFormatted();
 
 #endif

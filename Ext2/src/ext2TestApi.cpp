@@ -3,7 +3,7 @@
 #include "chrono"
 
 #include "../include/ext2Api.h"
-#include "../include/structures.h"
+#include "../include/ext2Structures.h"
 #include "../include/ext2TestApi.h"
 
 uint32_t ext2_create_directory(DiskInfo* diskInfo, ext2_super_block* superBlock, char* parentPath, char* directoryName, int16_t type, int64_t& timeElapsedMilliseconds)

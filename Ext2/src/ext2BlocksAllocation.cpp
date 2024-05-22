@@ -5,7 +5,7 @@
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
-#include "../include/structures.h"
+#include "../include/ext2Structures.h"
 #include "../include/ext2FunctionUtils.h"
 #include "../include/codes/ext2Attributes.h"
 #include "../include/codes/ext2Codes.h"
@@ -116,7 +116,8 @@ uint32_t updateBlockAllocation(DiskInfo* diskInfo, ext2_super_block* superBlock,
     }
 
     uint32_t blockLocalIndexInDataBlockList = getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(superBlock, blockGlobalIndex);
-    uint8_t newByteValue = changeBitValue(blockBuffer[blockLocalIndexInDataBlockList / 8], blockLocalIndexInDataBlockList % 8, newAllocationValue);
+    uint8_t newByteValue = ext2_changeBitValue(blockBuffer[blockLocalIndexInDataBlockList / 8],
+                                               blockLocalIndexInDataBlockList % 8, newAllocationValue);
     memset(blockBuffer + blockLocalIndexInDataBlockList / 8, newByteValue, 1);
 
     uint32_t writeResult = writeDiskSectors(diskInfo , numOfSectorsPerBlock, getFirstSectorForGivenBlock(diskInfo, superBlock, dataBitmapBlock),
@@ -599,9 +600,12 @@ static uint32_t searchAndOccupyFreeDataBlockInGivenGroup(DiskInfo* diskInfo, ext
 
     uint32_t preferredLocation = previousBlockLocalIndex + 1;
     uint32_t preferredBlockLocalIndexInDataBlockList = getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(superBlock, preferredLocation);
-    if(previousBlockLocalIndex != BIG_VALUE && getBitFromByte(blockBuffer[preferredBlockLocalIndexInDataBlockList / 8], preferredBlockLocalIndexInDataBlockList % 8) == 0)
+    if(previousBlockLocalIndex != BIG_VALUE &&
+            ext2_getBitFromByte(blockBuffer[preferredBlockLocalIndexInDataBlockList / 8],
+                                preferredBlockLocalIndexInDataBlockList % 8) == 0)
     {
-        uint8_t newByteValue = changeBitValue(blockBuffer[preferredBlockLocalIndexInDataBlockList / 8], preferredBlockLocalIndexInDataBlockList % 8, 1);
+        uint8_t newByteValue = ext2_changeBitValue(blockBuffer[preferredBlockLocalIndexInDataBlockList / 8],
+                                                   preferredBlockLocalIndexInDataBlockList % 8, 1);
         memset(blockBuffer + preferredBlockLocalIndexInDataBlockList / 8, newByteValue, 1);
 
         uint32_t numOfSectorsWritten;
@@ -615,9 +619,9 @@ static uint32_t searchAndOccupyFreeDataBlockInGivenGroup(DiskInfo* diskInfo, ext
     }
 
     for(uint32_t bitIndex = 0; bitIndex < getNumberOfDataBlocksForGivenGroup(superBlock, group); bitIndex++)
-        if(getBitFromByte(blockBuffer[bitIndex / 8], bitIndex % 8) == 0)
+        if(ext2_getBitFromByte(blockBuffer[bitIndex / 8], bitIndex % 8) == 0)
         {
-            uint8_t newByteValue = changeBitValue(blockBuffer[bitIndex / 8], bitIndex % 8, 1);
+            uint8_t newByteValue = ext2_changeBitValue(blockBuffer[bitIndex / 8], bitIndex % 8, 1);
             memset(blockBuffer + bitIndex / 8, newByteValue, 1);
 
             uint32_t numOfSectorsWritten;

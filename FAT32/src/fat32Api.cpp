@@ -9,7 +9,7 @@
 #include "../include/diskCodes.h"
 #include "../include/fat32Init.h"
 #include "../include/utils.h"
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 #include "../include/codes/fat32Codes.h"
 #include "../include/codes/fat32ApiResponseCodes.h"
 #include "../include/codes/fat32Attributes.h"
@@ -134,9 +134,9 @@ uint32_t write(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, 
 
         DirectoryEntry* newDirectoryEntry = new DirectoryEntry();
         memcpy(newDirectoryEntry, actualDirectoryEntry, 32);
-        newDirectoryEntry->LastAccessedDate = getCurrentDateFormatted();
+        newDirectoryEntry->LastAccessedDate = fat32_getCurrentDateFormatted();
         newDirectoryEntry->LastWriteDate = newDirectoryEntry->LastAccessedDate;
-        newDirectoryEntry->LastWriteTime = getCurrentTimeFormatted();
+        newDirectoryEntry->LastWriteTime = fat32_getCurrentTimeFormatted();
         updateDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, newDirectoryEntry); //CAUTION we don't query this, so if it fails, we have corrupted data
 
         delete actualDirectoryEntry, delete newDirectoryEntry;
@@ -212,7 +212,7 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
 
             DirectoryEntry* newDirectoryEntry = new DirectoryEntry();
             memcpy(newDirectoryEntry, actualDirectoryEntry, 32);
-            newDirectoryEntry->LastAccessedDate = getCurrentDateFormatted();
+            newDirectoryEntry->LastAccessedDate = fat32_getCurrentDateFormatted();
             //CAUTION we don't query this, so if it fails, we have bad data for time & date(unimportant anyway)
             updateDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, newDirectoryEntry);
 
@@ -237,7 +237,7 @@ uint32_t read(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, c
 
     DirectoryEntry* newDirectoryEntry = new DirectoryEntry();
     memcpy(newDirectoryEntry, actualDirectoryEntry, 32);
-    newDirectoryEntry->LastAccessedDate = getCurrentDateFormatted();
+    newDirectoryEntry->LastAccessedDate = fat32_getCurrentDateFormatted();
     //CAUTION we don't query this, so if it fails, we have bad data for time & date(unimportant anyway)
     updateDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, newDirectoryEntry);
 
@@ -269,9 +269,9 @@ uint32_t truncateFile(DiskInfo* diskInfo, BootSector* bootSector, char* director
     DirectoryEntry* newDirectoryEntry = new DirectoryEntry();
     memcpy(newDirectoryEntry, actualDirectoryEntry, 32);
     newDirectoryEntry->FileSize = newSize;
-    newDirectoryEntry->LastAccessedDate = getCurrentDateFormatted();
+    newDirectoryEntry->LastAccessedDate = fat32_getCurrentDateFormatted();
     newDirectoryEntry->LastWriteDate = newDirectoryEntry->LastWriteDate;
-    newDirectoryEntry->LastWriteTime = getCurrentTimeFormatted();
+    newDirectoryEntry->LastWriteTime = fat32_getCurrentTimeFormatted();
     uint32_t directoryEntryUpdateResult = updateDirectoryEntry(diskInfo, bootSector, actualDirectoryEntry, newDirectoryEntry);
 
     if(directoryEntryUpdateResult == DIRECTORY_ENTRY_UPDATE_FAILED)
@@ -301,7 +301,7 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, BootSector* bootSector, char*
         return DELETE_DIRECTORY_CAN_NOT_DELETE_ROOT;
 
     char* parentPath = new char[strlen(directoryPath)];
-    extractParentPathFromPath(directoryPath, parentPath);
+    fat32_extractParentPathFromPath(directoryPath, parentPath);
 
     DirectoryEntry* actualDirectoryEntry = nullptr;
     uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
@@ -326,7 +326,7 @@ uint32_t deleteDirectoryByPath(DiskInfo* diskInfo, BootSector* bootSector, char*
 uint32_t getDirectoryFullSizeByPath(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, uint32_t& size, uint32_t& sizeOnDisk)
 {
     char* parentPath = new char[strlen(directoryPath)];
-    extractParentPathFromPath(directoryPath, parentPath);
+    fat32_extractParentPathFromPath(directoryPath, parentPath);
 
     DirectoryEntry* actualDirectoryEntry = nullptr;
     uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,
@@ -347,7 +347,7 @@ uint32_t getDirectoryFullSizeByPath(DiskInfo* diskInfo, BootSector* bootSector, 
 uint32_t getDirectoryDisplayableAttributes(DiskInfo* diskInfo, BootSector* bootSector, char* directoryPath, Fat32DirectoryDisplayableAttributes* attributes)
 {
     char* parentPath = new char[strlen(directoryPath)];
-    extractParentPathFromPath(directoryPath, parentPath);
+    fat32_extractParentPathFromPath(directoryPath, parentPath);
 
     DirectoryEntry* actualDirectoryEntry = nullptr;
     uint32_t findDirectoryEntryResult = findDirectoryEntryByFullPath(diskInfo, bootSector, directoryPath,

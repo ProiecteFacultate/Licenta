@@ -6,7 +6,7 @@
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
-#include "../include/structures.h"
+#include "../include/ext2Structures.h"
 #include "../include/ext2FunctionUtils.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/codes/ext2Attributes.h"
@@ -229,7 +229,7 @@ static uint32_t searchFirstFreeInodeInGroup(DiskInfo* diskInfo, ext2_super_block
     }
 
     for(uint32_t bitIndex = 0; bitIndex < getNumberOfInodesForGivenGroup(superBlock, group); bitIndex++)
-        if(getBitFromByte(blockBuffer[bitIndex / 8], bitIndex % 8) == 0)
+        if(ext2_getBitFromByte(blockBuffer[bitIndex / 8], bitIndex % 8) == 0)
         {
             firstFreeInodeInGroupGlobalIndex = group * getNumberOfInodesForGivenGroup(superBlock, 0) + bitIndex;
             delete[] blockBuffer;
@@ -261,7 +261,7 @@ static uint32_t calculateGroupDebt(DiskInfo* diskInfo, ext2_super_block* superBl
 
     for(uint32_t inodeIndex = 0; ; inodeIndex++)
     {
-        if(getBitFromByte(blockBuffer[inodeIndex / 8], inodeIndex % 8) == 1)
+        if(ext2_getBitFromByte(blockBuffer[inodeIndex / 8], inodeIndex % 8) == 1)
         {
             if(inodeIndex % numberOfInodesPerBlock == 0) //read a new block from inodes table
             {

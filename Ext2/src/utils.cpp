@@ -6,11 +6,11 @@
 
 #include "../include/disk.h"
 #include "../include/diskCodes.h"
-#include "../include/structures.h"
+#include "../include/ext2Structures.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/utils.h"
 
-uint32_t getBitFromByte(uint8_t byte, uint32_t bitIndexInByte)
+uint32_t ext2_getBitFromByte(uint8_t byte, uint32_t bitIndexInByte)
 {
     switch (bitIndexInByte) {
         case 0:
@@ -32,7 +32,7 @@ uint32_t getBitFromByte(uint8_t byte, uint32_t bitIndexInByte)
     }
 }
 
-uint32_t changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitValue)
+uint32_t ext2_changeBitValue(uint32_t byte, uint32_t bitIndexInByte, uint8_t newBitValue)
 {
     switch (bitIndexInByte) {
         case 0:
@@ -62,7 +62,7 @@ uint64_t getMaximumFileSize(ext2_super_block* superBlock)
 
 ////////////////////Utils that are not directly related with Ext2
 
-std::vector<std::string> splitString(const std::string& str, char delimiter)
+std::vector<std::string> ext2_splitString(const std::string& str, char delimiter)
 {
     std::vector<std::string> tokens;
     std::string token;
@@ -83,7 +83,7 @@ std::vector<std::string> splitString(const std::string& str, char delimiter)
     return tokens;
 }
 
-void extractParentPathFromPath(const char* fullPath, char* parentPath)
+void ext2_extractParentPathFromPath(const char* fullPath, char* parentPath)
 {
     std::string fullPathAsString = fullPath;
     size_t pos = fullPathAsString.find_last_of('/');
@@ -91,7 +91,7 @@ void extractParentPathFromPath(const char* fullPath, char* parentPath)
     parentPath[pos] = '\0';
 }
 
-uint32_t getCurrentTimeDateAndTimeFormatted()
+uint32_t ext2_getCurrentTimeDateAndTimeFormatted()
 {
     SYSTEMTIME time;
     GetSystemTime(&time);

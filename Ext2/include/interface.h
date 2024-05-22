@@ -1,9 +1,9 @@
 #include "vector"
 #include "string"
-#include "../include/structures.h"
+#include "../include/ext2Structures.h"
 
 #include "diskUtils.h"
-#include "../include/structures.h"
+#include "../include/ext2Structures.h"
 
 #ifndef EXT2_INTERFACE_H
 #define EXT2_INTERFACE_H

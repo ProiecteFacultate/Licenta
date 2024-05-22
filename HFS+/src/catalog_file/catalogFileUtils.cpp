@@ -2,7 +2,7 @@
 #include "windows.h"
 
 #include "../include/disk.h"
-#include "../../include/structures.h"
+#include "../../include/hfsStructures.h"
 #include "../../include/utils.h"
 #include "../../include/hfsFunctionUtils.h"
 #include "../../include/hfs.h"
@@ -11,10 +11,10 @@
 
 int32_t cf_compareKeys(HFSPlusCatalogKey* key1, HFSPlusCatalogKey* key2)
 {
-    if(key1->parentID > key2->parentID)
+    if((int) key1->parentID > (int) key2->parentID)
         return CF_KEY_1_HIGHER;
 
-    if(key1->parentID < key2->parentID)
+    if((int) key1->parentID < (int) key2->parentID)
         return CF_KEY_2_HIGHER;
 
     //else we have equality in parentId so we compare based on nodeName
@@ -42,7 +42,7 @@ CatalogFileHeaderNode* cf_updateNodeOccupiedInHeaderNodeMapRecord(CatalogFileHea
     uint32_t byteIndexForNodeNumber = nodeNumber / 8;
     uint32_t bitIndexForNodeNumber = nodeNumber % 8;
 
-    uint8_t newByteValueForNodes = changeBitValue(byteIndexForNodeNumber, bitIndexForNodeNumber, newValue);
+    uint8_t newByteValueForNodes = hfs_changeBitValue(byteIndexForNodeNumber, bitIndexForNodeNumber, newValue);
     updatedCatalogFileHeaderNode->mapRecordAndOffsets[byteIndexForNodeNumber] = newByteValueForNodes;
 
     return updatedCatalogFileHeaderNode;

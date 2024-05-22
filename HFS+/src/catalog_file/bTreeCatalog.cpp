@@ -3,7 +3,7 @@
 
 #include "disk.h"
 #include "diskCodes.h"
-#include "../../include/structures.h"
+#include "../../include/hfsStructures.h"
 #include "../../include/utils.h"
 #include "../../include/hfsFunctionUtils.h"
 #include "../../include/catalog_file/codes/bTreeResponseCodes.h"

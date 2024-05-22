@@ -1,5 +1,5 @@
 #include "../include/disk.h"
-#include "../../include/structures.h"
+#include "../../include/hfsStructures.h"
 
 #ifndef HFS__CATALOGFILEUTILS_H
 #define HFS__CATALOGFILEUTILS_H

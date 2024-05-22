@@ -4,7 +4,7 @@
 #include "algorithm"
 #include "iostream"
 
-#include "../include/structures.h"
+#include "../include/fat32Structures.h"
 #include "../include/fat32.h"
 
 bool checkDirectoryNameValidity(const char* directoryName) //CAUTION directoryName MUST end with null
@@ -126,7 +126,7 @@ void formatDirectoryName(const char* directoryName, char* formattedName)
     }
 }
 
-void extractParentPathFromPath(const char* fullPath, char* parentPath)
+void fat32_extractParentPathFromPath(const char* fullPath, char* parentPath)
 {
     std::string fullPathAsString = fullPath;
     size_t pos = fullPathAsString.find_last_of('/');
@@ -137,7 +137,7 @@ void extractParentPathFromPath(const char* fullPath, char* parentPath)
 
 ////////////////////Utils that are not directly related with FAT32
 
-std::vector<std::string> splitString(const std::string& str, char delimiter)
+std::vector<std::string> fat32_splitString(const std::string& str, char delimiter)
 {
     std::vector<std::string> tokens;
     std::string token;
@@ -158,14 +158,14 @@ std::vector<std::string> splitString(const std::string& str, char delimiter)
     return tokens;
 }
 
-uint16_t getCurrentDateFormatted()
+uint16_t fat32_getCurrentDateFormatted()
 {
     SYSTEMTIME time;
     GetSystemTime(&time);
     return ((time.wYear - 1900) << 9) | (time.wMonth << 5) | time.wDay; //high 7 bits represent how many years since 1900, next 4 for month, last 5 for day
 }
 
-uint16_t getCurrentTimeFormatted()
+uint16_t fat32_getCurrentTimeFormatted()
 {
     SYSTEMTIME time;
     GetSystemTime(&time);

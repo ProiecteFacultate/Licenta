@@ -5,7 +5,7 @@
 #include "math.h"
 
 #include "../include/ext2Api.h"
-#include "../include/structures.h"
+#include "../include/ext2Structures.h"
 #include "../include/codes/ext2Attributes.h"
 #include "../include/codes/ext2Codes.h"
 #include "../include/codes/ext2ApiResponseCodes.h"

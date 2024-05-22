@@ -1,6 +1,6 @@
 #include "disk.h"
 #include "vector"
-#include "../structures.h"
+#include "../hfsStructures.h"
 
 #ifndef HFS__CATALOG_BTREECATALOG_H
 #define HFS__CATALOG_BTREECATALOG_H

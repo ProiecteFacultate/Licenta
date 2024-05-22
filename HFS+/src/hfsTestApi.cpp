@@ -2,7 +2,7 @@
 #include "chrono"
 
 #include "../include/hfsApi.h"
-#include "../include/structures.h"
+#include "../include/hfsStructures.h"
 #include "../include/hfsTestApi.h"
 
 uint32_t hfs_create_directory(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, char* parentPath, char* directoryName,

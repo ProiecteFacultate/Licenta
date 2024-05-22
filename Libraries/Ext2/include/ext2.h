@@ -2,7 +2,7 @@
 #include "string"
 
 #include "../include/disk.h"
-#include "../include/structures.h"
+#include "../include/ext2Structures.h"
 
 #ifndef EXT2_EXT2_H
 #define EXT2_EXT2_H

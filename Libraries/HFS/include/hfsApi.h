@@ -1,7 +1,7 @@
 #include "vector"
 
 #include "../include/disk.h"
-#include "../include/structures.h"
+#include "../include/hfsStructures.h"
 
 #ifndef HFS__HFSAPI_H
 #define HFS__HFSAPI_H
