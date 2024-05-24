@@ -1303,7 +1303,19 @@
 				}
 			],
 			"type" : "PATH",
-			"value" : "D:/Facultate/Licenta/Implementare/Libraries/Ext2/include"
+			"value" : "D:/Facultate/Licenta/Implementare/Libraries/EXT2/include"
+		},
+		{
+			"name" : "EXT2_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "D:/Facultate/Licenta/Implementare/Libraries/EXT2/lib/libext2_lib.a"
 		},
 		{
 			"name" : "EXTt2_LIBRARY",
@@ -1315,31 +1327,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "D:/Facultate/Licenta/Implementare/Libraries/Ext2/lib/libext2_lib.a"
-		},
-		{
-			"name" : "Ext2_INCLUDE_DIR",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Path to a file."
-				}
-			],
-			"type" : "PATH",
-			"value" : "D:/Facultate/Licenta/Implementare/Libraries/Ext2/include"
-		},
-		{
-			"name" : "Ext2_LIBRARY",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Path to a library."
-				}
-			],
-			"type" : "FILEPATH",
-			"value" : "D:/Facultate/Licenta/Implementare/Libraries/Ext2/lib/libext2_lib.a"
+			"value" : "D:/Facultate/Licenta/Implementare/Libraries/EXT2/lib/libext2_lib.a"
 		},
 		{
 			"name" : "FAT32_INCLUDE_DIR",

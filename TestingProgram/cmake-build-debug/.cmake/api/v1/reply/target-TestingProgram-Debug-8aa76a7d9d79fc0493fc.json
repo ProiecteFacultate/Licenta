@@ -99,7 +99,7 @@
 				},
 				{
 					"backtrace" : 7,
-					"path" : "D:/Facultate/Licenta/Implementare/Libraries/Ext2/include"
+					"path" : "D:/Facultate/Licenta/Implementare/Libraries/EXT2/include"
 				},
 				{
 					"backtrace" : 8,
@@ -150,7 +150,7 @@
 			},
 			{
 				"backtrace" : 3,
-				"fragment" : "D:\\Facultate\\Licenta\\Implementare\\Libraries\\Ext2\\lib\\libext2_lib.a",
+				"fragment" : "D:\\Facultate\\Licenta\\Implementare\\Libraries\\EXT2\\lib\\libext2_lib.a",
 				"role" : "libraries"
 			},
 			{

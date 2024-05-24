@@ -7,7 +7,7 @@
 
 int main()
 {
-    hfs_test_2();
+    hfs_test_7();
 
     return 0;
 }

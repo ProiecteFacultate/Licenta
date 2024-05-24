@@ -24,9 +24,9 @@ find_package(FAT32 REQUIRED)
 include_directories(${FAT32_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${FAT32_LIBRARY})
 
-find_package(Ext2 REQUIRED)
-include_directories(${Ext2_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} ${Ext2_LIBRARY})
+find_package(EXT2 REQUIRED)
+include_directories(${EXT2_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} ${EXT2_LIBRARY})
 
 find_package(HFS REQUIRED)
 include_directories(${HFS_INCLUDE_DIR})

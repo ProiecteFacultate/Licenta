@@ -65,26 +65,80 @@ int main() {
 //                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() % 1000  << '\n';
 //    }
 
+//    char* parentPath = new char[50];
+//    memcpy(parentPath, "Root\0", 50);
+//    char* fileName = new char[50];
+//    memcpy(fileName, "File_1\0", 50);
+//    char* fullFilePath = new char[50];
+//    memcpy(fullFilePath, "Root/File_1\0", 50);
+//    int64_t timeElapsedMilliseconds;
+//    uint32_t numberOfBytesWritten, reasonForIncompleteWrite;
+//    uint64_t bufferSize = 8000000;
+//    char* buffer = new char[bufferSize];
+//
+//    uint32_t result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPath, fileName, DIRECTORY_TYPE_FILE, timeElapsedMilliseconds);
+//    result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, fullFilePath, buffer, bufferSize,
+//                            WRITE_WITH_TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+
+    uint64_t bufferSize = 5000;
+    uint32_t numOfFiles = 100;
+    char* buffer = new char[bufferSize];
+    uint32_t sectorsNumber = 204800;
+    uint32_t sectorSize = 512;
     char* parentPath = new char[50];
     memcpy(parentPath, "Root\0", 50);
     char* fileName = new char[50];
-    memcpy(fileName, "File_1\0", 50);
+    memcpy(fileName, "File_\0\0\0\0", 50);
     char* fullFilePath = new char[50];
-    memcpy(fullFilePath, "Root/File_1\0", 50);
+    memcpy(fullFilePath, "Root/File_\0\0\0\0", 50);
+    char* parentPathCopy = new char[50];
+    char* fileNameCopy = new char[50];
+    char* fullFilePathCopy = new char[50];
     int64_t timeElapsedMilliseconds;
-    uint32_t numberOfBytesWritten, reasonForIncompleteWrite;
-    uint64_t bufferSize = 8000000;
-    char* buffer = new char[bufferSize];
+    uint32_t numberOfBytesWritten, reasonForIncompleteWrite, result;
 
-    uint32_t result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPath, fileName, DIRECTORY_TYPE_FILE, timeElapsedMilliseconds);
-    result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, fullFilePath, buffer, bufferSize,
-                            WRITE_WITH_TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+    uint32_t blockSize = 2048;
 
-    uint64_t totalSeconds = timeElapsedMilliseconds / 1000;
-    uint64_t millisecondsDisplayed = timeElapsedMilliseconds % 1000;
-    uint64_t secondsDisplayed = totalSeconds % 60;
-    uint64_t minutesDisplayed = totalSeconds / 60;
-    std::cout << result << " --- Time --- Minutes: " << minutesDisplayed << " --- Seconds: " << secondsDisplayed << " --- Milliseconds: " << millisecondsDisplayed <<  '\n';
+    while(blockSize <= 8192)
+    {
+        uint64_t totalWriteTime = 0, totalBytesWritten = 0;
+
+        std:: cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
+
+        for(int i = 100; i <= 99 + numOfFiles; i++)
+        {
+            memcpy(parentPathCopy, parentPath, 50);
+            memcpy(fileNameCopy, fileName, 50);
+            memcpy(fullFilePathCopy, fullFilePath, 50);
+
+            memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(i).c_str(), 3);
+            memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
+
+            result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, DIRECTORY_TYPE_FILE,
+                                          timeElapsedMilliseconds);
+            result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsOverflowFileHeaderNode, fullFilePathCopy, buffer, bufferSize,
+                                    TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+
+            totalWriteTime += timeElapsedMilliseconds;
+            totalBytesWritten += numberOfBytesWritten;
+        }
+
+        std::cout << "Number of bytes written: " <<  totalBytesWritten << "/" << bufferSize * numOfFiles << '\n';
+
+        uint64_t totalSeconds = timeElapsedMilliseconds / 1000;
+        uint64_t millisecondsDisplayed = timeElapsedMilliseconds % 1000;
+        uint64_t secondsDisplayed = totalSeconds % 60;
+        uint64_t minutesDisplayed = totalSeconds / 60;
+        std::cout << result << " --- Time --- Minutes: " << minutesDisplayed << " --- Seconds: " << secondsDisplayed << " --- Milliseconds: " << millisecondsDisplayed <<  '\n';
+
+        blockSize *= 2;
+    }
+
+//    uint64_t totalSeconds = timeElapsedMilliseconds / 1000;
+//    uint64_t millisecondsDisplayed = timeElapsedMilliseconds % 1000;
+//    uint64_t secondsDisplayed = totalSeconds % 60;
+//    uint64_t minutesDisplayed = totalSeconds / 60;
+//    std::cout << result << " --- Time --- Minutes: " << minutesDisplayed << " --- Seconds: " << secondsDisplayed << " --- Milliseconds: " << millisecondsDisplayed <<  '\n';
 
     return 0;
 }

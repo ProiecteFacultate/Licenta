@@ -52,9 +52,9 @@ uint32_t createDirectory(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, 
                              newDirectoryType);
     uint32_t insertRecordInTreeResult = cf_insertRecordInTree(diskInfo, volumeHeader, catalogFileHeaderNode, recordToInsert);
 
-    updateCatalogDirectoryRecordCreatedDateAndTime(diskInfo, volumeHeader, recordToInsert, nodeOfNewRecord);
-    updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, recordToInsert, nodeOfNewRecord);
-    updateCatalogDirectoryRecordLastModifiedDateAndTime(diskInfo, volumeHeader, recordToInsert, nodeOfNewRecord);
+//    updateCatalogDirectoryRecordCreatedDateAndTime(diskInfo, volumeHeader, recordToInsert, nodeOfNewRecord);
+//    updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, recordToInsert, nodeOfNewRecord);
+//    updateCatalogDirectoryRecordLastModifiedDateAndTime(diskInfo, volumeHeader, recordToInsert, nodeOfNewRecord);
 
     return (insertRecordInTreeResult == CF_INSERT_RECORD_IN_TREE_SUCCESS) ? DIRECTORY_CREATION_SUCCESS : DIRECTORY_CREATION_PARENT_FAILED_TO_INSERT_RECORD_IN_CATALOG_TREE;
 }
