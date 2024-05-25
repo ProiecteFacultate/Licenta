@@ -37,11 +37,11 @@ uint32_t fat32_get_subdirectories(DiskInfo* diskInfo, BootSector* bootSector, ch
         memcpy(fileName, child->FileName, 11);
         fileName[11] = 0;
 
-        uint32_t numOfClustersOccupiedClusters = child->FileSize / getClusterSize(bootSector);
+        uint32_t numOfClustersOccupiedClusters = child->FileSize / getClusterSize(bootSector) + 1;
         if(child->FileSize % getClusterSize(bootSector) == 0) //in case the size occupies the last sector at maximum
             numOfClustersOccupiedClusters--;
 
-        uint32_t sizeOnDisk;
+        uint32_t sizeOnDisk = numOfClustersOccupiedClusters * getClusterSize(bootSector);
         uint32_t size = child->FileSize;
         uint32_t getDirectorySizeResult = getDirectoryDetailsByDirectoryEntry(diskInfo, bootSector, child, size,
                                                                         sizeOnDisk);

@@ -1,12 +1,12 @@
 #include "iostream"
 
-#include "hfsTestApi.h"
+#include "ext2TestApi.h"
 
-#include "../include/utils.h"
-#include "../include/attributes.h"
-#include "../include/hfsTests.h"
+#include "../../include/utils.h"
+#include "../../include/attributes.h"
+#include "../../include/time_tests/ext2TimeTests.h"
 
-void hfs_test_1()
+void ext2_time_test_1()
 {
     uint64_t bufferSize = 50000000;
 
@@ -34,18 +34,16 @@ void hfs_test_1()
     while(blockSize <= 8192)
     {
         DiskInfo* diskInfo;
-        HFSPlusVolumeHeader* volumeHeader;
-        ExtentsFileHeaderNode* extentsFileHeaderNode;
-        CatalogFileHeaderNode* catalogFileHeaderNode;
-        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+        ext2_super_block* superBlock;
+        initializeExt2(diskPath, &diskInfo, &superBlock, sectorsNumber, sectorSize, blockSize);
 
         memcpy(parentPathCopy, parentPath, 50);
         memcpy(fileNameCopy, fileName, 50);
         memcpy(fullFilePathCopy, fullFilePath, 50);
 
-        result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-        result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize,
-                                TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+        result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+        result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize, TRUNCATE,
+                                 numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
         if(round == 1)
         {
@@ -69,7 +67,7 @@ void hfs_test_1()
     }
 }
 
-void hfs_test_2()
+void ext2_time_test_2()
 {
     uint64_t bufferSize = 500000;
     uint32_t numOfFiles = 100;
@@ -97,10 +95,8 @@ void hfs_test_2()
     while(blockSize <= 8192)
     {
         DiskInfo* diskInfo;
-        HFSPlusVolumeHeader* volumeHeader;
-        ExtentsFileHeaderNode* extentsFileHeaderNode;
-        CatalogFileHeaderNode* catalogFileHeaderNode;
-        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+        ext2_super_block* superBlock;
+        initializeExt2(diskPath, &diskInfo, &superBlock, sectorsNumber, sectorSize, blockSize);
         uint64_t totalWriteTime = 0, totalBytesWritten = 0;
 
         std:: cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
@@ -112,7 +108,7 @@ void hfs_test_2()
 
             memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(i).c_str(), 3);
 
-            result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+            result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
         }
 
         for(int i = 100; i <= 99 + numOfFiles; i++)
@@ -121,8 +117,8 @@ void hfs_test_2()
 
             memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
 
-            result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize,
-                                    TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+            result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize, TRUNCATE,
+                                     numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
             totalWriteTime += timeElapsedMilliseconds;
             totalBytesWritten += numberOfBytesWritten;
@@ -135,11 +131,11 @@ void hfs_test_2()
     }
 }
 
-void hfs_test_3()
+void ext2_time_test_3()
 {
     uint64_t bigBufferSize = 9000000;
     uint64_t mediumBufferSize = 900000;
-    uint64_t smallBufferSize = 9000;
+    uint64_t smallBufferSize = 90000;
     uint32_t numOfRounds = 5;
 
     char* diskPath = new char[100];
@@ -167,10 +163,8 @@ void hfs_test_3()
     while(blockSize <= 8192)
     {
         DiskInfo* diskInfo;
-        HFSPlusVolumeHeader* volumeHeader;
-        ExtentsFileHeaderNode* extentsFileHeaderNode;
-        CatalogFileHeaderNode* catalogFileHeaderNode;
-        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+        ext2_super_block* superBlock;
+        initializeExt2(diskPath, &diskInfo, &superBlock, sectorsNumber, sectorSize, blockSize);
         uint64_t totalWriteTime = 0, totalBytesWritten = 0;
 
         std:: cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
@@ -185,9 +179,9 @@ void hfs_test_3()
             memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(i * 3).c_str(), 2);
             memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i * 3).c_str(), 2);
 
-            result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-            result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, smallBuffer,
-                                    smallBufferSize, TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+            result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+            result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, smallBuffer, smallBufferSize, TRUNCATE,
+                                     numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
             totalWriteTime += timeElapsedMilliseconds;
             totalBytesWritten += numberOfBytesWritten;
@@ -200,9 +194,9 @@ void hfs_test_3()
             memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(i * 3 + 1).c_str(), 2);
             memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i * 3 + 1).c_str(), 2);
 
-            result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-            result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, mediumBuffer,
-                                    mediumBufferSize, TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+            result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+            result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, mediumBuffer, mediumBufferSize, TRUNCATE,
+                                     numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
             totalWriteTime += timeElapsedMilliseconds;
             totalBytesWritten += numberOfBytesWritten;
@@ -215,9 +209,9 @@ void hfs_test_3()
             memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(i * 3 + 2).c_str(), 2);
             memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i * 3 + 2).c_str(), 2);
 
-            result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-            result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, bigBuffer, bigBufferSize,
-                                    TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+            result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+            result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, bigBuffer, bigBufferSize, TRUNCATE,
+                                     numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
             totalWriteTime += timeElapsedMilliseconds;
             totalBytesWritten += numberOfBytesWritten;
@@ -230,7 +224,7 @@ void hfs_test_3()
     }
 }
 
-void hfs_test_4()
+void ext2_time_test_4()
 {
     uint64_t bufferSize = 25000000;
 
@@ -258,18 +252,12 @@ void hfs_test_4()
     while(blockSize <= 8192)
     {
         DiskInfo* diskInfo;
-        HFSPlusVolumeHeader* volumeHeader;
-        ExtentsFileHeaderNode* extentsFileHeaderNode;
-        CatalogFileHeaderNode* catalogFileHeaderNode;
-        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+        ext2_super_block* superBlock;
+        initializeExt2(diskPath, &diskInfo, &superBlock, sectorsNumber, sectorSize, blockSize);
 
         memcpy(parentPathCopy, parentPath, 50);
         memcpy(fileNameCopy, fileName, 50);
         memcpy(fullFilePathCopy, fullFilePath, 50);
-
-        result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-        result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize,
-                                TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
         if(round == 1)
         {
@@ -282,6 +270,10 @@ void hfs_test_4()
             std::cout << "\nRound 2\n";
             writeMode = APPEND;
         }
+
+        result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+        result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize, TRUNCATE,
+                                 numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
         std::cout << "Number of bytes written: " <<  numberOfBytesWritten << "/" << bufferSize << '\n';
         printDurationSolo(timeElapsedMilliseconds);
@@ -297,7 +289,7 @@ void hfs_test_4()
     }
 }
 
-void hfs_test_5()
+void ext2_time_test_5()
 {
     uint64_t bigBufferSize = 1000000;
     uint64_t smallBufferSize = 10000;
@@ -333,10 +325,8 @@ void hfs_test_5()
     while(blockSize <= 8192)
     {
         DiskInfo* diskInfo;
-        HFSPlusVolumeHeader* volumeHeader;
-        ExtentsFileHeaderNode* extentsFileHeaderNode;
-        CatalogFileHeaderNode* catalogFileHeaderNode;
-        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+        ext2_super_block* superBlock;
+        initializeExt2(diskPath, &diskInfo, &superBlock, sectorsNumber, sectorSize, blockSize);
         uint64_t totalWriteTimeOfBigFile = 0, totalBytesWritten = 0;
 
         std::cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
@@ -349,9 +339,9 @@ void hfs_test_5()
             memcpy(bigFileFullPathCopy, bigFileFullPath, 50);
 
             uint32_t writeMode = (i == 0) ? TRUNCATE : APPEND;
-            result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, bigFileNameCopy, FILE, timeElapsedMilliseconds);
-            result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, bigFileFullPathCopy, bigBuffer, bigBufferSize,
-                                    writeMode, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+            result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, bigFileNameCopy, FILE, timeElapsedMilliseconds);
+            result = ext2_write_file(diskInfo, superBlock, bigFileFullPathCopy, bigBuffer, bigBufferSize, writeMode,
+                                     numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
             totalWriteTimeOfBigFile += timeElapsedMilliseconds;
             totalBytesWritten += numberOfBytesWritten;
@@ -367,9 +357,9 @@ void hfs_test_5()
                 memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(j * 3).c_str(), 2);
                 memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(j * 3).c_str(), 2);
 
-                result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-                result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, smallBuffer, smallBufferSize,
-                                        TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+                result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+                result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, smallBuffer, smallBufferSize, TRUNCATE,
+                                         numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
                 //second small file
                 memcpy(parentPathCopy, parentPath, 50);
@@ -379,9 +369,9 @@ void hfs_test_5()
                 memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(j * 3 + 1).c_str(), 2);
                 memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(j * 3 + 1).c_str(), 2);
 
-                result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-                result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, smallBuffer, smallBufferSize,
-                                        TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+                result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+                result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, smallBuffer, smallBufferSize, TRUNCATE,
+                                         numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
             }
         }
 
@@ -392,7 +382,7 @@ void hfs_test_5()
     }
 }
 
-void hfs_test_6()
+void ext2_time_test_6()
 {
     uint64_t bufferSize = 50000000;
 
@@ -412,31 +402,29 @@ void hfs_test_6()
     char* fileNameCopy = new char[50];
     char* fullFilePathCopy = new char[50];
     int64_t timeElapsedMilliseconds;
-    uint32_t numberOfBytesInBuffer, reasonForIncompleteWrite, result;
+    uint32_t numberOfBytesInBuffer, reasonForIncompleteOperation, result;
 
     uint32_t blockSize = 2048;
 
     while(blockSize <= 8192)
     {
         DiskInfo* diskInfo;
-        HFSPlusVolumeHeader* volumeHeader;
-        ExtentsFileHeaderNode* extentsFileHeaderNode;
-        CatalogFileHeaderNode* catalogFileHeaderNode;
-        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+        ext2_super_block* superBlock;
+        initializeExt2(diskPath, &diskInfo, &superBlock, sectorsNumber, sectorSize, blockSize);
 
         memcpy(parentPathCopy, parentPath, 50);
         memcpy(fileNameCopy, fileName, 50);
         memcpy(fullFilePathCopy, fullFilePath, 50);
 
-        result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-        result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize,
-                                TRUNCATE, numberOfBytesInBuffer, reasonForIncompleteWrite, timeElapsedMilliseconds);
+        result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+        result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize, TRUNCATE,
+                                 numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
 
         memcpy(parentPathCopy, parentPath, 50);
         memcpy(fullFilePathCopy, fullFilePath, 50);
 
-        result = hfs_read_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize, 0,
-                                numberOfBytesInBuffer, reasonForIncompleteWrite, timeElapsedMilliseconds);
+        result = ext2_read_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize, 0,
+                                 numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
 
         std::cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
 
@@ -448,7 +436,7 @@ void hfs_test_6()
     }
 }
 
-void hfs_test_7()
+void ext2_time_test_7()
 {
     uint64_t bufferSize = 50000000;
 
@@ -468,31 +456,29 @@ void hfs_test_7()
     char* fileNameCopy = new char[50];
     char* fullFilePathCopy = new char[50];
     int64_t timeElapsedMilliseconds;
-    uint32_t numberOfBytesInBuffer, reasonForIncompleteWrite, result;
+    uint32_t numberOfBytesInBuffer, reasonForIncompleteOperation, result;
 
     uint32_t blockSize = 2048;
 
     while(blockSize <= 8192)
     {
         DiskInfo* diskInfo;
-        HFSPlusVolumeHeader* volumeHeader;
-        ExtentsFileHeaderNode* extentsFileHeaderNode;
-        CatalogFileHeaderNode* catalogFileHeaderNode;
-        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+        ext2_super_block* superBlock;
+        initializeExt2(diskPath, &diskInfo, &superBlock, sectorsNumber, sectorSize, blockSize);
 
         memcpy(parentPathCopy, parentPath, 50);
         memcpy(fileNameCopy, fileName, 50);
         memcpy(fullFilePathCopy, fullFilePath, 50);
 
-        result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-        result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize,
-                                TRUNCATE, numberOfBytesInBuffer, reasonForIncompleteWrite, timeElapsedMilliseconds);
+        result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+        result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize, TRUNCATE,
+                                 numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
 
         memcpy(parentPathCopy, parentPath, 50);
         memcpy(fullFilePathCopy, fullFilePath, 50);
 
-        result = hfs_read_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize/ 2,
-                               bufferSize / 4, numberOfBytesInBuffer, reasonForIncompleteWrite, timeElapsedMilliseconds);
+        result = ext2_read_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize / 2, bufferSize / 4,
+                                numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
 
         std::cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
 
@@ -504,7 +490,7 @@ void hfs_test_7()
     }
 }
 
-void hfs_test_8()
+void ext2_time_test_8()
 {
     uint64_t bufferSize = 500000;
     uint32_t numOfFiles = 100;
@@ -532,10 +518,8 @@ void hfs_test_8()
     while(blockSize <= 8192)
     {
         DiskInfo* diskInfo;
-        HFSPlusVolumeHeader* volumeHeader;
-        ExtentsFileHeaderNode* extentsFileHeaderNode;
-        CatalogFileHeaderNode* catalogFileHeaderNode;
-        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+        ext2_super_block* superBlock;
+        initializeExt2(diskPath, &diskInfo, &superBlock, sectorsNumber, sectorSize, blockSize);
         uint64_t totalReadTime = 0, totalBytesRead = 0;
 
         std::cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
@@ -549,9 +533,9 @@ void hfs_test_8()
             memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(i).c_str(), 3);
             memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
 
-            result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-            result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize,
-                                    TRUNCATE, numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+            result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+            result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize, TRUNCATE,
+                                     numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
         }
 
         for(int i = 100; i <= 99 + numOfFiles; i++)
@@ -559,8 +543,8 @@ void hfs_test_8()
             memcpy(fullFilePathCopy, fullFilePath, 50);
             memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
 
-            result = hfs_read_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize, 0,
-                                   numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+            result = ext2_read_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize, 0,
+                                    numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
 
             totalReadTime += timeElapsedMilliseconds;
             totalBytesRead += numberOfBytesInBuffer;
@@ -573,7 +557,7 @@ void hfs_test_8()
     }
 }
 
-void hfs_test_9()
+void ext2_time_test_9()
 {
     uint64_t bigBufferSize = 1000000;
     uint64_t smallBufferSize = 10000;
@@ -609,10 +593,8 @@ void hfs_test_9()
     while(blockSize <= 8192)
     {
         DiskInfo* diskInfo;
-        HFSPlusVolumeHeader* volumeHeader;
-        ExtentsFileHeaderNode* extentsFileHeaderNode;
-        CatalogFileHeaderNode* catalogFileHeaderNode;
-        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+        ext2_super_block* superBlock;
+        initializeExt2(diskPath, &diskInfo, &superBlock, sectorsNumber, sectorSize, blockSize);
         uint64_t totalReadTimeOfBigFile = 0, totalBytesRead = 0;
 
         std::cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
@@ -625,9 +607,9 @@ void hfs_test_9()
             memcpy(bigFileFullPathCopy, bigFileFullPath, 50);
 
             uint32_t writeMode = (i == 0) ? TRUNCATE : APPEND;
-            result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, bigFileNameCopy, FILE, timeElapsedMilliseconds);
-            result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, bigFileFullPathCopy, bigBuffer, bigBufferSize,
-                                    writeMode, numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+            result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, bigFileNameCopy, FILE, timeElapsedMilliseconds);
+            result = ext2_write_file(diskInfo, superBlock, bigFileFullPathCopy, bigBuffer, bigBufferSize, writeMode,
+                                     numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
 
             //small files
             for(uint32_t j = 0; j < 2; j++)
@@ -640,9 +622,9 @@ void hfs_test_9()
                 memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(j * 3).c_str(), 2);
                 memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(j * 3).c_str(), 2);
 
-                result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-                result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, smallBuffer, smallBufferSize,
-                                        TRUNCATE, numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+                result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+                result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, smallBuffer, smallBufferSize, TRUNCATE,
+                                         numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
 
                 //second small file
                 memcpy(parentPathCopy, parentPath, 50);
@@ -652,9 +634,9 @@ void hfs_test_9()
                 memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(j * 3 + 1).c_str(), 2);
                 memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(j * 3 + 1).c_str(), 2);
 
-                result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
-                result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, smallBuffer, smallBufferSize,
-                                        TRUNCATE, numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+                result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+                result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, smallBuffer, smallBufferSize, TRUNCATE,
+                                         numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
             }
         }
 
@@ -662,8 +644,8 @@ void hfs_test_9()
         {
             memcpy(bigFileFullPathCopy, bigFileFullPath, 50);
 
-            result = hfs_read_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, bigFileFullPathCopy, bigBuffer, bigBufferSize,
-                                   0, numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+            result = ext2_read_file(diskInfo, superBlock, bigFileFullPathCopy, bigBuffer, bigBufferSize, i * bigBufferSize,
+                                    numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
 
             totalReadTimeOfBigFile += timeElapsedMilliseconds;
             totalBytesRead += numberOfBytesInBuffer;

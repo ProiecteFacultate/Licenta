@@ -11,12 +11,18 @@ add_executable(TestingProgram main.cpp
         include/commonTests.h
         src/commonTests.cpp
         include/attributes.h
-        include/fat32Tests.h
-        src/fat32Tests.cpp
-        include/ext2Tests.h
-        src/ext2Tests.cpp
-        include/hfsTests.h
-        src/hfsTests.cpp)
+        include/time_tests/fat32TimeTests.h
+        src/time_tests/fat32TimeTests.cpp
+        include/time_tests/ext2TimeTests.h
+        src/time_tests/ext2TimeTests.cpp
+        include/time_tests/hfsTimeTests.h
+        src/time_tests/hfsTimeTests.cpp
+        include/space_tests/ext2SpaceTests.h
+        include/space_tests/fat32SpaceTests.h
+        include/space_tests/hfsSpaceTests.h
+        src/space_tests/fat32SpaceTests.cpp
+        src/space_tests/ext2SpaceTests.cpp
+        src/space_tests/hfsSpaceTests.cpp)
 
 include(FindPkgConfig)
 

@@ -1,7 +1,7 @@
 # ninja log v5
 7362	7754	7380879165564885	FAT32.exe	3450618afd65008c
 70	6136	7380879149526401	CMakeFiles/FAT32.dir/src/utils.cpp.obj	71b79722c53389cb
-203	1391	7383497661225103	build.ninja	55387c3c6c8ea52d
+203	1391	7383560296782114	build.ninja	55387c3c6c8ea52d
 11	6007	7380879148160058	CMakeFiles/FAT32.dir/src/main.cpp.obj	b39b7ab5a6dd8a20
 45	6680	7380879154977653	CMakeFiles/FAT32.dir/src/fat32.cpp.obj	41fae9396044905c
 6028	7227	7380879160448370	CMakeFiles/FAT32.dir/src/fat32TestApi.cpp.obj	d3dec6e5fabdc2b8
@@ -17,3 +17,5 @@
 54	1499	7383208230679257	CMakeFiles/fat32_lib.dir/src/interface.cpp.obj	b53ddea000a75b6d
 22	4479	7380879293699557	CMakeFiles/fat32_lib.dir/src/utils.cpp.obj	3321d03f552f39fc
 1630	3074	7380879279576279	CMakeFiles/fat32_lib.dir/src/fat32TestApi.cpp.obj	3652e82f063701ea
+7	760	7383732533625067	CMakeFiles/fat32_lib.dir/src/fat32TestApi.cpp.obj	3652e82f063701ea
+760	1906	7383732545096404	libfat32_lib.a	c03eb4859ccf5149

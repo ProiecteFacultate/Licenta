@@ -3,11 +3,11 @@
 
 #include "fat32TestApi.h"
 
-#include "../include/utils.h"
-#include "../include/attributes.h"
-#include "../include/fat32Tests.h"
+#include "../../include/utils.h"
+#include "../../include/attributes.h"
+#include "../../include/time_tests/fat32TimeTests.h"
 
-void fat32_test_1()
+void fat32_time_test_1()
 {
     uint64_t bufferSize = 5000000;
 
@@ -70,7 +70,7 @@ void fat32_test_1()
     }
 }
 
-void fat32_test_2()
+void fat32_time_test_2()
 {
     uint64_t bufferSize = 500000;
     uint32_t numOfFiles = 100;
@@ -135,7 +135,7 @@ void fat32_test_2()
     }
 }
 
-void fat32_test_3()
+void fat32_time_test_3()
 {
     uint64_t bigBufferSize = 9000000;
     uint64_t mediumBufferSize = 900000;
@@ -229,7 +229,7 @@ void fat32_test_3()
     }
 }
 
-void fat32_test_4()
+void fat32_time_test_4()
 {
     uint64_t bufferSize = 10000000;
 
@@ -296,7 +296,7 @@ void fat32_test_4()
     }
 }
 
-void fat32_test_5()
+void fat32_time_test_5()
 {
     uint64_t bigBufferSize = 1000000;
     uint64_t smallBufferSize = 10000;
@@ -390,7 +390,7 @@ void fat32_test_5()
     }
 }
 
-void fat32_test_6()
+void fat32_time_test_6()
 {
     uint64_t bufferSize = 50000000;
 
@@ -446,7 +446,7 @@ void fat32_test_6()
     }
 }
 
-void fat32_test_7()
+void fat32_time_test_7()
 {
     uint64_t bufferSize = 50000000;
 
@@ -502,7 +502,7 @@ void fat32_test_7()
     }
 }
 
-void fat32_test_8()
+void fat32_time_test_8()
 {
     uint64_t bufferSize = 500000;
     uint32_t numOfFiles = 100;
@@ -571,7 +571,7 @@ void fat32_test_8()
     }
 }
 
-void fat32_test_9()
+void fat32_time_test_9()
 {
     uint64_t bigBufferSize = 1000000;
     uint64_t smallBufferSize = 10000;
