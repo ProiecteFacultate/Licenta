@@ -56,7 +56,6 @@ uint32_t ext2_read_file(DiskInfo* diskInfo, ext2_super_block* superBlock, char* 
 {
     uint32_t bufferSize = ((bytesToRead / superBlock->s_log_block_size) + 1) * superBlock->s_log_block_size; //in order to avoid overflows
     char* readBuffer = new char[bufferSize];
-    memcpy(readBuffer, buffer, bytesToRead);
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -65,7 +64,8 @@ uint32_t ext2_read_file(DiskInfo* diskInfo, ext2_super_block* superBlock, char* 
     auto stop = std::chrono::high_resolution_clock::now();
     timeElapsedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
 
-    delete[] readBuffer;
+    memcpy(buffer, readBuffer, bytesToRead);
+  //delete[] readBuffer;
 
     return result;
 }

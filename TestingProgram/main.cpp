@@ -7,7 +7,7 @@
 
 int main()
 {
-    fat32_test_2();
+    hfs_test_9();
 
     return 0;
 }

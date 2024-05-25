@@ -11,7 +11,7 @@ void hfs_test_1()
     uint64_t bufferSize = 50000000;
 
     char* diskPath = new char[100];
-    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Tests\\HFS_Tests\\Test_1\0", 100);
+    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
 
     char* buffer = generateBuffer(bufferSize);
     uint32_t sectorsNumber = 204800;
@@ -75,7 +75,7 @@ void hfs_test_2()
     uint32_t numOfFiles = 100;
 
     char* diskPath = new char[100];
-    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Tests\\HFS_Tests\\Test_2\0", 100);
+    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
 
     char* buffer = generateBuffer(bufferSize);
     uint32_t sectorsNumber = 204800;
@@ -143,7 +143,7 @@ void hfs_test_3()
     uint32_t numOfRounds = 5;
 
     char* diskPath = new char[100];
-    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Tests\\HFS_Tests\\Test_3\0", 100);
+    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
 
     char* bigBuffer = generateBuffer(bigBufferSize);
     char* mediumBuffer = generateBuffer(mediumBufferSize);
@@ -235,7 +235,7 @@ void hfs_test_4()
     uint64_t bufferSize = 25000000;
 
     char* diskPath = new char[100];
-    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Tests\\HFS_Tests\\Test_4\0", 100);
+    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
 
     char* buffer = generateBuffer(bufferSize);
     uint32_t sectorsNumber = 204800;
@@ -299,10 +299,105 @@ void hfs_test_4()
 
 void hfs_test_5()
 {
+    uint64_t bigBufferSize = 1000000;
+    uint64_t smallBufferSize = 10000;
+    uint32_t numOfRounds = 50;
+
+    char* diskPath = new char[100];
+    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
+
+    char* bigBuffer = generateBuffer(bigBufferSize);
+    char* smallBuffer = generateBuffer(smallBufferSize);
+    uint32_t sectorsNumber = 204800;
+    uint32_t sectorSize = 512;
+    char* parentPath = new char[50];
+    memcpy(parentPath, "Root\0", 50);
+    char* fileName = new char[50];
+    memcpy(fileName, "File_\0\0\0\0", 50);
+    char* fullFilePath = new char[50];
+    memcpy(fullFilePath, "Root/File_\0\0\0\0", 50);
+    char* bigFileName = new char[50];
+    memcpy(bigFileName, "BigFile\0\0\0\0", 50);
+    char* bigFileFullPath = new char[50];
+    memcpy(bigFileFullPath, "Root/BigFile\0\0\0\0", 50);
+    char* parentPathCopy = new char[50];
+    char* fileNameCopy = new char[50];
+    char* fullFilePathCopy = new char[50];
+    char* bigFileNameCopy = new char[50];
+    char* bigFileFullPathCopy = new char[50];
+    int64_t timeElapsedMilliseconds;
+    uint32_t numberOfBytesWritten, reasonForIncompleteWrite, result;
+
+    uint32_t blockSize = 2048;
+
+    while(blockSize <= 8192)
+    {
+        DiskInfo* diskInfo;
+        HFSPlusVolumeHeader* volumeHeader;
+        ExtentsFileHeaderNode* extentsFileHeaderNode;
+        CatalogFileHeaderNode* catalogFileHeaderNode;
+        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+        uint64_t totalWriteTimeOfBigFile = 0, totalBytesWritten = 0;
+
+        std::cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
+
+        for(int i = 0; i < numOfRounds; i++)
+        {
+            //big file buffer
+            memcpy(parentPathCopy, parentPath, 50);
+            memcpy(bigFileNameCopy, bigFileName, 50);
+            memcpy(bigFileFullPathCopy, bigFileFullPath, 50);
+
+            uint32_t writeMode = (i == 0) ? TRUNCATE : APPEND;
+            result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, bigFileNameCopy, FILE, timeElapsedMilliseconds);
+            result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, bigFileFullPathCopy, bigBuffer, bigBufferSize,
+                                    writeMode, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+
+            totalWriteTimeOfBigFile += timeElapsedMilliseconds;
+            totalBytesWritten += numberOfBytesWritten;
+
+            //small files
+            for(uint32_t j = 0; j < 2; j++)
+            {
+                //first small file
+                memcpy(parentPathCopy, parentPath, 50);
+                memcpy(fileNameCopy, fileName, 50);
+                memcpy(fullFilePathCopy, fullFilePath, 50);
+
+                memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(j * 3).c_str(), 2);
+                memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(j * 3).c_str(), 2);
+
+                result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+                result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, smallBuffer, smallBufferSize,
+                                        TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+
+                //second small file
+                memcpy(parentPathCopy, parentPath, 50);
+                memcpy(fileNameCopy, fileName, 50);
+                memcpy(fullFilePathCopy, fullFilePath, 50);
+
+                memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(j * 3 + 1).c_str(), 2);
+                memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(j * 3 + 1).c_str(), 2);
+
+                result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+                result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, smallBuffer, smallBufferSize,
+                                        TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
+            }
+        }
+
+        std::cout << "Number of bytes written in big file: " <<  totalBytesWritten << "/" << bigBufferSize * numOfRounds << '\n';
+        printDurationSolo(totalWriteTimeOfBigFile);
+        blockSize *= 2;
+        deleteFiles(diskPath);
+    }
+}
+
+void hfs_test_6()
+{
     uint64_t bufferSize = 50000000;
 
     char* diskPath = new char[100];
-    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Tests\\HFS_Tests\\Test_5\0", 100);
+    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
 
     char* buffer = generateBuffer(bufferSize);
     uint32_t sectorsNumber = 204800;
@@ -355,11 +450,67 @@ void hfs_test_5()
 
 void hfs_test_7()
 {
+    uint64_t bufferSize = 50000000;
+
+    char* diskPath = new char[100];
+    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
+
+    char* buffer = generateBuffer(bufferSize);
+    uint32_t sectorsNumber = 204800;
+    uint32_t sectorSize = 512;
+    char* parentPath = new char[50];
+    memcpy(parentPath, "Root\0", 50);
+    char* fileName = new char[50];
+    memcpy(fileName, "File_1\0", 50);
+    char* fullFilePath = new char[50];
+    memcpy(fullFilePath, "Root/File_1\0", 50);
+    char* parentPathCopy = new char[50];
+    char* fileNameCopy = new char[50];
+    char* fullFilePathCopy = new char[50];
+    int64_t timeElapsedMilliseconds;
+    uint32_t numberOfBytesInBuffer, reasonForIncompleteWrite, result;
+
+    uint32_t blockSize = 2048;
+
+    while(blockSize <= 8192)
+    {
+        DiskInfo* diskInfo;
+        HFSPlusVolumeHeader* volumeHeader;
+        ExtentsFileHeaderNode* extentsFileHeaderNode;
+        CatalogFileHeaderNode* catalogFileHeaderNode;
+        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+
+        memcpy(parentPathCopy, parentPath, 50);
+        memcpy(fileNameCopy, fileName, 50);
+        memcpy(fullFilePathCopy, fullFilePath, 50);
+
+        result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+        result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize,
+                                TRUNCATE, numberOfBytesInBuffer, reasonForIncompleteWrite, timeElapsedMilliseconds);
+
+        memcpy(parentPathCopy, parentPath, 50);
+        memcpy(fullFilePathCopy, fullFilePath, 50);
+
+        result = hfs_read_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize/ 2,
+                               bufferSize / 4, numberOfBytesInBuffer, reasonForIncompleteWrite, timeElapsedMilliseconds);
+
+        std::cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
+
+        std::cout << "Number of bytes read: " <<  numberOfBytesInBuffer << "/" << bufferSize / 2 << " --- Start: " << bufferSize / 4 << " End: " << (bufferSize / 4) * 3 << '\n';
+        printDurationSolo(timeElapsedMilliseconds);
+
+        blockSize *= 2;
+        deleteFiles(diskPath);
+    }
+}
+
+void hfs_test_8()
+{
     uint64_t bufferSize = 500000;
     uint32_t numOfFiles = 100;
 
     char* diskPath = new char[100];
-    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Tests\\HFS_Tests\\Test_7\0", 100);
+    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
 
     char* buffer = generateBuffer(bufferSize);
     uint32_t sectorsNumber = 204800;
@@ -417,6 +568,109 @@ void hfs_test_7()
 
         std::cout << "Number of bytes read: " <<  totalBytesRead << "/" << bufferSize * numOfFiles << '\n';
         printDurationSolo(totalReadTime);
+        blockSize *= 2;
+        deleteFiles(diskPath);
+    }
+}
+
+void hfs_test_9()
+{
+    uint64_t bigBufferSize = 1000000;
+    uint64_t smallBufferSize = 10000;
+    uint32_t numOfRounds = 50;
+
+    char* diskPath = new char[100];
+    memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
+
+    char* bigBuffer = generateBuffer(bigBufferSize);
+    char* smallBuffer = generateBuffer(smallBufferSize);
+    uint32_t sectorsNumber = 204800;
+    uint32_t sectorSize = 512;
+    char* parentPath = new char[50];
+    memcpy(parentPath, "Root\0", 50);
+    char* fileName = new char[50];
+    memcpy(fileName, "File_\0\0\0\0", 50);
+    char* fullFilePath = new char[50];
+    memcpy(fullFilePath, "Root/File_\0\0\0\0", 50);
+    char* bigFileName = new char[50];
+    memcpy(bigFileName, "BigFile\0\0\0\0", 50);
+    char* bigFileFullPath = new char[50];
+    memcpy(bigFileFullPath, "Root/BigFile\0\0\0\0", 50);
+    char* parentPathCopy = new char[50];
+    char* fileNameCopy = new char[50];
+    char* fullFilePathCopy = new char[50];
+    char* bigFileNameCopy = new char[50];
+    char* bigFileFullPathCopy = new char[50];
+    int64_t timeElapsedMilliseconds;
+    uint32_t numberOfBytesInBuffer, reasonForIncompleteOperation, result;
+
+    uint32_t blockSize = 2048;
+
+    while(blockSize <= 8192)
+    {
+        DiskInfo* diskInfo;
+        HFSPlusVolumeHeader* volumeHeader;
+        ExtentsFileHeaderNode* extentsFileHeaderNode;
+        CatalogFileHeaderNode* catalogFileHeaderNode;
+        initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
+        uint64_t totalReadTimeOfBigFile = 0, totalBytesRead = 0;
+
+        std::cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
+
+        for(int i = 0; i < numOfRounds; i++)
+        {
+            //big file buffer
+            memcpy(parentPathCopy, parentPath, 50);
+            memcpy(bigFileNameCopy, bigFileName, 50);
+            memcpy(bigFileFullPathCopy, bigFileFullPath, 50);
+
+            uint32_t writeMode = (i == 0) ? TRUNCATE : APPEND;
+            result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, bigFileNameCopy, FILE, timeElapsedMilliseconds);
+            result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, bigFileFullPathCopy, bigBuffer, bigBufferSize,
+                                    writeMode, numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+
+            //small files
+            for(uint32_t j = 0; j < 2; j++)
+            {
+                //first small file
+                memcpy(parentPathCopy, parentPath, 50);
+                memcpy(fileNameCopy, fileName, 50);
+                memcpy(fullFilePathCopy, fullFilePath, 50);
+
+                memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(j * 3).c_str(), 2);
+                memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(j * 3).c_str(), 2);
+
+                result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+                result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, smallBuffer, smallBufferSize,
+                                        TRUNCATE, numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+
+                //second small file
+                memcpy(parentPathCopy, parentPath, 50);
+                memcpy(fileNameCopy, fileName, 50);
+                memcpy(fullFilePathCopy, fullFilePath, 50);
+
+                memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(j * 3 + 1).c_str(), 2);
+                memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(j * 3 + 1).c_str(), 2);
+
+                result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+                result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, smallBuffer, smallBufferSize,
+                                        TRUNCATE, numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+            }
+        }
+
+        for(int i = 0; i < numOfRounds ; i++)
+        {
+            memcpy(bigFileFullPathCopy, bigFileFullPath, 50);
+
+            result = hfs_read_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, bigFileFullPathCopy, bigBuffer, bigBufferSize,
+                                   0, numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+
+            totalReadTimeOfBigFile += timeElapsedMilliseconds;
+            totalBytesRead += numberOfBytesInBuffer;
+        }
+
+        std::cout << "Number of bytes read from big file: " <<  totalBytesRead << "/" << bigBufferSize * numOfRounds << '\n';
+        printDurationSolo(totalReadTimeOfBigFile);
         blockSize *= 2;
         deleteFiles(diskPath);
     }

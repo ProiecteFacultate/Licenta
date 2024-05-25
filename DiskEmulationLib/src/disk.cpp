@@ -11,6 +11,7 @@ DiskInfo* initializeDisk(const char* diskDirectory, uint32_t sectorsNumber, uint
 {
     if(createMetadataFile(diskDirectory, sectorsNumber, sectorSize) == METADATA_SECTOR_WRITE_FAILED)
     {
+        DWORD err = GetLastError();
         return nullptr;
     }
 

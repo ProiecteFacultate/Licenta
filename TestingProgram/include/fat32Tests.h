@@ -15,13 +15,23 @@ void fat32_test_3();
 //Write (25 Mib) twice, first with TRUNCATE, second with APPEND (so 50 Mib in total), for 4/8/16 sectors per cluster
 void fat32_test_4();
 
+//Write (50 Mib) file in 50 rounds, first truncate and 49 append, and between these rounds add small files. Count only the time for big file, for 4/8/16 sectors per cluster
+void fat32_test_5();
+
 
 //////////////////READ TESTS
 
 //A single 50 Mib file, write and read completely, starting from 0, count only the read time, for 4/8/16 sectors per cluster
-void fat32_test_5();
+void fat32_test_6();
+
+//A single 50 Mib file, write and read half of the written bytes (from end of quarter 1 to end of quarter 3: 12.5Mib - 37.5Mib), count only the read time, for 4/8/16 sectors per cluster
+void fat32_test_7();
 
 //Many(100) 500 Kib files, write and  read completely, starting from 0, count only the read time, for 4/8/16 sectors per cluster
-void fat32_test_7();
+void fat32_test_8();
+
+//Write (50 Mib) file in 50 rounds, first truncate and 49 append, and between these rounds add small files, and then read only the big file for its full size, starting from 0.
+//Count only the read time for big file, for 4/8/16 sectors per cluster
+void fat32_test_9();
 
 #endif

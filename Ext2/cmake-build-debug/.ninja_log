@@ -1,5 +1,5 @@
 # ninja log v5
-0	152	7382821617749563	build.ninja	cd76e6ccc1d3fe19
+0	152	7383530796008309	build.ninja	cd76e6ccc1d3fe19
 207	6043	7380410456188535	CMakeFiles/Ext2.dir/src/ext2.cpp.obj	d15919d0b1434749
 7	642	7381059496782308	CMakeFiles/Ext2.dir/src/main.cpp.obj	ae258c090fa4b994
 655	900	7381059499515744	Ext2.exe	c8a531a486db9fcd
@@ -23,3 +23,13 @@
 4587	5742	7380325547283909	CMakeFiles/ext2_lib.dir/src/ext2TestApi.cpp.obj	5ae01ceed883dd16
 1004	3947	7380410595002256	CMakeFiles/ext2_lib.dir/src/ext2RootInit.cpp.obj	a06663a79a4de57e
 982	2202	7381067217432443	libext2_lib.a	4b898d4bf41a4ea6
+38	1113	7383536184349731	CMakeFiles/ext2_lib.dir/src/ext2BlocksAllocation.cpp.obj	ae2262f8d3106686
+6	1147	7383536184718749	CMakeFiles/ext2_lib.dir/src/ext2Init.cpp.obj	85b66a63f056f9f9
+30	1414	7383536187401571	CMakeFiles/ext2_lib.dir/src/interface.cpp.obj	12b4b308b773bc63
+1114	1745	7383536190742639	CMakeFiles/ext2_lib.dir/src/ext2TestApi.cpp.obj	5ae01ceed883dd16
+18	2418	7383536197458866	CMakeFiles/ext2_lib.dir/src/ext2Api.cpp.obj	e654c572888e10c3
+13	2449	7383536197797952	CMakeFiles/ext2_lib.dir/src/ext2.cpp.obj	86ce588b884d12a1
+24	2501	7383536198266702	CMakeFiles/ext2_lib.dir/src/ext2RootInit.cpp.obj	a06663a79a4de57e
+2501	2965	7383536202941619	libext2_lib.a	4b898d4bf41a4ea6
+4	458	7383537888861693	CMakeFiles/ext2_lib.dir/src/ext2TestApi.cpp.obj	5ae01ceed883dd16
+459	624	7383537890516192	libext2_lib.a	4b898d4bf41a4ea6
