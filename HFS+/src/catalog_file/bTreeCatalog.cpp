@@ -37,7 +37,9 @@ uint32_t cf_searchRecordForGivenNodeDataAndSearchedKey(DiskInfo* diskInfo, HFSPl
     if(nodeDescriptor->isLeaf == NODE_IS_LEAF) //if we haven't found the key and this is a leaf node it means the key doesn't exist in tree
         return CF_SEARCH_RECORD_IN_GIVEN_DATA_KEY_DO_NOT_EXIST_IN_TREE;
 
-    ChildNodeInfo* nextNodeInfo = (ChildNodeInfo*)&nodeData[getCatalogFileNodeSize(volumeHeader) - (recordIndex + 1) * sizeof(ChildNodeInfo)];
+    uint32_t nextNodeInfoByteIndex = getCatalogFileNodeSize(volumeHeader) - (recordIndex + 1) * sizeof(ChildNodeInfo);
+    ChildNodeInfo* nextNodeInfo = new ChildNodeInfo();
+    memcpy(nextNodeInfo, &nodeData[nextNodeInfoByteIndex], sizeof(ChildNodeInfo));
 
     uint32_t readNodeFromDiskResult = cf_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nextNodeInfo->nodeNumber);
     if(readNodeFromDiskResult == CF_READ_NODE_FROM_DISK_FAILED)

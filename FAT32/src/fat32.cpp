@@ -191,6 +191,9 @@ uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, BootSector* bootSector, D
                                                    uint32_t firstEmptyCluster, DirectoryEntry* newDirectoryEntry, uint32_t newDirectoryAttribute)
 {
     uint32_t firstClusterInChainWithFreeSpace = parentDirectoryEntry->FileSize / getClusterSize(bootSector); //number of cluster IN CHAIN: so 0,1,2,3
+    if(parentDirectoryEntry->FileSize % getClusterSize(bootSector) == 0)
+        firstClusterInChainWithFreeSpace++;
+
     uint32_t cluster = 0; //the cluster number of the first cluster with free space in the directory
     uint32_t findClusterResult = findNthClusterInChain(diskInfo, bootSector, getFirstClusterForDirectory(bootSector, parentDirectoryEntry),
                                                        firstClusterInChainWithFreeSpace, cluster);
@@ -329,7 +332,7 @@ uint32_t updateDirectoryEntry(DiskInfo* diskInfo, BootSector* bootSector, Direct
         if(searchDirectoryEntryInClusterResult == DIR_ENTRY_FOUND)
         {
             memcpy(clusterData + givenDirectoryEntryOffsetInParentCluster, newDirectoryEntry, 32);
-            uint32_t writeResult =  writeDiskSectors(diskInfo, 1, getFirstSectorForCluster(bootSector, actualCluster),
+            uint32_t writeResult =  writeDiskSectors(diskInfo, bootSector->SectorsPerCluster, getFirstSectorForCluster(bootSector, actualCluster),
                                                 clusterData, numOfSectorsWritten);
 
             delete[] sectorData, delete[] clusterData;

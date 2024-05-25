@@ -109,12 +109,18 @@ void hfs_test_2()
         {
             memcpy(parentPathCopy, parentPath, 50);
             memcpy(fileNameCopy, fileName, 50);
-            memcpy(fullFilePathCopy, fullFilePath, 50);
 
             memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(i).c_str(), 3);
-            memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
 
             result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+        }
+
+        for(int i = 100; i <= 99 + numOfFiles; i++)
+        {
+            memcpy(fullFilePathCopy, fullFilePath, 50);
+
+            memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
+
             result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize,
                                     TRUNCATE, numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
@@ -349,7 +355,7 @@ void hfs_test_5()
 
 void hfs_test_7()
 {
-    uint64_t bufferSize = 5000;
+    uint64_t bufferSize = 500000;
     uint32_t numOfFiles = 100;
 
     char* diskPath = new char[100];
@@ -379,7 +385,7 @@ void hfs_test_7()
         ExtentsFileHeaderNode* extentsFileHeaderNode;
         CatalogFileHeaderNode* catalogFileHeaderNode;
         initializeHFS(diskPath, &diskInfo, &volumeHeader, &extentsFileHeaderNode, &catalogFileHeaderNode, sectorsNumber, sectorSize, blockSize);
-        uint64_t totalWriteTime = 0, totalBytesRead = 0;
+        uint64_t totalReadTime = 0, totalBytesRead = 0;
 
         std::cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
 
@@ -395,19 +401,22 @@ void hfs_test_7()
             result = hfs_create_directory(diskInfo, volumeHeader, catalogFileHeaderNode, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
             result = hfs_write_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize,
                                     TRUNCATE, numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+        }
 
+        for(int i = 100; i <= 99 + numOfFiles; i++)
+        {
             memcpy(fullFilePathCopy, fullFilePath, 50);
             memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
 
             result = hfs_read_file(diskInfo, volumeHeader, catalogFileHeaderNode, extentsFileHeaderNode, fullFilePathCopy, buffer, bufferSize, 0,
                                    numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
 
-            totalWriteTime += timeElapsedMilliseconds;
+            totalReadTime += timeElapsedMilliseconds;
             totalBytesRead += numberOfBytesInBuffer;
         }
 
         std::cout << "Number of bytes read: " <<  totalBytesRead << "/" << bufferSize * numOfFiles << '\n';
-        printDurationSolo(totalWriteTime);
+        printDurationSolo(totalReadTime);
         blockSize *= 2;
         deleteFiles(diskPath);
     }

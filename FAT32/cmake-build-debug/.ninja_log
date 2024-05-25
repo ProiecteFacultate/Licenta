@@ -17,3 +17,11 @@
 104	1629	7380879265107561	CMakeFiles/fat32_lib.dir/src/interface.cpp.obj	b53ddea000a75b6d
 22	4479	7380879293699557	CMakeFiles/fat32_lib.dir/src/utils.cpp.obj	3321d03f552f39fc
 1630	3074	7380879279576279	CMakeFiles/fat32_lib.dir/src/fat32TestApi.cpp.obj	3652e82f063701ea
+247	4133	7383181172688954	CMakeFiles/fat32_lib.dir/src/fat32.cpp.obj	78a0061ecdca9f31
+4136	5400	7383181185393223	libfat32_lib.a	c03eb4859ccf5149
+54	1499	7383208230679257	CMakeFiles/fat32_lib.dir/src/interface.cpp.obj	b53ddea000a75b6d
+9	2936	7383208245241493	CMakeFiles/fat32_lib.dir/src/fat32Init.cpp.obj	24985bf854d6236a
+18	2959	7383208245460910	CMakeFiles/fat32_lib.dir/src/fat32.cpp.obj	78a0061ecdca9f31
+27	2975	7383208245640423	CMakeFiles/fat32_lib.dir/src/fat32Api.cpp.obj	aea0b76271864271
+35	2978	7383208245660368	CMakeFiles/fat32_lib.dir/src/fat32FunctionUtils.cpp.obj	8c69b2823a31f7d3
+2978	3156	7383208247448768	libfat32_lib.a	c03eb4859ccf5149

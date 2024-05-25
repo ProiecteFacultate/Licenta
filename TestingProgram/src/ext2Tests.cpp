@@ -105,12 +105,18 @@ void ext2_test_2()
         {
             memcpy(parentPathCopy, parentPath, 50);
             memcpy(fileNameCopy, fileName, 50);
-            memcpy(fullFilePathCopy, fullFilePath, 50);
 
             memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(i).c_str(), 3);
-            memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
 
             result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+        }
+
+        for(int i = 100; i <= 99 + numOfFiles; i++)
+        {
+            memcpy(fullFilePathCopy, fullFilePath, 50);
+
+            memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
+
             result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize, TRUNCATE,
                                      numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
@@ -367,7 +373,7 @@ void ext2_test_7()
         DiskInfo* diskInfo;
         ext2_super_block* superBlock;
         initializeExt2(diskPath, &diskInfo, &superBlock, sectorsNumber, sectorSize, blockSize);
-        uint64_t totalWriteTime = 0, totalBytesRead = 0;
+        uint64_t totalReadTime = 0, totalBytesRead = 0;
 
         std::cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
 
@@ -383,19 +389,22 @@ void ext2_test_7()
             result = ext2_create_directory(diskInfo, superBlock, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
             result = ext2_write_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize, TRUNCATE,
                                      numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+        }
 
+        for(int i = 100; i <= 99 + numOfFiles; i++)
+        {
             memcpy(fullFilePathCopy, fullFilePath, 50);
             memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
 
             result = ext2_read_file(diskInfo, superBlock, fullFilePathCopy, buffer, bufferSize, 0,
                                     numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
 
-            totalWriteTime += timeElapsedMilliseconds;
+            totalReadTime += timeElapsedMilliseconds;
             totalBytesRead += numberOfBytesInBuffer;
         }
 
         std::cout << "Number of bytes read: " <<  totalBytesRead << "/" << bufferSize * numOfFiles << '\n';
-        printDurationSolo(totalWriteTime);
+        printDurationSolo(totalReadTime);
         blockSize *= 2;
         deleteFiles(diskPath);
     }

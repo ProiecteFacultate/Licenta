@@ -1318,18 +1318,6 @@
 			"value" : "D:/Facultate/Licenta/Implementare/Libraries/EXT2/lib/libext2_lib.a"
 		},
 		{
-			"name" : "EXTt2_LIBRARY",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Path to a library."
-				}
-			],
-			"type" : "FILEPATH",
-			"value" : "D:/Facultate/Licenta/Implementare/Libraries/EXT2/lib/libext2_lib.a"
-		},
-		{
 			"name" : "FAT32_INCLUDE_DIR",
 			"properties" : 
 			[

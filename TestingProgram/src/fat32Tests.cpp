@@ -109,12 +109,18 @@ void fat32_test_2()
         {
             memcpy(parentPathCopy, parentPath, 50);
             memcpy(fileNameCopy, fileName, 50);
-            memcpy(fullFilePathCopy, fullFilePath, 50);
 
             memcpy(fileNameCopy + strlen(fileNameCopy), std::to_string(i).c_str(), 3);
-            memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
 
             result = fat32_create_directory(diskInfo, bootSector, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
+        }
+
+        for(int i = 100; i <= 99 + numOfFiles; i++)
+        {
+            memcpy(fullFilePathCopy, fullFilePath, 50);
+
+            memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
+
             result = fat32_write_file(diskInfo, bootSector, fullFilePathCopy, buffer, bufferSize, TRUNCATE,
                                       numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
@@ -348,7 +354,7 @@ void fat32_test_5()
 
 void fat32_test_7()
 {
-    uint64_t bufferSize = 1500;
+    uint64_t bufferSize = 500000;
     uint32_t numOfFiles = 100;
 
     char* diskPath = new char[100];
@@ -377,7 +383,7 @@ void fat32_test_7()
         BootSector* bootSector;
         FsInfo* fsInfo;
         initializeFAT32(diskPath, &diskInfo, &bootSector, &fsInfo, sectorsNumber, sectorSize, sectorsPerCluster);
-        uint64_t totalWriteTime = 0, totalBytesRead = 0;
+        uint64_t totalReadTime = 0, totalBytesRead = 0;
 
         std:: cout << "\n------------------------------- " << sectorsPerCluster << " Sectors Per Cluster -------------------------------\n";
 
@@ -393,22 +399,23 @@ void fat32_test_7()
             result = fat32_create_directory(diskInfo, bootSector, parentPathCopy, fileNameCopy, FILE, timeElapsedMilliseconds);
             result = fat32_write_file(diskInfo, bootSector, fullFilePathCopy, buffer, bufferSize, TRUNCATE,
                                       numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
+        }
 
+        for(int i = 100; i <= 99 + numOfFiles; i++)
+        {
             memcpy(fullFilePathCopy, fullFilePath, 50);
             memcpy(fullFilePathCopy + strlen(fullFilePathCopy), std::to_string(i).c_str(), 3);
 
             result = fat32_read_file(diskInfo, bootSector, fullFilePathCopy, buffer, bufferSize, 0,
                                      numberOfBytesInBuffer, reasonForIncompleteOperation, timeElapsedMilliseconds);
 
-            if(numberOfBytesInBuffer == 0)
-                std::cout<<"";
-//            std::cout << numberOfBytesInBuffer << '\n';
-            totalWriteTime += timeElapsedMilliseconds;
+            totalReadTime += timeElapsedMilliseconds;
             totalBytesRead += numberOfBytesInBuffer;
         }
 
+
         std::cout << "Number of bytes read: " <<  totalBytesRead << "/" << bufferSize * numOfFiles << '\n';
-        printDurationSolo(totalWriteTime);
+        printDurationSolo(totalReadTime);
         sectorsPerCluster *= 2;
         deleteFiles(diskPath);
     }

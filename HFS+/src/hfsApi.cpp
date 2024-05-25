@@ -289,7 +289,6 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
     }
 
     updateCatalogDirectoryRecordLastAccessedDateAndTime(diskInfo, volumeHeader, fileRecord, nodeOfNewRecord);
-    delete fileRecord;
     return READ_BYTES_FROM_FILE_SUCCESS;
 }
 

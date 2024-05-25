@@ -254,9 +254,6 @@ EXT2_INCLUDE_DIR:PATH=D:/Facultate/Licenta/Implementare/Libraries/EXT2/include
 //Path to a library.
 EXT2_LIBRARY:FILEPATH=D:/Facultate/Licenta/Implementare/Libraries/EXT2/lib/libext2_lib.a
 
-//Path to a library.
-EXTt2_LIBRARY:FILEPATH=D:/Facultate/Licenta/Implementare/Libraries/EXT2/lib/libext2_lib.a
-
 //Path to a file.
 FAT32_INCLUDE_DIR:PATH=D:/Facultate/Licenta/Implementare/Libraries/FAT32/include
 

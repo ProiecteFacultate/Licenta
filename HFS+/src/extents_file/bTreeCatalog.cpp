@@ -37,7 +37,9 @@ uint32_t eof_searchRecordForGivenNodeDataAndSearchedKey(DiskInfo* diskInfo, HFSP
     if(nodeDescriptor->isLeaf == NODE_IS_LEAF) //if we haven't found the key and this is a leaf node it means the key doesn't exist in tree
         return EOF_SEARCH_RECORD_IN_GIVEN_DATA_KEY_DO_NOT_EXIST_IN_TREE;
 
-    ChildNodeInfo* nextNodeInfo = (ChildNodeInfo*)&nodeData[getExtentsOverflowFileNodeSize(volumeHeader) - (recordIndex + 1) * sizeof(ChildNodeInfo)];
+    uint32_t nextNodeInfoByteIndex = getCatalogFileNodeSize(volumeHeader) - (recordIndex + 1) * sizeof(ChildNodeInfo);
+    ChildNodeInfo* nextNodeInfo = new ChildNodeInfo();
+    memcpy(nextNodeInfo, &nodeData[nextNodeInfoByteIndex], sizeof(ChildNodeInfo));
 
     uint32_t readNodeFromDiskResult = eof_readNodeFromDisk(diskInfo, volumeHeader, nodeData, nextNodeInfo->nodeNumber);
     if(readNodeFromDiskResult == EOF_READ_NODE_FROM_DISK_FAILED)
