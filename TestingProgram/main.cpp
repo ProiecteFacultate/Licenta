@@ -10,7 +10,7 @@
 
 int main()
 {
-    hfs_space_test_5();
+    common_time_test_3();
 
     return 0;
 }

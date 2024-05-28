@@ -51,7 +51,7 @@ void ext2_space_test_1()
 
 void ext2_space_test_2()
 {
-    uint64_t bufferSize = 1000000;
+    uint64_t bufferSize = 50000000;
 
     char* diskPath = new char[100];
     memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
@@ -97,8 +97,8 @@ void ext2_space_test_2()
         std:: cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
 
         double internalFragmentationPercentage = ((double) totalInternalFragmentation / (double) totalSizeOnDisk) * 100;
-        std::cout << totalInternalFragmentation << "/" << totalSizeOnDisk << " (" << internalFragmentationPercentage << "%) --- (internal fragmentation/size on disk)"
-                  << " for total of " << numberOfBytesWritten << " bytes written\n";
+        std::cout << totalInternalFragmentation << "/" << totalFilesSizes << "/" << totalSizeOnDisk << " (internal fragmentation/file size/size on disk) --- ("
+                  << internalFragmentationPercentage << "%) (internal fragmentation/size on disk)";
 
         blockSize *= 2;
         deleteFiles(diskPath);
@@ -107,7 +107,7 @@ void ext2_space_test_2()
 
 void ext2_space_test_3()
 {
-    uint64_t bufferSize = 5000;
+    uint64_t bufferSize = 500000;
     uint32_t numOfFiles = 100;
 
     char* diskPath = new char[100];
@@ -161,15 +161,15 @@ void ext2_space_test_3()
         std:: cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
 
         double internalFragmentationPercentage = ((double) totalInternalFragmentation / (double) totalSizeOnDisk) * 100;
-        std::cout << totalInternalFragmentation << "/" << totalSizeOnDisk << " (" << internalFragmentationPercentage << "%) --- (internal fragmentation/size on disk)"
-                  << " for total of " << totalFilesSizes << " bytes written\n";
+        std::cout << totalInternalFragmentation << "/" << totalFilesSizes << "/" << totalSizeOnDisk << " (internal fragmentation/file size/size on disk) --- ("
+                  << internalFragmentationPercentage << "%) (internal fragmentation/size on disk)";
 
         blockSize *= 2;
         deleteFiles(diskPath);
     }
 }
 
-void ext2_space_test_4() //TODO NOT WORKING
+void ext2_space_test_ignore_1() //TODO NOT WORKING
 {
     uint64_t bufferSize = 100000; //CAUTION this isn't the actual file size, it differs, see below in code
     uint32_t numOfFiles = 10;
@@ -261,7 +261,7 @@ void ext2_space_test_4() //TODO NOT WORKING
     }
 }
 
-void ext2_space_test_5()
+void ext2_space_test_4()
 {
     uint64_t bigBufferSize = 9000000;
     uint64_t mediumBufferSize = 900000;
@@ -345,8 +345,8 @@ void ext2_space_test_5()
         std:: cout << "\n------------------------------- " << blockSize << " Block Size -------------------------------\n";
 
         double internalFragmentationPercentage = ((double) totalInternalFragmentation / (double) totalSizeOnDisk) * 100;
-        std::cout << totalInternalFragmentation << "/" << totalSizeOnDisk << " (" << internalFragmentationPercentage << "%) --- (internal fragmentation/size on disk)"
-                  << " for total of " << totalFilesSizes << " bytes written\n";
+        std::cout << totalInternalFragmentation << "/" << totalFilesSizes << "/" << totalSizeOnDisk << " (internal fragmentation/file size/size on disk) --- ("
+                  << internalFragmentationPercentage << "%) (internal fragmentation/size on disk)";
 
         blockSize *= 2;
         deleteFiles(diskPath);

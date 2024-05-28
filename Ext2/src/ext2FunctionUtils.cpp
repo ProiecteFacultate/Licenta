@@ -1,5 +1,6 @@
 #include "windows.h"
 #include "string.h"
+#include "iostream"
 #include "cstdint"
 
 #include "../include/disk.h"
@@ -284,7 +285,8 @@ uint32_t getDataBlockGlobalIndexByLocalIndexInsideInode(DiskInfo* diskInfo, ext2
             return GET_DATA_BLOCK_BY_LOCAL_INDEX_FAILED;
         }
 
-        uint32_t indexInSecondOrderArray = ((searchedBlockLocalIndexInInode - blockSize / VALUE_ENTRY - 12) / (blockSize / VALUE_ENTRY)) * VALUE_ENTRY;
+        uint32_t indexInSecondOrderArray =
+       ((searchedBlockLocalIndexInInode - blockSize / VALUE_ENTRY - 12) / (blockSize / VALUE_ENTRY)) * VALUE_ENTRY;
         uint32_t thirdOrderArrayBlock = *(uint32_t*)&blockBuffer[indexInSecondOrderArray];
 
         readResult = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
@@ -347,6 +349,11 @@ uint32_t getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(ext2_super_b
 {
     uint32_t blockIndexInGroup = dataBlockGlobalIndex % superBlock->s_blocks_per_group;
     return blockIndexInGroup - getNumberOfGroupDescriptorsBlocksInFullGroup(superBlock) - getNumberOfInodesBlocksInFullGroup(superBlock) - 3;
+}
+
+uint32_t getBlockGlobalIndexByLocalIndexInsideGroup(ext2_super_block* superBlock, uint32_t dataBlockLocalIndexInGroup, uint32_t group)
+{
+    return superBlock->s_blocks_per_group * group + dataBlockLocalIndexInGroup;
 }
 
 uint32_t getInodeByInodeGlobalIndex(DiskInfo* diskInfo, ext2_super_block* superBlock, uint32_t inodeGlobalIndex, ext2_inode* searchedInode, uint32_t& inodeBlock,

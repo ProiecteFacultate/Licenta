@@ -10,7 +10,7 @@
 #define FAT_VALUE_EOC                                                     0x0FFFFFFF
 
 #define DIR_ENTRY_NO_MORE_ENTRIES                                         0
-#define DIR_ENTRY_FOUND                                                   1
+#define DIR_ENTRY_FOUND                                                   999
 #define DIR_ENTRY_NOT_FOUND_IN_CLUSTER                                    2
 #define DIR_ENTRY_DO_NOT_EXIST                                            3
 #define DIR_ENTRY_SEARCH_ERROR                                            4

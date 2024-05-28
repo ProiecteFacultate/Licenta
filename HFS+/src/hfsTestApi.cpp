@@ -34,7 +34,7 @@ uint32_t hfs_get_subdirectories(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeH
 uint32_t hfs_write_file(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode, char* filePath,
                         char* buffer, uint32_t bytesToWrite, uint32_t writeMode, uint32_t& numberOfBytesWritten, uint32_t& reasonForIncompleteWrite, int64_t& timeElapsedMilliseconds)
 {
-    uint32_t bufferSize = ((bytesToWrite / volumeHeader->blockSize) + 1) * volumeHeader->blockSize; //in order to avoid overflows
+    uint32_t bufferSize = ((bytesToWrite / volumeHeader->blockSize) + 2) * volumeHeader->blockSize; //in order to avoid overflows
     char* writeBuffer = new char[bufferSize];
     memcpy(writeBuffer, buffer, bytesToWrite);
 
@@ -54,9 +54,8 @@ uint32_t hfs_write_file(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, C
 uint32_t hfs_read_file(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFileHeaderNode* catalogFileHeaderNode, ExtentsFileHeaderNode* extentsFileHeaderNode, char* filePath,
                        char* buffer, uint32_t bytesToRead, uint32_t startingPosition, uint32_t& numberOfBytesRead, uint32_t& reasonForIncompleteRead, int64_t& timeElapsedMilliseconds)
 {
-    uint32_t bufferSize = ((bytesToRead / volumeHeader->blockSize) + 1) * volumeHeader->blockSize; //in order to avoid overflows
+    uint32_t bufferSize = ((bytesToRead / volumeHeader->blockSize) + 2) * volumeHeader->blockSize; //in order to avoid overflows
     char* readBuffer = new char[bufferSize];
-    memcpy(readBuffer, buffer, bytesToRead);
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -66,7 +65,8 @@ uint32_t hfs_read_file(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Ca
     auto stop = std::chrono::high_resolution_clock::now();
     timeElapsedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
 
-    delete[] readBuffer;
+    memcpy(buffer, readBuffer, bytesToRead);
+//    delete[] readBuffer;
 
     return result;
 }

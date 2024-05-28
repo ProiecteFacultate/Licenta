@@ -177,14 +177,50 @@ uint32_t updateFat(DiskInfo* diskInfo, BootSector* bootSector, uint32_t clusterN
     uint32_t numOfSectorsWritten = 0;
     uint32_t writeResult = writeDiskSectors(diskInfo, 1, sector, fatTable, numOfSectorsWritten);
 
-    if(writeResult != EC_NO_ERROR)
-    {
-        delete[] fatTable;
-        return FAT_UPDATE_FAILED;
-    }
-
     delete[] fatTable;
-    return FAT_UPDATE_SUCCESS;
+    return (writeResult == EC_NO_ERROR) ? FAT_UPDATE_SUCCESS : FAT_UPDATE_FAILED;
+}
+
+uint32_t updateFatForTwoNeighbours(DiskInfo* diskInfo, BootSector* bootSector, uint32_t clusterNumber_1, char* value_1, uint32_t clusterNumber_2, char* value_2)
+{
+    uint32_t clusterEntryPosition_1 = clusterNumber_1 * 4;
+    uint32_t sector_1 = getFirstFatSector(bootSector) + (clusterEntryPosition_1 / bootSector->BytesPerSector);
+    uint32_t clusterEntryPosition_2 = clusterNumber_2 * 4;
+    uint32_t sector_2 = getFirstFatSector(bootSector) + (clusterEntryPosition_2 / bootSector->BytesPerSector);
+
+    if(sector_1 == sector_2)
+    {
+        uint32_t numOfSectorsRead, numOfSectorsWritten;
+        char* fatTable = new char[bootSector->BytesPerSector];
+        int readResult = readDiskSectors(diskInfo, 1, sector_1, fatTable, numOfSectorsRead);
+
+        if(readResult != EC_NO_ERROR)
+        {
+            delete[] fatTable;
+            return FAT_UPDATE_FAILED;
+        }
+
+        uint32_t offsetInsideSector_1 = clusterEntryPosition_1 % bootSector->BytesPerSector;
+        uint32_t offsetInsideSector_2 = clusterEntryPosition_2 % bootSector->BytesPerSector;
+
+        memcpy(fatTable + offsetInsideSector_1, value_1, 4);
+        memcpy(fatTable + offsetInsideSector_2, value_2, 4);
+
+        uint32_t writeResult = writeDiskSectors(diskInfo, 1, sector_1, fatTable, numOfSectorsWritten);
+
+        delete[] fatTable;
+        return (writeResult == EC_NO_ERROR) ? FAT_UPDATE_SUCCESS : FAT_UPDATE_FAILED;
+    }
+    else
+    {
+        uint32_t updateResult_1 = updateFat(diskInfo, bootSector, clusterNumber_1, value_1);
+        uint32_t updateResult_2 = updateFat(diskInfo, bootSector, clusterNumber_2, value_2);
+
+        if(updateResult_1 == FAT_UPDATE_FAILED || updateResult_2 == FAT_UPDATE_FAILED)
+            return FAT_UPDATE_FAILED;
+
+        return FAT_UPDATE_SUCCESS;
+    }
 }
 
 uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, char* newDirectoryName,
@@ -250,11 +286,9 @@ uint32_t addNewClusterToDirectory(DiskInfo* diskInfo, BootSector* bootSector, ui
     else if(searchEmptyClusterResult == CLUSTER_SEARCH_NO_FREE_CLUSTERS)
         return DIR_ADD_NEW_CLUSTER_NO_CLUSTER_AVAILABLE;
 
-    uint32_t updateFatResult = updateFat(diskInfo, bootSector, newCluster, "\xFF\xFF\xFF\x0F"); //set EOC for the new cluster
-    if(updateFatResult == FAT_UPDATE_FAILED)
-        return DIR_ADD_NEW_CLUSTER_FAILED;
-
-    updateFatResult = updateFat(diskInfo, bootSector, lastClusterInDirectory, (char*) &newCluster); //set EOC for the new cluster
+    //set EOC for the new cluster, and the number of the new cluster for the previous last cluster
+    uint32_t updateFatResult = updateFatForTwoNeighbours(diskInfo, bootSector, newCluster, "\xFF\xFF\xFF\x0F",
+                                                         lastClusterInDirectory, (char*) &newCluster);
 
     return (updateFatResult == FAT_UPDATE_SUCCESS) ? DIR_ADD_NEW_CLUSTER_SUCCESS : DIR_ADD_NEW_CLUSTER_FAILED;
 }

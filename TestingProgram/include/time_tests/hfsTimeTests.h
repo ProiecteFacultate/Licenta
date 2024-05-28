@@ -32,6 +32,6 @@ void hfs_time_test_8();
 
 //Write (50 Mib) file in 50 rounds, first truncate and 49 append, and between these rounds add small files, and then read only the big file for its full size, starting from 0.
 //Count only the read time for big file, for 2048, 4096, 8192 blockSize
-void hfs_time_test_9();
+void hfs_time_test_ignore_1();
 
 #endif

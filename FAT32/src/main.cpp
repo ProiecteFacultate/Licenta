@@ -27,38 +27,38 @@ int main() {
     fat32Startup(diskDirectory, &diskInfo, &bootSector, &fsInfo, 204800, 512, 8,true);
 
     std::string command;
-//    std::cout << "Waiting commands\n";
+    std::cout << "Waiting commands\n";
 
-//    while(true)
-//    {
-//        std::cout << '\n';
-//        std::getline(std::cin, command);
-//
-//        if(command == "exit")
-//        {
-//            std::cout << "Process terminated with exit";
-//            break;
-//        }
-//
-//        std::vector<std::string> tokens = fat32_splitString(command, ' ');
-//
-//        if(tokens[0] == "mkdir")
-//            commandCreateDirectory(diskInfo, bootSector, tokens);
-//        else if(tokens[0] == "ls")
-//            commandListSubdirectories(diskInfo, bootSector, tokens);
-//        else if(tokens[0] == "write")
-//            commandWriteFile(diskInfo, bootSector, tokens);
-//        else if(tokens[0] == "read")
-//            commandReadFile(diskInfo, bootSector, tokens);
-//        else if(tokens[0] == "truncate")
-//            commandTruncateFile(diskInfo, bootSector, tokens);
-//        else if(tokens[0] == "rmdir")
-//            commandDeleteDirectory(diskInfo, bootSector, tokens);
-//        else if(tokens[0] == "la")
-//            commandShowDirectoryAttributes(diskInfo, bootSector, tokens);
-//        else
-//            std::cout << "Unknown command \n";
-//    }
+    while(true)
+    {
+        std::cout << '\n';
+        std::getline(std::cin, command);
+
+        if(command == "exit")
+        {
+            std::cout << "Process terminated with exit";
+            break;
+        }
+
+        std::vector<std::string> tokens = fat32_splitString(command, ' ');
+
+        if(tokens[0] == "mkdir")
+            commandCreateDirectory(diskInfo, bootSector, tokens);
+        else if(tokens[0] == "ls")
+            commandListSubdirectories(diskInfo, bootSector, tokens);
+        else if(tokens[0] == "write")
+            commandWriteFile(diskInfo, bootSector, tokens);
+        else if(tokens[0] == "read")
+            commandReadFile(diskInfo, bootSector, tokens);
+        else if(tokens[0] == "truncate")
+            commandTruncateFile(diskInfo, bootSector, tokens);
+        else if(tokens[0] == "rmdir")
+            commandDeleteDirectory(diskInfo, bootSector, tokens);
+        else if(tokens[0] == "la")
+            commandShowDirectoryAttributes(diskInfo, bootSector, tokens);
+        else
+            std::cout << "Unknown command \n";
+    }
 
     char* parentPath = new char[50];
     memcpy(parentPath, "Root\0", 50);

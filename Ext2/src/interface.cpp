@@ -118,7 +118,7 @@ void commandWriteFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vec
         return;
     }
 
-    uint32_t bufferSize = ((maxBytesToWrite / superBlock->s_log_block_size) + 1) * superBlock->s_log_block_size; //in order to avoid overflows
+    uint32_t bufferSize = ((maxBytesToWrite / superBlock->s_log_block_size) + 2) * superBlock->s_log_block_size; //in order to avoid overflows
     char* text = new char[bufferSize];
     memset(text, 0, maxBytesToWrite);
     uint32_t numberOfBytesAlreadyRead = 0;
@@ -199,7 +199,7 @@ void commandReadFile(DiskInfo* diskInfo, ext2_super_block* superBlock, std::vect
     uint32_t startingPosition = atoi(commandTokens[2].c_str());
     uint32_t maxBytesToRead = atoi(commandTokens[3].c_str());
 
-    uint32_t bufferSize = ((maxBytesToRead / superBlock->s_log_block_size) + 1) * superBlock->s_log_block_size; //in order to avoid overflows
+    uint32_t bufferSize = ((maxBytesToRead / superBlock->s_log_block_size) + 2) * superBlock->s_log_block_size; //in order to avoid overflows
     char* readBuffer = new char[bufferSize];
     uint32_t numberOfBytesRead = 0;
     uint32_t reasonForIncompleteRead;

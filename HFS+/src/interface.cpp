@@ -117,7 +117,7 @@ void commandWriteFile(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, Cat
         return;
     }
 
-    uint32_t bufferSize = ((maxBytesToWrite / volumeHeader->blockSize) + 1) * volumeHeader->blockSize; //in order to avoid overflows
+    uint32_t bufferSize = ((maxBytesToWrite / volumeHeader->blockSize) + 2) * volumeHeader->blockSize; //in order to avoid overflows
     char* text = new char[bufferSize];
     memset(text, 0, maxBytesToWrite);
     uint32_t numberOfBytesAlreadyRead = 0;

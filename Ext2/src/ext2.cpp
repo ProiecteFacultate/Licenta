@@ -1,6 +1,7 @@
 #include "windows.h"
 #include "string.h"
 #include "string"
+#include "iostream"
 #include "vector"
 
 #include "../include/disk.h"
@@ -189,6 +190,7 @@ uint32_t searchInodeByDirectoryNameInParent(DiskInfo* diskInfo, ext2_super_block
                                                                                             parentInode,
                                                                                             blockLocalIndex,
                                                                                             blockGlobalIndex);
+
         if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
         {
             delete[] blockBuffer;
@@ -268,7 +270,7 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* supe
     uint32_t numberOfBlocksToAddToAddToDirectory = 0;
     if(maxBytesToWrite > totalSpaceInDirectory)
         numberOfBlocksToAddToAddToDirectory = (maxBytesToWrite - totalSpaceInDirectory) / superBlock->s_log_block_size + 1;
-    if((maxBytesToWrite - totalSpaceInDirectory) % superBlock->s_log_block_size == 0)
+    if(numberOfBlocksToAddToAddToDirectory != 0 && (maxBytesToWrite - totalSpaceInDirectory) % superBlock->s_log_block_size == 0)
         numberOfBlocksToAddToAddToDirectory--;
 
     //CAUTION we don't return if the add block fails, so even if it fails, the method will continue, and will add bytes only to the free space available + the blocks added successfully
@@ -276,6 +278,8 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* supe
     {
         ext2_inode* updatedInode = new ext2_inode();
         memcpy(updatedInode, inode, sizeof(ext2_inode));
+        if(i == 16630)
+            std::cout<<"";
         uint32_t addBlockToDirectoryResult = allocateBlockToDirectory(diskInfo, superBlock, inode, newBlockGlobalIndex, updatedInode); //we also update the inode if blocks added
         if(addBlockToDirectoryResult != ADD_BLOCK_TO_DIRECTORY_SUCCESS)
         {
@@ -285,6 +289,7 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* supe
         memcpy(inode, updatedInode, sizeof(ext2_inode));
     }
 
+    char* testBuffer = new char[2048];
     for(uint32_t blockLocalIndex = 0; blockLocalIndex < inode->i_blocks; blockLocalIndex++)
     {
         uint32_t numOfBytesToWriteToActualBlock = std::min(superBlock->s_log_block_size, maxBytesToWrite - numberOfBytesWritten);
@@ -292,9 +297,22 @@ uint32_t writeBytesToFileWithTruncate(DiskInfo* diskInfo, ext2_super_block* supe
         if(numOfBytesToWriteToActualBlock == 0)
             return WRITE_BYTES_TO_FILE_SUCCESS;
 
+        uint32_t readResult_1, thirdOrderArrayBlock_1, indexInSecondOrderArray_1;
+//        if(blockLocalIndex > 523 && ((blockLocalIndex - 524) / 512) * 4 == 124)
+//        {
+//            readResult_1 = readDiskSectors(diskInfo, getNumberOfSectorsPerBlock(diskInfo, superBlock),
+//                                           getFirstSectorForGivenBlock(diskInfo, superBlock, 652),testBuffer, numOfSectorsWritten);
+//            indexInSecondOrderArray_1 = ((blockLocalIndex - 524) / 512) * 4;
+//            thirdOrderArrayBlock_1 = *(uint32_t*)&testBuffer[indexInSecondOrderArray_1];
+//            std::cout<<"";
+//        }
+        if(blockLocalIndex == 16637)
+            std::cout<<"";
+
         uint32_t getBlockGlobalIndexResult = getDataBlockGlobalIndexByLocalIndexInsideInode(diskInfo, superBlock, inode,
                                                                                             blockLocalIndex,
                                                                                             blockGlobalIndex);
+
         if(getBlockGlobalIndexResult != GET_DATA_BLOCK_BY_LOCAL_INDEX_SUCCESS)
         {
             reasonForIncompleteWrite = INCOMPLETE_BYTES_WRITE_DUE_TO_OTHER;

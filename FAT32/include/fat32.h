@@ -30,6 +30,8 @@ uint32_t searchEmptyCluster(DiskInfo* diskInfo, BootSector* bootSector, uint32_t
 //Changes the value for given cluster in fat
 uint32_t updateFat(DiskInfo* diskInfo, BootSector* bootSector, uint32_t clusterNumber, char* value);
 
+uint32_t updateFatForTwoNeighbours(DiskInfo* diskInfo, BootSector* bootSector, uint32_t clusterNumber_1, char* value_1, uint32_t clusterNumber_2, char* value_2);
+
 //When creating a new directory, we need to add a directory entry for this new directory in its parent cluster(S)
 uint32_t addDirectoryEntryToParent(DiskInfo* diskInfo, BootSector* bootSector, DirectoryEntry* parentDirectoryEntry, char* newDirectoryName,
                                                    uint32_t firstEmptyCluster, DirectoryEntry* newDirectoryEntry, uint32_t newDirectoryAttribute);

@@ -43,7 +43,7 @@ void fat32_space_test_1()
 
 void fat32_space_test_2()
 {
-    uint64_t bufferSize = 1000000;
+    uint64_t bufferSize = 50000000;
 
     char* diskPath = new char[100];
     memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
@@ -91,8 +91,8 @@ void fat32_space_test_2()
         std:: cout << "\n------------------------------- " << sectorsPerCluster << " Sectors Per Cluster -------------------------------\n";
 
         double internalFragmentationPercentage = ((double) totalInternalFragmentation / (double) totalSizeOnDisk) * 100;
-        std::cout << totalInternalFragmentation << "/" << totalSizeOnDisk << " (" << internalFragmentationPercentage << "%) --- (internal fragmentation/size on disk)"
-        << " for total of " << numberOfBytesWritten << " bytes written\n";
+        std::cout << totalInternalFragmentation << "/" << totalFilesSizes << "/" << totalSizeOnDisk << " (internal fragmentation/file size/size on disk) --- ("
+        << internalFragmentationPercentage << "%) (internal fragmentation/size on disk)";
 
         sectorsPerCluster *= 2;
         deleteFiles(diskPath);
@@ -156,15 +156,15 @@ void fat32_space_test_3()
         std:: cout << "\n------------------------------- " << sectorsPerCluster << " Sectors Per Cluster -------------------------------\n";
 
         double internalFragmentationPercentage = ((double) totalInternalFragmentation / (double) totalSizeOnDisk) * 100;
-        std::cout << totalInternalFragmentation << "/" << totalSizeOnDisk << " (" << internalFragmentationPercentage << "%) --- (internal fragmentation/size on disk)"
-                  << " for total of " << totalFilesSizes << " bytes written\n";
+        std::cout << totalInternalFragmentation << "/" << totalFilesSizes << "/" << totalSizeOnDisk << " (internal fragmentation/file size/size on disk) --- ("
+                  << internalFragmentationPercentage << "%) (internal fragmentation/size on disk)";
 
         sectorsPerCluster *= 2;
         deleteFiles(diskPath);
     }
 }
 
-void fat32_space_test_4()
+void fat32_space_test_ignore_1()
 {
     uint64_t bufferSize = 10000; //CAUTION this isn't the actual file size, it differs, see below in code
     uint32_t numOfFiles = 100;
@@ -257,7 +257,7 @@ void fat32_space_test_4()
     }
 }
 
-void fat32_space_test_5()
+void fat32_space_test_4()
 {
     uint64_t bigBufferSize = 9000000;
     uint64_t mediumBufferSize = 900000;
@@ -342,8 +342,8 @@ void fat32_space_test_5()
         std:: cout << "\n------------------------------- " << sectorsPerCluster << " Sectors Per Cluster -------------------------------\n";
 
         double internalFragmentationPercentage = ((double) totalInternalFragmentation / (double) totalSizeOnDisk) * 100;
-        std::cout << totalInternalFragmentation << "/" << totalSizeOnDisk << " (" << internalFragmentationPercentage << "%) --- (internal fragmentation/size on disk)"
-                  << " for total of " << totalFilesSizes << " bytes written\n";
+        std::cout << totalInternalFragmentation << "/" << totalFilesSizes << "/" << totalSizeOnDisk << " (internal fragmentation/file size/size on disk) --- ("
+                  << internalFragmentationPercentage << "%) (internal fragmentation/size on disk)";
 
         sectorsPerCluster *= 2;
         deleteFiles(diskPath);

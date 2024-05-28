@@ -9,7 +9,7 @@
 
 void fat32_time_test_1()
 {
-    uint64_t bufferSize = 5000000;
+    uint64_t bufferSize = 50000000;
 
     char* diskPath = new char[100];
     memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
@@ -51,12 +51,14 @@ void fat32_time_test_1()
         if(round == 1)
         {
             std:: cout << "\n------------------------------- " << sectorsPerCluster << " Sectors Per Cluster -------------------------------\n";
-            std::cout << "Round 1\n";
+            std::cout << "First Write\n";
         }
         else
-            std::cout << "\nRound 2\n";
+            std::cout << "\nSecond Write\n";
 
-        std::cout << "Number of bytes written: " <<  numberOfBytesWritten << "/" << bufferSize << '\n';
+        uint64_t totalSeconds = timeElapsedMilliseconds / 1000;
+        uint32_t bytesPerSecond = numberOfBytesWritten / totalSeconds;
+        std::cout << "Number of bytes written: " <<  numberOfBytesWritten << "/" << bufferSize << " --- " << bytesPerSecond << " bytes/second --- ";
         printDurationSolo(timeElapsedMilliseconds);
 
         if(round == 2)
@@ -128,7 +130,9 @@ void fat32_time_test_2()
             totalBytesWritten += numberOfBytesWritten;
         }
 
-        std::cout << "Number of bytes written: " <<  totalBytesWritten << "/" << bufferSize * numOfFiles << '\n';
+        uint64_t totalSeconds = totalWriteTime / 1000;
+        uint32_t bytesPerSecond = totalBytesWritten / totalSeconds;
+        std::cout << "Number of bytes written: " <<  totalBytesWritten << "/" << bufferSize * numOfFiles << " --- " << bytesPerSecond << " bytes/second --- ";
         printDurationSolo(totalWriteTime);
         sectorsPerCluster *= 2;
         deleteFiles(diskPath);
@@ -222,7 +226,10 @@ void fat32_time_test_3()
             totalBytesWritten += numberOfBytesWritten;
         }
 
-        std::cout << "Number of bytes written: " <<  totalBytesWritten << "/" << (smallBufferSize + mediumBufferSize + bigBufferSize) * numOfRounds << '\n';
+        uint64_t totalSeconds = totalWriteTime / 1000;
+        uint32_t bytesPerSecond = totalBytesWritten / totalSeconds;
+        std::cout << "Number of bytes written: " <<  totalBytesWritten << "/" << (smallBufferSize + mediumBufferSize + bigBufferSize) * numOfRounds << " --- "
+        << bytesPerSecond << " bytes/second --- ";
         printDurationSolo(totalWriteTime);
         sectorsPerCluster *= 2;
         deleteFiles(diskPath);
@@ -231,7 +238,7 @@ void fat32_time_test_3()
 
 void fat32_time_test_4()
 {
-    uint64_t bufferSize = 10000000;
+    uint64_t bufferSize = 25000000;
 
     char* diskPath = new char[100];
     memcpy(diskPath, "D:\\Facultate\\Licenta\\HardDisks\\Automatic_Test_Solo\0", 100);
@@ -268,12 +275,12 @@ void fat32_time_test_4()
         if(round == 1)
         {
             std:: cout << "\n------------------------------- " << sectorsPerCluster << " Sectors Per Cluster -------------------------------\n";
-            std::cout << "Round 1\n";
+            std::cout << "Write with TRUNCATE\n";
             writeMode = TRUNCATE;
         }
         else
         {
-            std::cout << "\nRound 2\n";
+            std::cout << "Write with APPEND\n";
             writeMode = APPEND;
         }
 
@@ -282,7 +289,9 @@ void fat32_time_test_4()
         result = fat32_write_file(diskInfo, bootSector, fullFilePathCopy, buffer, bufferSize, writeMode,
                                   numberOfBytesWritten, reasonForIncompleteWrite, timeElapsedMilliseconds);
 
-        std::cout << "Number of bytes written: " <<  numberOfBytesWritten << "/" << bufferSize << '\n';
+        uint64_t totalSeconds = timeElapsedMilliseconds / 1000;
+        uint32_t bytesPerSecond = numberOfBytesWritten / totalSeconds;
+        std::cout << "Number of bytes written: " <<  numberOfBytesWritten << "/" << bufferSize << " --- " << bytesPerSecond << " bytes/second --- ";
         printDurationSolo(timeElapsedMilliseconds);
 
         if(round == 2)
@@ -383,7 +392,9 @@ void fat32_time_test_5()
             }
         }
 
-        std::cout << "Number of bytes written in big file: " <<  totalBytesWritten << "/" << bigBufferSize * numOfRounds << '\n';
+        uint64_t totalSeconds = totalWriteTimeOfBigFile / 1000;
+        uint32_t bytesPerSecond = totalBytesWritten / totalSeconds;
+        std::cout << "Number of bytes written in big file: " <<  totalBytesWritten << "/" << bigBufferSize * numOfRounds << " --- " << bytesPerSecond << " bytes/second --- ";
         printDurationSolo(totalWriteTimeOfBigFile);
         sectorsPerCluster *= 2;
         deleteFiles(diskPath);
@@ -438,7 +449,9 @@ void fat32_time_test_6()
 
         std:: cout << "\n------------------------------- " << sectorsPerCluster << " Sectors Per Cluster -------------------------------\n";
 
-        std::cout << "Number of bytes read: " <<  numberOfBytesInBuffer << "/" << bufferSize << '\n';
+        uint64_t totalSeconds = timeElapsedMilliseconds / 1000;
+        uint32_t bytesPerSecond = numberOfBytesInBuffer / totalSeconds;
+        std::cout << "Number of bytes read: " <<  numberOfBytesInBuffer << "/" << bufferSize << " --- " << bytesPerSecond << " bytes/second --- ";
         printDurationSolo(timeElapsedMilliseconds);
 
         sectorsPerCluster *= 2;
@@ -494,7 +507,10 @@ void fat32_time_test_7()
 
         std:: cout << "\n------------------------------- " << sectorsPerCluster << " Sectors Per Cluster -------------------------------\n";
 
-        std::cout << "Number of bytes read: " <<  numberOfBytesInBuffer << "/" << bufferSize / 2 << " --- Start: " << bufferSize / 4 << " End: " << (bufferSize / 4) * 3 << '\n';
+        uint64_t totalSeconds = timeElapsedMilliseconds / 1000;
+        uint32_t bytesPerSecond = numberOfBytesRead / totalSeconds;
+        std::cout << "Number of bytes read: " <<  numberOfBytesRead << "/" << bufferSize / 2 << " --- Start: " << bufferSize / 4 << " End: " << (bufferSize / 4) * 3
+          << " --- " << bytesPerSecond << " bytes/second --- ";
         printDurationSolo(timeElapsedMilliseconds);
 
         sectorsPerCluster *= 2;
@@ -563,15 +579,16 @@ void fat32_time_test_8()
             totalBytesRead += numberOfBytesInBuffer;
         }
 
-
-        std::cout << "Number of bytes read: " <<  totalBytesRead << "/" << bufferSize * numOfFiles << '\n';
+        uint64_t totalSeconds = totalReadTime / 1000;
+        uint32_t bytesPerSecond = totalBytesRead / totalSeconds;
+        std::cout << "Number of bytes read: " <<  totalBytesRead << "/" << bufferSize * numOfFiles  << " --- " << bytesPerSecond << " bytes/second --- ";
         printDurationSolo(totalReadTime);
         sectorsPerCluster *= 2;
         deleteFiles(diskPath);
     }
 }
 
-void fat32_time_test_9()
+void fat32_time_test_ignore_1()
 {
     uint64_t bigBufferSize = 1000000;
     uint64_t smallBufferSize = 10000;
@@ -666,7 +683,9 @@ void fat32_time_test_9()
             totalBytesRead += numberOfBytesInBuffer;
         }
 
-        std::cout << "Number of bytes read from big file: " <<  totalBytesRead << "/" << bigBufferSize * numOfRounds << '\n';
+        uint64_t totalSeconds = totalReadTimeOfBigFile / 1000;
+        uint32_t bytesPerSecond = totalBytesRead / totalSeconds;
+        std::cout << "Number of bytes read from big file: " <<  totalBytesRead << "/" << bigBufferSize * numOfRounds << " --- " << bytesPerSecond << " bytes/second --- ";
         printDurationSolo(totalReadTimeOfBigFile);
         sectorsPerCluster *= 2;
         deleteFiles(diskPath);

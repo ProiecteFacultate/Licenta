@@ -600,6 +600,7 @@ static uint32_t searchAndOccupyFreeDataBlockInGivenGroup(DiskInfo* diskInfo, ext
 
     uint32_t preferredBlockLocalIndexInDataBlockList;
     uint32_t preferredLocation = previousBlockLocalIndex + 1;
+    preferredLocation = getBlockGlobalIndexByLocalIndexInsideGroup(superBlock, preferredLocation, group);
     if(preferredLocation % superBlock->s_blocks_per_group != 0) //in case we are at the beginning of a new group, we don't make the next operation because underflow
         preferredBlockLocalIndexInDataBlockList = getDataBlockLocalIndexInLocalListOfDataBlocksByGlobalIndex(superBlock, preferredLocation);
     else

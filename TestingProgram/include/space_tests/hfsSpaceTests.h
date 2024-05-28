@@ -17,10 +17,10 @@ void hfs_space_test_3();
 
 //write many (100) small files 2 times with truncate, once with the block size + 1 byte, so fragmentation will be almost 50%, and second time 1 byte less, so equal to block size,
 //and fragmentation will be 0, for 2048, 4096, 8192 blockSize
-void hfs_space_test_4();
+void hfs_space_test_ignore_1();
 
 //Multiple rounds (5) of 3 types of files: big 9 Mib, medium 900 Kib, small 90 Kib, count total internal fragmentation for all of them, for 2048, 4096, 8192 blockSize
-void hfs_space_test_5();
+void hfs_space_test_4();
 
 //////////////////////
 

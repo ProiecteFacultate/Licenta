@@ -34,7 +34,7 @@ uint32_t ext2_get_subdirectories(DiskInfo* diskInfo, ext2_super_block* superBloc
 uint32_t ext2_write_file(DiskInfo* diskInfo, ext2_super_block* superBlock, char* filePath, char* buffer, uint32_t bytesToWrite, uint32_t writeMode, uint32_t& numberOfBytesWritten,
                          uint32_t& reasonForIncompleteWrite, int64_t& timeElapsedMilliseconds)
 {
-    uint32_t bufferSize = ((bytesToWrite / superBlock->s_log_block_size) + 1) * superBlock->s_log_block_size; //in order to avoid overflows
+    uint32_t bufferSize = ((bytesToWrite / superBlock->s_log_block_size) + 2) * superBlock->s_log_block_size; //in order to avoid overflows
     char* writeBuffer = new char[bufferSize];
     memcpy(writeBuffer, buffer, bytesToWrite);
 
@@ -54,7 +54,7 @@ uint32_t ext2_write_file(DiskInfo* diskInfo, ext2_super_block* superBlock, char*
 uint32_t ext2_read_file(DiskInfo* diskInfo, ext2_super_block* superBlock, char* filePath, char* buffer, uint32_t bytesToRead, uint32_t startingPosition, uint32_t& numberOfBytesRead,
                         uint32_t& reasonForIncompleteRead, int64_t& timeElapsedMilliseconds)
 {
-    uint32_t bufferSize = ((bytesToRead / superBlock->s_log_block_size) + 1) * superBlock->s_log_block_size; //in order to avoid overflows
+    uint32_t bufferSize = ((bytesToRead / superBlock->s_log_block_size) + 2) * superBlock->s_log_block_size; //in order to avoid overflows
     char* readBuffer = new char[bufferSize];
 
     auto start = std::chrono::high_resolution_clock::now();

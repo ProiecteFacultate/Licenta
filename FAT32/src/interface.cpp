@@ -118,7 +118,7 @@ void commandWriteFile(DiskInfo* diskInfo, BootSector* bootSector, std::vector<st
         return;
     }
 
-    char* text = new char[maxBytesToWrite];
+    char* text = new char[maxBytesToWrite + 20000]; //hardcoded 20000 because lazy
     memset(text, 0, maxBytesToWrite);
     uint32_t numberOfBytesAlreadyRead = 0;
     std::string lineData;
@@ -192,7 +192,7 @@ void commandReadFile(DiskInfo* diskInfo, BootSector* bootSector, std::vector<std
     uint32_t startingPosition = atoi(commandTokens[2].c_str());
     uint32_t maxBytesToRead = atoi(commandTokens[3].c_str());
 
-    char* readBuffer = new char[maxBytesToRead];
+    char* readBuffer = new char[maxBytesToRead + 20000]; //hardcoded 20000 because lazy
     uint32_t numberOfBytesRead = 0;
     uint32_t reasonForIncompleteRead;
     uint32_t readFileResult = read(diskInfo, bootSector, filePath, readBuffer, startingPosition, maxBytesToRead, numberOfBytesRead, reasonForIncompleteRead);
