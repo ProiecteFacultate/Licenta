@@ -219,7 +219,7 @@ uint32_t read(DiskInfo* diskInfo, HFSPlusVolumeHeader* volumeHeader, CatalogFile
     uint32_t blockLocalIndex = startingPosition / volumeHeader->blockSize;
 
     //look for the extent of the first block we are reading from
-    uint32_t localIndex = 0, actualExtentIndex, startBlockInExtentIndex, i = 0;
+    uint32_t localIndex = 0, actualExtentIndex = 0, startBlockInExtentIndex, i = 0;
     while(localIndex < blockLocalIndex)
     {
         if(localIndex + extents[i]->blockCount >= blockLocalIndex)

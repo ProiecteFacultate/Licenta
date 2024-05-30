@@ -10,7 +10,7 @@
 
 int main()
 {
-    common_time_test_3();
+    common_time_test_2();
 
     return 0;
 }

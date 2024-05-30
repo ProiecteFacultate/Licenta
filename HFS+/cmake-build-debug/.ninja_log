@@ -34,3 +34,5 @@
 12	440	7386080947091166	CMakeFiles/hfs_lib.dir/src/hfsTestApi.cpp.obj	6c69ecae26c439d1
 6	1151	7386080954205221	CMakeFiles/hfs_lib.dir/src/interface.cpp.obj	2b3cde3c69a702ed
 1151	1551	7386080958176661	libhfs_lib.a	9929309bd586a944
+160	2369	7387124243545763	CMakeFiles/hfs_lib.dir/src/hfsApi.cpp.obj	a0c568e5b3d08628
+2369	2890	7387124248789194	libhfs_lib.a	9929309bd586a944
