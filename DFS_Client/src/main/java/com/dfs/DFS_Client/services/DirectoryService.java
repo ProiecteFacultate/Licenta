@@ -1,12 +1,9 @@
 package com.dfs.DFS_Client.services;
 
-import com.dfs.DFS_Client.clients.DriveClient;
 import com.dfs.DFS_Client.models.*;
 import com.dfs.DFS_Client.clients.DirectoryClient;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileWriter;
-import java.io.InputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -21,7 +18,7 @@ public class DirectoryService {
         this.driveService = new DriveService();
     }
 
-    public void createDirectory( final List<String> commandTokens, final UserData userData ) {
+    public void createDirectory( final List<String> commandTokens, final LocalUserData localUserData) {
         if(commandTokens.size() != 4)
         {
             System.out.println( "'mkdir' command should have 4 arguments!\n" );
@@ -31,14 +28,14 @@ public class DirectoryService {
         final String parentFolder = commandTokens.get( 1 );
         final String directoryName = commandTokens.get( 2 );
         final DirectoryType type = DirectoryType.valueOf( commandTokens.get( 3 ) );
-        final Status createDirectoryStatus = directoryClient.createDirectory( parentFolder, directoryName, type, userData.getUsername() );
+        final Status createDirectoryStatus = directoryClient.createDirectory( parentFolder, directoryName, type, localUserData.getUsername() );
 
         switch ( createDirectoryStatus.getMessage() ){
             case "Directory created":
                 System.out.println( "Directory created" );
 
-                if( !userData.getLocalFSPath().isEmpty() )
-                    driveService.createDirectory( parentFolder, directoryName, type, userData );
+                if( !localUserData.getLocalFSPath().isEmpty() )
+                    driveService.createDirectory( parentFolder, directoryName, type, localUserData);
               break;
             case "Directory already exists":
                 System.out.println( "Directory already exists" );
@@ -51,7 +48,7 @@ public class DirectoryService {
         }
     }
 
-    public void writeFile( final List<String> commandTokens, final UserData userData ) {
+    public void writeFile( final List<String> commandTokens, final LocalUserData localUserData) {
         if(commandTokens.size() != 3)
         {
             System.out.println( "'write' command should have 3 arguments!\n" );
@@ -73,13 +70,20 @@ public class DirectoryService {
 
         final byte[] fileData = Arrays.copyOfRange( buffer.toString().getBytes(), 0 , bytesToWrite );
 
-        final Status writeFileResult = directoryClient.writeFile( filePath, fileData, bytesToWrite, userData.getUsername() );
+        final Status writeFileResult = directoryClient.writeFile( filePath, fileData, bytesToWrite, localUserData.getUsername() );
 
         switch ( writeFileResult.getMessage() ) {
             case "File written":
                 System.out.println( "File written" );
-                if( !userData.getLocalFSPath().isEmpty() )
-                    driveService.writeFile( filePath, fileData, bytesToWrite, userData );
+
+                try {
+                    final String localDrivePath = localUserData.getLocalFSPath();
+                    if( !localDrivePath.isEmpty() && LocalDriveHandler.getDirectoryMetadataForFile( localDrivePath, filePath ).isPresent() )
+                        driveService.writeFile( filePath, fileData, bytesToWrite, localUserData);
+                } catch ( final IOException exception) {
+
+                }
+
                 break;
             case "File does not exist":
                 System.out.println( "File does not exist" );
@@ -89,7 +93,7 @@ public class DirectoryService {
         }
     }
 
-    public void readFile( final List<String> commandTokens, final UserData userData ) {
+    public void readFile( final List<String> commandTokens, final LocalUserData localUserData) {
         if(commandTokens.size() != 4)
         {
             System.out.println( "'read' command should have 4 arguments!\n" );
@@ -108,8 +112,14 @@ public class DirectoryService {
 
         //read the first bytes from local drive
         Pair<Status, ReadResponse> readFromLocalDriveResult = null;
-        if( !userData.getLocalFSPath().isEmpty() )
-            readFromLocalDriveResult = driveService.readFile( filePath, startPosition, bytesToRead, userData);
+
+        try {
+            final String localDrivePath = localUserData.getLocalFSPath();
+            if( !localDrivePath.isEmpty() && LocalDriveHandler.getDirectoryMetadataForFile( localDrivePath, filePath ).isPresent() )
+                readFromLocalDriveResult = driveService.readFile( filePath, startPosition, bytesToRead, localUserData);
+        } catch ( final IOException exception) {
+
+        }
 
         if( readFromLocalDriveResult != null && readFromLocalDriveResult.getKey().getMessage().equals( "File read" ) ) {
             bytesReadFromLocalDrive = readFromLocalDriveResult.getValue().getBytesRead();
@@ -130,7 +140,7 @@ public class DirectoryService {
             return;
         }
 
-        final Pair<Status, ReadResponse> readFromServerResult = directoryClient.readFile( filePath, startingPositionOnServer, bytesToReadFromServer, userData.getUsername() );
+        final Pair<Status, ReadResponse> readFromServerResult = directoryClient.readFile( filePath, startingPositionOnServer, bytesToReadFromServer, localUserData.getUsername() );
 
         switch ( readFromServerResult.getKey().getMessage() ) {
             case "File read":

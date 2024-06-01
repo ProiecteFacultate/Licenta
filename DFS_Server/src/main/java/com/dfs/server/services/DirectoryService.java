@@ -4,12 +4,10 @@ import com.dfs.server.models.*;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 
 @Service
 public class DirectoryService {
@@ -102,16 +100,16 @@ public class DirectoryService {
         }
     }
 
-    public Pair<Status, UserData> getUserData( final String username ) {
+    public Pair<Status, ServerUserData> getUserData(final String username ) {
         try {
             final UsersSerializableData usersSerializableData = UsersSerializableData.readFromFile( dfsServerUsersDataFilePath );
 
-            final UserData userData = usersSerializableData.getUsersDataList().stream()
+            final ServerUserData serverUserData = usersSerializableData.getUsersDataList().stream()
                     .filter( data -> data.getUsername().equals( username ) )
                     .findAny()
                     .get();
 
-            return Pair.of( new Status( "Retrieved user data" ), userData );
+            return Pair.of( new Status( "Retrieved user data" ), serverUserData);
         } catch ( final IOException exception) {
             return Pair.of( new Status( "Failed to get user data" ), null);
         }

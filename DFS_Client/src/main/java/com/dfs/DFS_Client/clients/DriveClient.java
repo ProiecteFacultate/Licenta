@@ -17,26 +17,4 @@ public class DriveClient {
     public DriveClient() {
         this.restTemplate = new RestTemplate();
     }
-
-    public Status createLocalDrive( final String localDrivePath, final int localDriveMaximumSize, final int localDriveMaximumFileSize, final String username ) {
-        final CreateLocalDrivePayload createLocalDrivePayload = new CreateLocalDrivePayload( localDrivePath, localDriveMaximumSize, localDriveMaximumFileSize, username );
-
-        final HttpHeaders headers = new HttpHeaders();
-        headers.setContentType( MediaType.APPLICATION_JSON );
-        headers.setAccept( Collections.singletonList( MediaType.APPLICATION_JSON ) );
-        final HttpEntity<CreateLocalDrivePayload> requestEntity = new HttpEntity<>( createLocalDrivePayload, headers );
-
-        final String url = String.format( "%s/drive/local/create", dfsServerUrl );
-
-        try {
-            final ResponseEntity<Status> response = restTemplate.exchange(
-                    url, HttpMethod.POST, requestEntity, Status.class
-            );
-
-            return response.getBody();
-
-        } catch ( final Exception e ) {
-            return new Status( "ERROR" );
-        }
-    }
 }

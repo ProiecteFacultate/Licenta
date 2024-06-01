@@ -1,9 +1,6 @@
 package com.dfs.server.services;
 
-import com.dfs.server.models.UsersSerializableData;
-
 import java.io.File;
-import java.io.IOException;
 
 public class InitializationService {
 

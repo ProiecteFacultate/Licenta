@@ -4,8 +4,6 @@ import com.dfs.server.models.*;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -13,15 +11,15 @@ public class AuthenticationService {
 
     private final String dfsServerUsersDataFilePath = "D:\\Facultate\\Licenta\\HardDisks\\DFS_Server_Disk\\UsersData";
 
-    public Pair<Status, UserData> register(final AuthenticationPayload authenticationPayload ) {
+    public Pair<Status, ServerUserData> register(final AuthenticationPayload authenticationPayload ) {
         try {
             final UsersSerializableData usersSerializableData = UsersSerializableData.readFromFile( dfsServerUsersDataFilePath );
-            final Optional<UserData> existingUser = usersSerializableData.getUsersDataList().stream()
+            final Optional<ServerUserData> existingUser = usersSerializableData.getUsersDataList().stream()
                     .filter( userData -> userData.getUsername().equals( authenticationPayload.getUsername() ) )
                     .findAny();
 
             if( existingUser.isEmpty() ) {
-                final UserData newUser = new UserData( authenticationPayload.getUsername(), authenticationPayload.getPassword() );
+                final ServerUserData newUser = new ServerUserData( authenticationPayload.getUsername(), authenticationPayload.getPassword() );
                 usersSerializableData.getUsersDataList().add( newUser );
                 UsersSerializableData.writeToFile( dfsServerUsersDataFilePath, usersSerializableData );
 
@@ -34,10 +32,10 @@ public class AuthenticationService {
         }
     }
 
-    public Pair<Status, UserData> login( final AuthenticationPayload authenticationPayload ) {
+    public Pair<Status, ServerUserData> login(final AuthenticationPayload authenticationPayload ) {
         try {
             final UsersSerializableData usersSerializableData = UsersSerializableData.readFromFile( dfsServerUsersDataFilePath );
-            final Optional<UserData> existingUser = usersSerializableData.getUsersDataList().stream()
+            final Optional<ServerUserData> existingUser = usersSerializableData.getUsersDataList().stream()
                     .filter( userData -> userData.getUsername().equals( authenticationPayload.getUsername() ) )
                     .findAny();
 

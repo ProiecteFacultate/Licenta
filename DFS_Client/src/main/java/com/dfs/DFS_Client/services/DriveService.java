@@ -3,7 +3,6 @@ package com.dfs.DFS_Client.services;
 import com.dfs.DFS_Client.clients.DirectoryClient;
 import com.dfs.DFS_Client.clients.DriveClient;
 import com.dfs.DFS_Client.models.*;
-import org.apache.catalina.User;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +25,7 @@ public class DriveService {
         this.driveClient = new DriveClient();
     }
 
-    public void createLocalDrive(final List<String> commandTokens, final UserData userData ) {
+    public void createLocalDrive( final List<String> commandTokens, final LocalUserData localUserData ) {
         if(commandTokens.size() != 4)
         {
             System.out.println( "'mkdrive' command should have 4 arguments!\n" );
@@ -37,28 +36,83 @@ public class DriveService {
         final int localDriveMaximumSize = Integer.parseInt( commandTokens.get( 2 ) );
         final int localDriveMaximumFileSize = Integer.parseInt( commandTokens.get( 3 ) );
 
-        final File file = new File( localDrivePath );
-        if( file.exists() )
-            file.delete();
+        final File localDriveFolder = new File( localDrivePath );
+        if( localDriveFolder.exists() ) {
+            final boolean localDriveFolderDeleted = localDriveFolder.delete();
+            if( !localDriveFolderDeleted ) {
+                System.out.println( "Failed to create local drive folder." );
+                return;
+            }
+        }
 
-        file.mkdir();
+        boolean localDriveFolderCreated = localDriveFolder.mkdir();
 
-        final Status createLocalDriveStatus = driveClient.createLocalDrive( localDrivePath, localDriveMaximumSize, localDriveMaximumFileSize, userData.getUsername() );
+        if( !localDriveFolderCreated ) {
+            System.out.println( "Failed to create local drive folder." );
+            return;
+        }
 
-        switch ( createLocalDriveStatus.getMessage() ){
-            case "Successfully created local drive":
-                System.out.println( "Successfully created local drive" );
-                userData.setLocalFSPath( localDrivePath );
-                userData.setLocalFSMaximumSize( localDriveMaximumSize );
-                userData.setLocalFSMaximumFileSize( localDriveMaximumFileSize );
-                break;
-            default: //"Failed to create local drive" or "ERROR" from client method
-                System.out.println( "Failed to create local drive" );
+        final String localDriveDataFolderPath = localDrivePath + "\\" + "Data";
+        final File localDriveDataFolder = new File( localDriveDataFolderPath );
+        boolean dataFolderCreated = localDriveDataFolder.mkdir();
+
+        if( !dataFolderCreated ) {
+            System.out.println( "Failed to create local drive folder." );
+            return;
+        }
+
+        final String localDriveMetadataFilePath = localDrivePath + "\\" + "Metadata";
+        final File localDriveMetadataFile = new File( localDriveMetadataFilePath );
+
+        try {
+            final boolean metadataFileCreated = localDriveMetadataFile.createNewFile();
+            if( !metadataFileCreated ) {
+                System.out.println( "Failed to create local drive folder." );
+                return;
+            }
+
+            final LocalUserData userDataToWrite = new LocalUserData(); //we make a new object here and then update the actual userData below in case this try fails
+            userDataToWrite.setUsername( localUserData.getUsername() );
+            userDataToWrite.setLocalFSPath( localDrivePath );
+            userDataToWrite.setLocalFSMaximumSize( localDriveMaximumSize );
+            userDataToWrite.setLocalFSMaximumFileSize( localDriveMaximumFileSize );
+
+            LocalDriveHandler.writeToMetadataFile( localDrivePath, userDataToWrite );;
+        } catch ( final IOException exception ) {
+            System.out.println( "Failed to create local drive folder." );
+            return;
+        }
+
+        localUserData.setLocalFSPath( localDrivePath );
+        localUserData.setLocalFSMaximumSize( localDriveMaximumSize );
+        localUserData.setLocalFSMaximumFileSize( localDriveMaximumFileSize );
+
+        System.out.println( "Successfully created local drive at " + localDrivePath );
+    }
+
+    public void linkLocalDrive( final List<String> commandTokens, final LocalUserData localUserData ) {
+        if(commandTokens.size() != 2)
+        {
+            System.out.println( "'linkdrive' command should have 2 arguments!\n" );
+            return;
+        }
+
+        final String localDrivePath = commandTokens.get( 1 );
+
+        try {
+            final LocalUserData userDataOnLocalDrive = LocalDriveHandler.readMetadataFile( localDrivePath );
+            localUserData.setLocalFSPath( localDrivePath );
+            localUserData.setLocalFSMaximumSize(userDataOnLocalDrive.getLocalFSMaximumSize() );
+            localUserData.setLocalFSMaximumFileSize( userDataOnLocalDrive.getLocalFSMaximumFileSize() );
+
+            System.out.println( "Successfully linked local drive at " + localDrivePath );
+        } catch ( final IOException exception ) {
+            System.out.println( "Failed to link local drive at " + localDrivePath );
         }
     }
 
-    public void createDirectory( final String parentFolder, final String directoryName, final DirectoryType type, final UserData userData ) {
-        final String directoryAbsolutePath = userData.getLocalFSPath() + "\\" + parentFolder.substring( 4 ) + "\\" + directoryName;
+    public void createDirectory( final String parentFolder, final String directoryName, final DirectoryType type, final LocalUserData localUserData) {
+        final String directoryAbsolutePath = localUserData.getLocalFSPath() + "\\Data\\" + parentFolder.substring( 4 ) + "\\" + directoryName;
         final File newDirectory = new File( directoryAbsolutePath );
 
         try {
@@ -67,7 +121,9 @@ public class DriveService {
             if( cratedResult ) {
                 final String directoryRelativePath = parentFolder + "\\" + directoryName;
                 final DirectoryMetadata newDirectoryMetadata = new DirectoryMetadata( directoryRelativePath, type, 0 );
-                userData.getDirectoriesMetadata().add( newDirectoryMetadata );
+
+                LocalDriveHandler.addDirectoryToListForUser( localUserData.getLocalFSPath(), newDirectoryMetadata );
+                localUserData.getDirectoriesMetadata().add( newDirectoryMetadata );
                 System.out.println( "Successfully created directory on local drive" );
             }
 
@@ -76,21 +132,15 @@ public class DriveService {
         }
     }
 
-    public void writeFile( final String filePath, byte[] fileData, final int bytesToWrite, final UserData userData ) {
-        final String fileAbsolutePath = userData.getLocalFSPath() + "\\" + filePath.substring( 5 );
-        final File localDriveFolder = new File( userData.getLocalFSPath() );
-        final int freeSpaceInLocalDrive = userData.getLocalFSMaximumSize() - (int) localDriveFolder.getTotalSpace();
-        final int bytesToWriteToFile = Math.min( freeSpaceInLocalDrive, userData.getLocalFSMaximumFileSize() );
+    public void writeFile( final String filePath, byte[] fileData, final int bytesToWrite, final LocalUserData localUserData) {
+        final String fileAbsolutePath = localUserData.getLocalFSPath() + "\\Data\\" + filePath.substring( 5 );
+        final File localDriveFolder = new File( localUserData.getLocalFSPath() );
+        final int freeSpaceInLocalDrive = localUserData.getLocalFSMaximumSize() - (int) localDriveFolder.getTotalSpace();
+        final int bytesToWriteToFile = Math.min( freeSpaceInLocalDrive, Math.min( localUserData.getLocalFSMaximumFileSize(), bytesToWrite ) );
 
         try {
             Files.write( Path.of( fileAbsolutePath ), Arrays.copyOfRange( fileData, 0 , bytesToWriteToFile ) );
-
-            final DirectoryMetadata writtenFileMetadata = userData.getDirectoriesMetadata().stream()
-                            .filter( directoryMetadata -> directoryMetadata.getDirectoryRelativePath().equals( filePath ) )
-                            .findAny()
-                            .get();
-
-            writtenFileMetadata.setFileLength( bytesToWriteToFile );
+            LocalDriveHandler.updateFileSize( localUserData.getLocalFSPath(), filePath, bytesToWriteToFile );
 
             System.out.println( "Wrote " + bytesToWriteToFile + " bytes to local drive" );
         } catch ( final IOException e) {
@@ -98,15 +148,15 @@ public class DriveService {
         }
     }
 
-    public Pair<Status, ReadResponse> readFile( final String filePath, final int startPosition, final int bytesToRead, final UserData userData ) {
-        final String fileAbsolutePath = userData.getLocalFSPath() + "\\" + filePath.substring( 5 );
+    public Pair<Status, ReadResponse> readFile( final String filePath, final int startPosition, final int bytesToRead, final LocalUserData localUserData) {
+        final String fileAbsolutePath = localUserData.getLocalFSPath() + "\\Data\\" + filePath.substring( 5 );
         final File file = new File( fileAbsolutePath );
 
         if( !file.exists() )
             return Pair.of( new Status( "File does not exist on local drive" ), null);
 
         try( RandomAccessFile raf = new RandomAccessFile( file, "r") ) {
-            final DirectoryMetadata fileMetadata = userData.getDirectoriesMetadata().stream()
+            final DirectoryMetadata fileMetadata = localUserData.getDirectoriesMetadata().stream()
                     .filter( directoryMetadata -> directoryMetadata.getDirectoryRelativePath().equals( filePath ) )
                     .findAny()
                     .get();
@@ -128,9 +178,9 @@ public class DriveService {
         }
     }
 
-    public void syncDrive( final UserData userData ) {
+    public void syncDrive( final LocalUserData localUserData) {
         //read user data (maybe someone changed it)
-        final Pair<Status, UserData> getUserDataResult = directoryClient.getUserData(userData.getUsername() );
+        final Pair<Status, LocalUserData> getUserDataResult = directoryClient.getUserData(localUserData.getUsername() );
 
         if( !getUserDataResult.getKey().getMessage().equals( "Retrieved user data" ) ) {
             System.out.println( "Failed to sync drive to local drive" );
@@ -140,14 +190,14 @@ public class DriveService {
         List<DirectoryMetadata> directoriesOnLocalDrive = new ArrayList<>();
 
         try {
-            getAllDirectoriesOnLocalDrive( userData.getLocalFSPath(), userData.getLocalFSPath(), directoriesOnLocalDrive );
+            getAllDirectoriesOnLocalDrive( localUserData.getLocalFSPath(), localUserData.getLocalFSPath(), directoriesOnLocalDrive );
         } catch ( final Exception exception ) {
             System.out.println( "Failed to sync drive to local drive" );
             return;
         }
 
-        final UserData newUserData = getUserDataResult.getValue();
-        final List<DirectoryMetadata> directoriesNotInLocalDrive = newUserData.getDirectoriesMetadata().stream()
+        final LocalUserData newLocalUserData = getUserDataResult.getValue();
+        final List<DirectoryMetadata> directoriesNotInLocalDrive = newLocalUserData.getDirectoriesMetadata().stream()
                 .filter( directoryMetadata -> !directoriesOnLocalDrive.stream()
                                               .map( DirectoryMetadata::getDirectoryRelativePath )
                                               .collect( Collectors.toList() ).contains( directoryMetadata.getDirectoryRelativePath() ) )
@@ -158,7 +208,7 @@ public class DriveService {
             final String parentFolder = directoryMetadata.getDirectoryRelativePath().substring( 0, lastSlashIndex );
             final String directoryName = directoryMetadata.getDirectoryRelativePath().substring(lastSlashIndex + 1);
 
-            createDirectory( parentFolder, directoryName, directoryMetadata.getType(), userData );
+            createDirectory( parentFolder, directoryName, directoryMetadata.getType(), localUserData);
         }
 
         System.out.println( "Successfully sync drive to local drive" );

@@ -19,15 +19,9 @@ public class DriveController {
         this.directoryService = new DirectoryService();
     }
 
-    @PostMapping( value = "/local/create", produces = MediaType.APPLICATION_JSON_VALUE )
-    @ResponseStatus( HttpStatus.OK )
-    public Status createLocalDrive( @RequestBody CreateLocalDrivePayload createLocalDrivePayload ) {
-        return driveService.createLocalDrive( createLocalDrivePayload );
-    }
-
     @PostMapping( value = "/userData/get/{username}", produces = MediaType.APPLICATION_JSON_VALUE )
     @ResponseStatus( HttpStatus.OK )
-    public Pair<Status, UserData> getUserData( @PathVariable final String username ) {
+    public Pair<Status, ServerUserData> getUserData(@PathVariable final String username ) {
         return directoryService.getUserData( username );
     }
 }

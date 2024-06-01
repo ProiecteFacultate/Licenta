@@ -2,13 +2,12 @@ package com.dfs.DFS_Client;
 
 import com.dfs.DFS_Client.clients.AuthenticationClient;
 import com.dfs.DFS_Client.models.Pair;
+import com.dfs.DFS_Client.models.ServerUserData;
 import com.dfs.DFS_Client.models.Status;
-import com.dfs.DFS_Client.models.UserData;
+import com.dfs.DFS_Client.models.LocalUserData;
 import com.dfs.DFS_Client.services.DirectoryService;
 import com.dfs.DFS_Client.services.DriveService;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -26,8 +25,9 @@ public class Interface {
     }
 
     public void run() throws Exception {
-        final UserData userData = authenticate();
-        System.out.println( "\n ---- You are now logged in as '" + userData.getUsername() + "' ----" );
+        final ServerUserData serverUserData = authenticate();
+        final LocalUserData localUserData = new LocalUserData( serverUserData.getUsername() );
+        System.out.println( "\n ---- You are now logged in as '" + localUserData.getUsername() + "' ----" );
 
         Scanner scanner = new Scanner(System.in);
 
@@ -36,15 +36,17 @@ public class Interface {
             final List<String> commandTokens = Arrays.asList( command.split(" ") );
 
             if( commandTokens.get( 0 ).equals( "mkdrive") )
-                driveService.createLocalDrive( commandTokens, userData );
-            else if( commandTokens.get( 0 ).equals( "mkdir") )
-                directoryService.createDirectory( commandTokens, userData );
-            else if( commandTokens.get( 0 ).equals( "write") )
-                directoryService.writeFile( commandTokens, userData );
-            else if( commandTokens.get( 0 ).equals( "read") )
-                directoryService.readFile( commandTokens, userData );
+                driveService.createLocalDrive( commandTokens, localUserData);
+            else if( commandTokens.get( 0 ).equals( "linkdrive" ) )
+                driveService.linkLocalDrive( commandTokens, localUserData );
             else if( commandTokens.get( 0 ).equals( "syncdrive") )
-                driveService.syncDrive( userData );
+                driveService.syncDrive(localUserData);
+            else if( commandTokens.get( 0 ).equals( "mkdir") )
+                directoryService.createDirectory( commandTokens, localUserData);
+            else if( commandTokens.get( 0 ).equals( "write") )
+                directoryService.writeFile( commandTokens, localUserData);
+            else if( commandTokens.get( 0 ).equals( "read") )
+                directoryService.readFile( commandTokens, localUserData);
             else if( commandTokens.get( 0 ).equals( "exit" ) ) {
                 scanner.close();
                 System.out.println( "Session ended!" );
@@ -55,7 +57,7 @@ public class Interface {
         }
     }
 
-    private UserData authenticate() throws Exception {
+    private ServerUserData authenticate() throws Exception {
         Scanner scanner = new Scanner(System.in);
 
         while ( true ) {
@@ -72,7 +74,7 @@ public class Interface {
             }
 
             if( authenticationCommand.equals( "Login") ) {
-                final Pair<Status, UserData> loginResponse = authenticationClient.login( username, password );
+                final Pair<Status, ServerUserData> loginResponse = authenticationClient.login( username, password );
 
                 switch ( loginResponse.getKey().getMessage() ) {
                     case "User logged in":
@@ -89,7 +91,7 @@ public class Interface {
                 }
 
             } else if( authenticationCommand.equals( "Register") ) {
-                final Pair<Status, UserData> registerResponse = authenticationClient.register( username, password );
+                final Pair<Status, ServerUserData> registerResponse = authenticationClient.register( username, password );
 
                 switch ( registerResponse.getKey().getMessage() ) {
                     case "User created":

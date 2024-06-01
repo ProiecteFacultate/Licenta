@@ -1,12 +1,8 @@
 package com.dfs.DFS_Client.clients;
 
-import com.dfs.DFS_Client.models.AuthenticationPayload;
-import com.dfs.DFS_Client.models.Pair;
-import com.dfs.DFS_Client.models.Status;
-import com.dfs.DFS_Client.models.UserData;
+import com.dfs.DFS_Client.models.*;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
@@ -21,7 +17,7 @@ public class AuthenticationClient {
         this.restTemplate = new RestTemplate();
     }
 
-    public Pair<Status, UserData> register(final String username, final String password ) {
+    public Pair<Status, ServerUserData> register(final String username, final String password ) {
         final AuthenticationPayload authenticationPayload = new AuthenticationPayload( username, password );
 
         final HttpHeaders headers = new HttpHeaders();
@@ -32,8 +28,8 @@ public class AuthenticationClient {
         final String url = String.format( "%s/authentication/register", dfsServerUrl );
 
         try {
-            final ResponseEntity<Pair<Status, UserData>> response = restTemplate.exchange(
-                    url, HttpMethod.POST, requestEntity, new ParameterizedTypeReference<Pair<Status, UserData>>() {}
+            final ResponseEntity<Pair<Status, ServerUserData>> response = restTemplate.exchange(
+                    url, HttpMethod.POST, requestEntity, new ParameterizedTypeReference<Pair<Status, ServerUserData>>() {}
             );
 
             return response.getBody();
@@ -43,7 +39,7 @@ public class AuthenticationClient {
         }
     }
 
-    public Pair<Status, UserData> login( final String username, final String password ) {
+    public Pair<Status, ServerUserData> login(final String username, final String password ) {
         final AuthenticationPayload authenticationPayload = new AuthenticationPayload( username, password );
 
         final HttpHeaders headers = new HttpHeaders();
@@ -54,8 +50,8 @@ public class AuthenticationClient {
         final String url = String.format( "%s/authentication/login", dfsServerUrl );
 
         try {
-            final ResponseEntity<Pair<Status, UserData>> response = restTemplate.exchange(
-                    url, HttpMethod.POST, requestEntity, new ParameterizedTypeReference<Pair<Status, UserData>>() {}
+            final ResponseEntity<Pair<Status, ServerUserData>> response = restTemplate.exchange(
+                    url, HttpMethod.POST, requestEntity, new ParameterizedTypeReference<Pair<Status, ServerUserData>>() {}
             );
 
             return response.getBody();

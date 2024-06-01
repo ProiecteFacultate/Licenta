@@ -3,8 +3,6 @@ package com.dfs.DFS_Client.clients;
 import com.dfs.DFS_Client.models.*;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
@@ -85,7 +83,7 @@ public class DirectoryClient {
         }
     }
 
-    public Pair<Status, UserData> getUserData( final String username ) {
+    public Pair<Status, LocalUserData> getUserData(final String username ) {
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType( MediaType.APPLICATION_JSON );
         headers.setAccept( Collections.singletonList( MediaType.APPLICATION_JSON ) );
@@ -94,8 +92,8 @@ public class DirectoryClient {
         final String url = String.format( "%s/drive/userData/get/%s", dfsServerUrl, username );
 
         try {
-            final ResponseEntity<Pair<Status, UserData>> response = restTemplate.exchange(
-                    url, HttpMethod.POST, requestEntity, new ParameterizedTypeReference<Pair<Status, UserData>>() {}
+            final ResponseEntity<Pair<Status, LocalUserData>> response = restTemplate.exchange(
+                    url, HttpMethod.POST, requestEntity, new ParameterizedTypeReference<Pair<Status, LocalUserData>>() {}
             );
 
             return response.getBody();

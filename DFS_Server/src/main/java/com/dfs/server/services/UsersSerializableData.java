@@ -1,5 +1,7 @@
-package com.dfs.server.models;
+package com.dfs.server.services;
 
+import com.dfs.server.models.DirectoryMetadata;
+import com.dfs.server.models.ServerUserData;
 import com.google.gson.Gson;
 
 import java.io.FileReader;
@@ -10,13 +12,13 @@ import java.util.List;
 
 public class UsersSerializableData implements Serializable {
 
-    private final List<UserData> usersDataList;
+    private final List<ServerUserData> usersDataList;
 
     public UsersSerializableData() {
         this.usersDataList = List.of();
     }
 
-    public List<UserData> getUsersDataList() {
+    public List<ServerUserData> getUsersDataList() {
         return usersDataList;
     }
 
@@ -40,12 +42,12 @@ public class UsersSerializableData implements Serializable {
 
     public static void updateFileSize( final String dfsServerUsersDataFilePath, final String fileRelativePath, final int newSize, final String username ) throws IOException {
         final UsersSerializableData usersSerializableData = readFromFile( dfsServerUsersDataFilePath );
-        final UserData userData = usersSerializableData.getUsersDataList().stream()
+        final ServerUserData serverUserData = usersSerializableData.getUsersDataList().stream()
                 .filter( user -> user.getUsername().equals( username ) )
                 .findAny()
                 .get();
 
-        final DirectoryMetadata directoryMetadata = userData.getDirectoriesMetadata().stream()
+        final DirectoryMetadata directoryMetadata = serverUserData.getDirectoriesMetadata().stream()
                         .filter( directory -> directory.getDirectoryRelativePath().equals( fileRelativePath ) )
                         .findAny()
                         .get();
@@ -56,12 +58,12 @@ public class UsersSerializableData implements Serializable {
 
     public static void addDirectoryToListForUser( final String dfsServerUsersDataFilePath, final DirectoryMetadata newDirectory, final String username ) throws IOException {
         final UsersSerializableData usersSerializableData = readFromFile( dfsServerUsersDataFilePath );
-        final UserData userData = usersSerializableData.getUsersDataList().stream()
+        final ServerUserData serverUserData = usersSerializableData.getUsersDataList().stream()
                 .filter( user -> user.getUsername().equals( username ) )
                 .findAny()
                 .get();
 
-        userData.getDirectoriesMetadata().add( newDirectory );
+        serverUserData.getDirectoriesMetadata().add( newDirectory );
         UsersSerializableData.writeToFile( dfsServerUsersDataFilePath, usersSerializableData );
     }
 }
