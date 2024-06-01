@@ -21,7 +21,7 @@ public class DriveController {
 
     @PostMapping( value = "/userData/get/{username}", produces = MediaType.APPLICATION_JSON_VALUE )
     @ResponseStatus( HttpStatus.OK )
-    public Pair<Status, ServerUserData> getUserData(@PathVariable final String username ) {
+    public Pair<Status, ServerUserData> getUserData( @PathVariable final String username ) {
         return directoryService.getUserData( username );
     }
 }

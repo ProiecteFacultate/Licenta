@@ -30,7 +30,19 @@ public class DirectoryController {
 
     @PostMapping( value = "/file/read", produces = MediaType.APPLICATION_JSON_VALUE )
     @ResponseStatus( HttpStatus.OK )
-    public Pair<Status, ReadResponse> writeFile(@RequestBody ReadFilePayload readFilePayload) {
+    public Pair<Status, ReadResponse> writeFile( @RequestBody ReadFilePayload readFilePayload ) {
         return directoryService.readFile( readFilePayload );
+    }
+
+    @PostMapping( value = "/file/hash/get", produces = MediaType.APPLICATION_JSON_VALUE )
+    @ResponseStatus( HttpStatus.OK )
+    public Pair<Status, FileHashResponse> getFileHash( @RequestBody FileHashPayload fileHashPayload ) {
+        return directoryService.getFileHash( fileHashPayload );
+    }
+
+    @PostMapping( value = "/delete", produces = MediaType.APPLICATION_JSON_VALUE )
+    @ResponseStatus( HttpStatus.OK )
+    public Status deleteDirectory( @RequestBody DeletePayload deletePayload ) {
+        return directoryService.deleteDirectory( deletePayload );
     }
 }

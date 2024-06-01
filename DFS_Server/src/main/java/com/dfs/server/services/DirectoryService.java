@@ -1,6 +1,7 @@
 package com.dfs.server.services;
 
 import com.dfs.server.models.*;
+import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -8,6 +9,11 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DirectoryService {
@@ -100,7 +106,7 @@ public class DirectoryService {
         }
     }
 
-    public Pair<Status, ServerUserData> getUserData(final String username ) {
+    public Pair<Status, ServerUserData> getUserData( final String username ) {
         try {
             final UsersSerializableData usersSerializableData = UsersSerializableData.readFromFile( dfsServerUsersDataFilePath );
 
@@ -112,6 +118,91 @@ public class DirectoryService {
             return Pair.of( new Status( "Retrieved user data" ), serverUserData);
         } catch ( final IOException exception) {
             return Pair.of( new Status( "Failed to get user data" ), null);
+        }
+    }
+
+    public Pair<Status, FileHashResponse> getFileHash( final FileHashPayload fileHashPayload ) {
+        final ReadFilePayload readFilePayload = new ReadFilePayload( fileHashPayload.getFilePath(), 0, fileHashPayload.getBufferSize(), fileHashPayload.getUsername() );
+        final Pair<Status, ReadResponse> readResult = readFile( readFilePayload );
+
+        if( readResult.getKey().getMessage().equals( "Failed to read file" ) )
+            return Pair.of( new Status( "Failed to get hash for file"), new FileHashResponse( null, 0 ) );
+
+        //else is "File Read" but it can still be a fail (0 bytes read or less than expected)
+        if( readResult.getValue().getBytesRead() < fileHashPayload.getBufferSize() )
+            return Pair.of( new Status( "Failed to get hash for file"), new FileHashResponse( null, 0 ) );
+
+        //else we read what we wanted
+
+        final MessageDigest startFileDataHash = hashFileContent( readResult.getValue().getBuffer() );
+        if( startFileDataHash != null ) {
+//            startFileDataHash.reset();
+            final byte[] hashBytes = startFileDataHash.digest();
+            return Pair.of( new Status( "Hashed file" ), new FileHashResponse( hashBytes, fileHashPayload.getBufferSize() ) );
+        }
+
+        return Pair.of( new Status( "Failed to get hash for file" ), new FileHashResponse( null, 0 ) );
+    }
+
+    public Status deleteDirectory( final DeletePayload deletePayload ) {
+        final String fileAbsolutePath = dfsServerDataFolderPath + "\\" + deletePayload.getUsername() + "\\" + deletePayload.getDirectoryPath().substring( 4 );
+        final File directory = new File( fileAbsolutePath );
+
+        if( !directory.exists() )
+            return new Status( "Directory does not exist" );
+
+        try {
+            //delete subdirectory metadata entries from UsersData
+            final UsersSerializableData usersSerializableData = UsersSerializableData.readFromFile( dfsServerUsersDataFilePath );
+            final ServerUserData userData = usersSerializableData.getUsersDataList().stream()
+                    .filter( data -> data.getUsername().equals( deletePayload.getUsername() ) )
+                    .findAny().get();
+
+            final List<DirectoryMetadata> directoryMetadataToDelete = userData.getDirectoriesMetadata().stream()
+                    .filter( directoryMetadata -> directoryMetadata.getDirectoryRelativePath().startsWith( deletePayload.getDirectoryPath() ) )
+                    .collect( Collectors.toList() );
+
+            userData.getDirectoriesMetadata().removeAll( directoryMetadataToDelete );
+            UsersSerializableData.writeToFile( dfsServerUsersDataFilePath, usersSerializableData );
+
+            deleteDirectoryRecursive( directory ); //even if this fails we already deleted from UsersData so it won't be counted and overwritten if necessary
+            return new Status( "Deleted directory" );
+        } catch ( final IOException exception ) {
+            return new Status( "Failed to delete directory" );
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////
+
+    private MessageDigest hashFileContent( final byte[] fileContent )  {
+        try {
+            String algorithmName = "SHA-256";
+            MessageDigest digest = null;
+            digest = MessageDigest.getInstance(algorithmName);
+            digest.update( fileContent );
+
+            return digest;
+        } catch (NoSuchAlgorithmException e) {
+            System.err.println( "Failed to hash file " + fileContent );
+            return null;
+        }
+    }
+
+    private void deleteDirectoryRecursive( File directory ) {
+        if ( !directory.exists() ) {
+            return;
+        }
+
+        if ( directory.isDirectory() ) {
+            File[] contents = directory.listFiles();
+            if ( contents != null ) {
+                for ( File file : contents ) {
+                    deleteDirectoryRecursive( file );
+                }
+            }
+            directory.delete();
+        } else {
+            directory.delete();
         }
     }
 }

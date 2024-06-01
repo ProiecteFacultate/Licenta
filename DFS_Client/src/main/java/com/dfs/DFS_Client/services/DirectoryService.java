@@ -175,4 +175,35 @@ public class DirectoryService {
                 System.out.println( "Failed to read file from server" );
         }
     }
+
+    public void deleteDirectory( final List<String> commandTokens, final LocalUserData localUserData ) {
+        if(commandTokens.size() != 2)
+        {
+            System.out.println( "'delete' command should have 2 arguments!\n" );
+            return;
+        }
+
+        final String directoryPath = commandTokens.get( 1 );
+
+        final Status deleteDirectoryResult = directoryClient.deleteDirectory( directoryPath, localUserData.getUsername() );
+
+        switch ( deleteDirectoryResult.getMessage() ) {
+            case "Deleted directory":
+                System.out.println( "Deleted directory" );
+
+                try {
+                    final String localDrivePath = localUserData.getLocalFSPath();
+                    if( !localDrivePath.isEmpty() && LocalDriveHandler.getDirectoryMetadataForFile( localDrivePath, directoryPath ).isPresent() )
+                        driveService.deleteDirectory( directoryPath, localUserData );
+                } catch ( final IOException exception) {
+
+                }
+                break;
+            case "Directory does not exist":
+                System.out.println( "Directory does not exist" );
+                break;
+            default: //"Failed to delete directory" or "ERROR" in client method
+                System.out.println( "Failed to delete directory" );
+        }
+    }
 }
