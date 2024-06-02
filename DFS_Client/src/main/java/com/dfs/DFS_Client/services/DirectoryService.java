@@ -3,7 +3,7 @@ package com.dfs.DFS_Client.services;
 import com.dfs.DFS_Client.models.*;
 import com.dfs.DFS_Client.clients.DirectoryClient;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -204,6 +204,57 @@ public class DirectoryService {
                 break;
             default: //"Failed to delete directory" or "ERROR" in client method
                 System.out.println( "Failed to delete directory" );
+        }
+    }
+
+    public void importFile( final List<String> commandTokens, final LocalUserData localUserData ) {
+        if(commandTokens.size() != 3)
+        {
+            System.out.println( "'write' command should have 3 arguments!\n" );
+            return;
+        }
+
+        final String sourceFileAbsolutePath = commandTokens.get( 1 );
+        final String destinationFileRelativePath = commandTokens.get( 2 );
+
+
+        final File sourceFile = new File( sourceFileAbsolutePath );
+        final int sourceFileSize = (int) sourceFile.length();
+        final byte[] sourceFileBytes = new byte[ sourceFileSize ];
+
+        try( RandomAccessFile raf = new RandomAccessFile( sourceFile, "r") ) {
+            raf.seek( 0 );
+            int bytesRead = raf.read( sourceFileBytes );
+
+            if( bytesRead != sourceFileSize ) {
+                System.out.println( "Failed to copy file" );
+                return;
+            }
+        } catch ( final Exception exception ) {
+            System.out.println( "Failed to copy file");
+            return;
+        }
+
+        final Status writeFileResult = directoryClient.writeFile( destinationFileRelativePath, sourceFileBytes, sourceFileSize, localUserData.getUsername() );
+
+        switch ( writeFileResult.getMessage() ) {
+            case "File written":
+                System.out.println( "File copied" );
+
+                try {
+                    final String localDrivePath = localUserData.getLocalFSPath();
+                    if( !localDrivePath.isEmpty() && LocalDriveHandler.getDirectoryMetadataForFile( localDrivePath, destinationFileRelativePath ).isPresent() )
+                        driveService.importFile( destinationFileRelativePath, sourceFileBytes, sourceFileSize, localUserData);
+                } catch ( final IOException exception) {
+
+                }
+
+                break;
+            case "File does not exist":
+                System.out.println( "File does not exist" );
+                break;
+            default: //"Failed to write file" or "ERROR" in client method
+                System.out.println( "Failed to copy file" );
         }
     }
 }

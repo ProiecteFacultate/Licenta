@@ -135,6 +135,23 @@ public class DriveService {
         }
     }
 
+    //THIS IS A COPY OF write file JUST THE souts texts are different!!!
+    public void importFile( final String filePath, byte[] fileData, final int bytesToWrite, final LocalUserData localUserData) {
+        final String fileAbsolutePath = localUserData.getLocalFSPath() + "\\Data\\" + filePath.substring( 5 );
+        final File localDriveFolder = new File( localUserData.getLocalFSPath() );
+        final int freeSpaceInLocalDrive = localUserData.getLocalFSMaximumSize() - getTotalSpaceOccupiedOnDrive( localUserData );
+        final int bytesToWriteToFile = Math.min( freeSpaceInLocalDrive, Math.min( localUserData.getLocalFSMaximumFileSize(), bytesToWrite ) );
+
+        try {
+            Files.write( Path.of( fileAbsolutePath ), Arrays.copyOfRange( fileData, 0 , bytesToWriteToFile ) );
+            LocalDriveHandler.updateFileSize( localUserData.getLocalFSPath(), filePath, bytesToWriteToFile );
+
+            System.out.println( "Copied " + bytesToWriteToFile + " bytes to local drive" );
+        } catch ( final IOException e) {
+            System.out.println( "Failed to copy file to local drive" );
+        }
+    }
+
     public void writeFile( final String filePath, byte[] fileData, final int bytesToWrite, final LocalUserData localUserData) {
         final String fileAbsolutePath = localUserData.getLocalFSPath() + "\\Data\\" + filePath.substring( 5 );
         final File localDriveFolder = new File( localUserData.getLocalFSPath() );
@@ -250,6 +267,17 @@ public class DriveService {
                     System.out.println("Failed to read file " + directoryMetadata.getDirectoryRelativePath() + " from server");
                     return;
             }
+        }
+
+        //Finds the directories that are on local drive and not on server and deletes them from local
+        final List<DirectoryMetadata> directoriesNotOnServer = directoriesOnLocalDrive.stream()
+                .filter( directoryMetadata -> !serverUserData.getDirectoriesMetadata().stream()
+                        .map( DirectoryMetadata::getDirectoryRelativePath )
+                        .collect( Collectors.toList() ).contains( directoryMetadata.getDirectoryRelativePath() ) )
+                .collect( Collectors.toList() );
+
+        for( final DirectoryMetadata directoryMetadata : directoriesNotOnServer ) {
+            deleteDirectory( directoryMetadata.getDirectoryRelativePath(), localUserData );
         }
 
         //Finds the directories that are both on server and on local and checks if data matches, otherwise updates them on local

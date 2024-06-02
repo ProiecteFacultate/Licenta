@@ -49,6 +49,8 @@ public class Interface {
                 directoryService.readFile( commandTokens, localUserData);
             else if( commandTokens.get( 0 ).equals( "delete") )
                 directoryService.deleteDirectory( commandTokens, localUserData);
+            else if( commandTokens.get( 0 ).equals( "import") )
+                directoryService.importFile( commandTokens, localUserData );
             else if( commandTokens.get( 0 ).equals( "exit" ) ) {
                 scanner.close();
                 System.out.println( "Session ended!" );

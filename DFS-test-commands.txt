@@ -1,0 +1,20 @@
+mkdir Root Folder_1 FOLDER
+mkdir Root\Folder_1 File_1 FILE
+mkdir Root\Folder_1 File_2 FILE
+mkdir Root\Folder_1 Sub_1 FOLDER
+mkdir Root\Folder_1 Sub_2 FOLDER
+mkdir Root\Folder_1\Sub_1 File_1 FILE
+
+
+mkdir Root File_1 FILE
+
+write Root\File_1 20
+ASDAFAFASFAadadadsad
+EOF
+
+read Root\File_3 0 15
+
+mkdrive D:\Facultate\Licenta\HardDisks\DFS_Local_Drive 100 10
+linkdrive D:\Facultate\Licenta\HardDisks\DFS_Local_Drive
+
+delete Root\Folder_1
