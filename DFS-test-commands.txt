@@ -16,5 +16,6 @@ read Root\File_3 0 15
 
 mkdrive D:\Facultate\Licenta\HardDisks\DFS_Local_Drive 100 10
 linkdrive D:\Facultate\Licenta\HardDisks\DFS_Local_Drive
+import D:\Demo.pdf Root\File_1 
 
 delete Root\Folder_1
