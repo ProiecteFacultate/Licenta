@@ -19,3 +19,5 @@ linkdrive D:\Facultate\Licenta\HardDisks\DFS_Local_Drive
 import D:\Demo.pdf Root\File_1 
 
 delete Root\Folder_1
+
+mkdrive D:\DFS_Local_Drive 100 10

@@ -30,6 +30,14 @@ public class ServerUserData {
         return directoriesMetadata;
     }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public void setDirectoriesMetadata(List<DirectoryMetadata> directoriesMetadata) {
         this.directoriesMetadata = directoriesMetadata;
     }

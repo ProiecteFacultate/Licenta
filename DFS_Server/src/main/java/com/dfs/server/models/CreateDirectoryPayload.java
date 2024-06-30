@@ -2,10 +2,14 @@ package com.dfs.server.models;
 
 public class CreateDirectoryPayload {
 
-    private final String parentFolder;
-    private final String directoryName;
-    private final DirectoryType type;
-    private final String username;
+    private String parentFolder;
+    private String directoryName;
+    private DirectoryType type;
+    private String username;
+
+    public CreateDirectoryPayload() {
+
+    }
 
     public CreateDirectoryPayload(String parentFolder, String directoryName, DirectoryType type, String username) {
         this.parentFolder = parentFolder;
@@ -28,5 +32,21 @@ public class CreateDirectoryPayload {
 
     public String getUsername() {
         return username;
+    }
+
+    public void setParentFolder(String parentFolder) {
+        this.parentFolder = parentFolder;
+    }
+
+    public void setDirectoryName(String directoryName) {
+        this.directoryName = directoryName;
+    }
+
+    public void setType(DirectoryType type) {
+        this.type = type;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

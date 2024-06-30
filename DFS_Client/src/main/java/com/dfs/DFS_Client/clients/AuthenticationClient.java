@@ -9,7 +9,7 @@ import java.util.Collections;
 
 public class AuthenticationClient {
 
-    private final String dfsServerUrl = "http://localhost:6789";
+    private final String dfsServerUrl = "http://localhost:8080";
 
     private RestTemplate restTemplate;
 

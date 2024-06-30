@@ -51,56 +51,56 @@ build cmake_object_order_depends_target_FAT32: phony || CMakeFiles/FAT32.dir
 
 build CMakeFiles/FAT32.dir/src/main.cpp.obj: CXX_COMPILER__FAT32_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/main.cpp || cmake_object_order_depends_target_FAT32
   DEP_FILE = CMakeFiles\FAT32.dir\src\main.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\FAT32.dir
   OBJECT_FILE_DIR = CMakeFiles\FAT32.dir\src
 
 build CMakeFiles/FAT32.dir/src/fat32Init.cpp.obj: CXX_COMPILER__FAT32_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32Init.cpp || cmake_object_order_depends_target_FAT32
   DEP_FILE = CMakeFiles\FAT32.dir\src\fat32Init.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\FAT32.dir
   OBJECT_FILE_DIR = CMakeFiles\FAT32.dir\src
 
 build CMakeFiles/FAT32.dir/src/fat32.cpp.obj: CXX_COMPILER__FAT32_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32.cpp || cmake_object_order_depends_target_FAT32
   DEP_FILE = CMakeFiles\FAT32.dir\src\fat32.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\FAT32.dir
   OBJECT_FILE_DIR = CMakeFiles\FAT32.dir\src
 
 build CMakeFiles/FAT32.dir/src/utils.cpp.obj: CXX_COMPILER__FAT32_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/utils.cpp || cmake_object_order_depends_target_FAT32
   DEP_FILE = CMakeFiles\FAT32.dir\src\utils.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\FAT32.dir
   OBJECT_FILE_DIR = CMakeFiles\FAT32.dir\src
 
 build CMakeFiles/FAT32.dir/src/fat32Api.cpp.obj: CXX_COMPILER__FAT32_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32Api.cpp || cmake_object_order_depends_target_FAT32
   DEP_FILE = CMakeFiles\FAT32.dir\src\fat32Api.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\FAT32.dir
   OBJECT_FILE_DIR = CMakeFiles\FAT32.dir\src
 
 build CMakeFiles/FAT32.dir/src/fat32FunctionUtils.cpp.obj: CXX_COMPILER__FAT32_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32FunctionUtils.cpp || cmake_object_order_depends_target_FAT32
   DEP_FILE = CMakeFiles\FAT32.dir\src\fat32FunctionUtils.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\FAT32.dir
   OBJECT_FILE_DIR = CMakeFiles\FAT32.dir\src
 
 build CMakeFiles/FAT32.dir/src/interface.cpp.obj: CXX_COMPILER__FAT32_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/interface.cpp || cmake_object_order_depends_target_FAT32
   DEP_FILE = CMakeFiles\FAT32.dir\src\interface.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\FAT32.dir
   OBJECT_FILE_DIR = CMakeFiles\FAT32.dir\src
 
 build CMakeFiles/FAT32.dir/src/fat32TestApi.cpp.obj: CXX_COMPILER__FAT32_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32TestApi.cpp || cmake_object_order_depends_target_FAT32
   DEP_FILE = CMakeFiles\FAT32.dir\src\fat32TestApi.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\FAT32.dir
   OBJECT_FILE_DIR = CMakeFiles\FAT32.dir\src
@@ -114,7 +114,8 @@ build CMakeFiles/FAT32.dir/src/fat32TestApi.cpp.obj: CXX_COMPILER__FAT32_unscann
 # Link the executable FAT32.exe
 
 build FAT32.exe: CXX_EXECUTABLE_LINKER__FAT32_Debug CMakeFiles/FAT32.dir/src/main.cpp.obj CMakeFiles/FAT32.dir/src/fat32Init.cpp.obj CMakeFiles/FAT32.dir/src/fat32.cpp.obj CMakeFiles/FAT32.dir/src/utils.cpp.obj CMakeFiles/FAT32.dir/src/fat32Api.cpp.obj CMakeFiles/FAT32.dir/src/fat32FunctionUtils.cpp.obj CMakeFiles/FAT32.dir/src/interface.cpp.obj CMakeFiles/FAT32.dir/src/fat32TestApi.cpp.obj | D$:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a
-  FLAGS = -g
+  FLAGS = -static-libstdc++ -static-libgcc -g
+  LINK_FLAGS = -static
   LINK_LIBRARIES = D:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/lib/libdisk_emulation.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\FAT32.dir
   POST_BUILD = cd .
@@ -134,49 +135,49 @@ build cmake_object_order_depends_target_fat32_lib: phony || CMakeFiles/fat32_lib
 
 build CMakeFiles/fat32_lib.dir/src/fat32Init.cpp.obj: CXX_COMPILER__fat32_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32Init.cpp || cmake_object_order_depends_target_fat32_lib
   DEP_FILE = CMakeFiles\fat32_lib.dir\src\fat32Init.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\fat32_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\fat32_lib.dir\src
 
 build CMakeFiles/fat32_lib.dir/src/fat32.cpp.obj: CXX_COMPILER__fat32_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32.cpp || cmake_object_order_depends_target_fat32_lib
   DEP_FILE = CMakeFiles\fat32_lib.dir\src\fat32.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\fat32_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\fat32_lib.dir\src
 
 build CMakeFiles/fat32_lib.dir/src/utils.cpp.obj: CXX_COMPILER__fat32_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/utils.cpp || cmake_object_order_depends_target_fat32_lib
   DEP_FILE = CMakeFiles\fat32_lib.dir\src\utils.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\fat32_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\fat32_lib.dir\src
 
 build CMakeFiles/fat32_lib.dir/src/fat32Api.cpp.obj: CXX_COMPILER__fat32_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32Api.cpp || cmake_object_order_depends_target_fat32_lib
   DEP_FILE = CMakeFiles\fat32_lib.dir\src\fat32Api.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\fat32_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\fat32_lib.dir\src
 
 build CMakeFiles/fat32_lib.dir/src/fat32FunctionUtils.cpp.obj: CXX_COMPILER__fat32_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32FunctionUtils.cpp || cmake_object_order_depends_target_fat32_lib
   DEP_FILE = CMakeFiles\fat32_lib.dir\src\fat32FunctionUtils.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\fat32_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\fat32_lib.dir\src
 
 build CMakeFiles/fat32_lib.dir/src/interface.cpp.obj: CXX_COMPILER__fat32_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/interface.cpp || cmake_object_order_depends_target_fat32_lib
   DEP_FILE = CMakeFiles\fat32_lib.dir\src\interface.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\fat32_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\fat32_lib.dir\src
 
 build CMakeFiles/fat32_lib.dir/src/fat32TestApi.cpp.obj: CXX_COMPILER__fat32_lib_unscanned_Debug D$:/Facultate/Licenta/Implementare/FAT32/src/fat32TestApi.cpp || cmake_object_order_depends_target_fat32_lib
   DEP_FILE = CMakeFiles\fat32_lib.dir\src\fat32TestApi.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -static-libstdc++ -static-libgcc -g -fdiagnostics-color=always
   INCLUDES = -ID:/Facultate/Licenta/Implementare/Libraries/DiskEmulation/include
   OBJECT_DIR = CMakeFiles\fat32_lib.dir
   OBJECT_FILE_DIR = CMakeFiles\fat32_lib.dir\src
@@ -190,7 +191,7 @@ build CMakeFiles/fat32_lib.dir/src/fat32TestApi.cpp.obj: CXX_COMPILER__fat32_lib
 # Link the static library libfat32_lib.a
 
 build libfat32_lib.a: CXX_STATIC_LIBRARY_LINKER__fat32_lib_Debug CMakeFiles/fat32_lib.dir/src/fat32Init.cpp.obj CMakeFiles/fat32_lib.dir/src/fat32.cpp.obj CMakeFiles/fat32_lib.dir/src/utils.cpp.obj CMakeFiles/fat32_lib.dir/src/fat32Api.cpp.obj CMakeFiles/fat32_lib.dir/src/fat32FunctionUtils.cpp.obj CMakeFiles/fat32_lib.dir/src/interface.cpp.obj CMakeFiles/fat32_lib.dir/src/fat32TestApi.cpp.obj
-  LANGUAGE_COMPILE_FLAGS = -g
+  LANGUAGE_COMPILE_FLAGS = -static-libstdc++ -static-libgcc -g
   OBJECT_DIR = CMakeFiles\fat32_lib.dir
   POST_BUILD = cd .
   PRE_LINK = cd .

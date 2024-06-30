@@ -4,6 +4,10 @@ public class Status {
 
     private String message;
 
+    public Status() {
+
+    }
+
     public Status(String message) {
         this.message = message;
     }

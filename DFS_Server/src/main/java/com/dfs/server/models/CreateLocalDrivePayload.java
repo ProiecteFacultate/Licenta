@@ -2,10 +2,15 @@ package com.dfs.server.models;
 
 public class CreateLocalDrivePayload {
 
-    private final String localFSPath;
-    private final int localFSMaximumSize;
-    private final int localFSMaximumFileSize;
-    private final String username;
+    private String localFSPath;
+    private int localFSMaximumSize;
+    private int localFSMaximumFileSize;
+    private String username;
+
+    public CreateLocalDrivePayload() {
+
+    }
+
 
     public CreateLocalDrivePayload(final String localFSPath, final int localFSMaximumSize, final int localFSMaximumFileSize, final String username ) {
         this.username = username;
@@ -28,5 +33,21 @@ public class CreateLocalDrivePayload {
 
     public int getLocalFSMaximumFileSize() {
         return localFSMaximumFileSize;
+    }
+
+    public void setLocalFSPath(String localFSPath) {
+        this.localFSPath = localFSPath;
+    }
+
+    public void setLocalFSMaximumSize(int localFSMaximumSize) {
+        this.localFSMaximumSize = localFSMaximumSize;
+    }
+
+    public void setLocalFSMaximumFileSize(int localFSMaximumFileSize) {
+        this.localFSMaximumFileSize = localFSMaximumFileSize;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

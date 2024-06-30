@@ -23,6 +23,14 @@ public class Pair<K, V> {
         return value;
     }
 
+    public void setKey(K key) {
+        this.key = key;
+    }
+
+    public void setValue(V value) {
+        this.value = value;
+    }
+
     public static <K, V> Pair<K, V> of(K key, V value) {
         return new Pair<>(key, value);
     }

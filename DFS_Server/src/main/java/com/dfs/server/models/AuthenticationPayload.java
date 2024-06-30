@@ -2,8 +2,12 @@ package com.dfs.server.models;
 
 public class AuthenticationPayload {
 
-    private final String username;
-    private final String password;
+    private String username;
+    private String password;
+
+    public AuthenticationPayload() {
+
+    }
 
     public AuthenticationPayload(String username, String password) {
         this.username = username;
@@ -16,5 +20,13 @@ public class AuthenticationPayload {
 
     public String getPassword() {
         return password;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
