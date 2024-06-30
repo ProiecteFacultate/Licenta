@@ -1,4 +1,0 @@
-FAT32:
-
-1. Metoda pt copierea dintr un fisier in altul (OPTIONAL)
-2. Update write / access time for directories
